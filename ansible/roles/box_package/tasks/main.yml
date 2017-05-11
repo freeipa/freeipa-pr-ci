@@ -1,0 +1,37 @@
+---
+- name: "remove any artifcats from previous packaging"
+  become_user: root
+  become: yes
+  file:
+    path: /tmp/image/_tmp_package
+    state: absent
+  tags:
+    - package_box
+
+# Turn template VM off and on again. Created vagrant box may not boot if 
+# this step is omitted.
+- name: "shutdown template VM"
+  shell: vagrant halt
+  args:
+    chdir: /tmp/image
+
+- name: "boot template VM"
+  shell: vagrant up
+  args:
+    chdir: /tmp/image
+
+- name: "create vagrant box"
+  become_user: root
+  become: yes
+  # TODO replace hardcoded name with variable
+  shell: vagrant package --output ipa-master-f25.box
+  args:
+    chdir: /tmp/image
+  tags:
+    - package_box
+
+- name: "destroy template VM"
+  shell: vagrant destroy
+  args:
+    chdir: /tmp/image
+

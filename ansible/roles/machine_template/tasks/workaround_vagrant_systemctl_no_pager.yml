@@ -1,0 +1,12 @@
+---
+# vagrant up will invoke systemctl status nfs-server which requires
+# a manual keypress, because vagrant doesn't use --no-pager option
+#
+# https://github.com/mitchellh/vagrant/blob/master/plugins/hosts/redhat/cap/nfs.rb#L33
+
+- name: "set systemctl pager to cat"
+  lineinfile:
+    path: /etc/profile
+    line: "export SYSTEMD_PAGER=cat"
+    state: present
+

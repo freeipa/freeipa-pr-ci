@@ -1,0 +1,8 @@
+---
+- name: "clean YUM cache"
+  command: yum clean all
+  when: ansible_os_family == "RedHat"
+
+- name: "clean DNF cache"
+  command: dnf clean all
+  when: ansible_os_family == "RedHat" and ansible_distribution == "Fedora"

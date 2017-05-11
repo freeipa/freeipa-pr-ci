@@ -1,0 +1,11 @@
+---
+# If custodia user isn't created, vagrant authentication will fail after
+# FreeIPA RPMs are installed
+#
+# https://pagure.io/freeipa/issue/6931
+
+- name: "create custodia user"
+  user:
+    name: custodia
+    state: present
+

@@ -1,0 +1,7 @@
+---
+- include: clean_caches.yml
+- include: clean_hostname.yml
+- include: clean_dhcp_state.yml
+- include: clean_mac_addresses.yml
+- include: clean_logs.yml
+- include: clean_history.yml

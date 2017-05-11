@@ -1,0 +1,4 @@
+---
+selinux_mode: permissive
+copr_repo: "@freeipa/freeipa-master"
+

@@ -1,0 +1,12 @@
+---
+- file:
+    path: "/etc/hostname"
+    state: absent
+
+- lineinfile:
+    dest: "/etc/sysconfig/network"
+    regexp: "HOSTNAME"
+    state: absent
+
+- name: "regenerate initrd to remove hardcoded hostname"
+  command: /usr/bin/dracut --regenerate-all --force

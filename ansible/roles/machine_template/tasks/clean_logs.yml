@@ -1,0 +1,10 @@
+---
+- name: "clean journald logs"
+  shell: rm -rf /var/log/journal/*
+
+- name: "clean audit logs"
+  shell: rm -f /var/log/audit/*
+
+- name: "clean *.log files"
+  shell: rm -f /var/log/*.log
+

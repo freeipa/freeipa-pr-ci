@@ -1,0 +1,24 @@
+---
+- hosts: runner
+  name: "prepare vagrant box"
+  roles:
+    - box_prepare
+
+# HACK: workaround to install Python2 that is still required by Ansible
+- hosts: image_box
+  gather_facts: false
+  tasks:
+    - name: install python and deps for ansible modules
+      raw: test -e /usr/bin/python || dnf install -y python2 python2-dnf libselinux-python
+    - name: gather facts
+      setup:
+
+- hosts: image_box
+  name: "modify vagrant box template"
+  roles:
+    - role: machine_template
+
+- hosts: runner
+  name: "package template box"
+  roles:
+    - box_package

@@ -1,0 +1,9 @@
+---
+- include: setup.yml
+- include: setup_rng.yml
+- include: install_packages.yml
+- include: manage_ssh_keys.yml
+- include: workaround_create_custodia_user.yml
+- include: workaround_vagrant_systemctl_no_pager.yml
+- include: cleanup.yml
+

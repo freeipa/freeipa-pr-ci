@@ -1,0 +1,18 @@
+---
+- name: "gather list of ifcfg files"
+  raw: find /etc/sysconfig/network-scripts/ -type f -name "ifcfg-*"
+  register: ifcfg_files
+
+- name: "remove HWADDR line from ifcfg files"
+  lineinfile:
+    dest: "{{ item }}"
+    backup: yes
+    state: absent
+    regexp: "HWADDR"
+  with_items: "{{ ifcfg_files.stdout_lines }}"
+
+- name: remove udev persistent rules for network cards
+  file:
+    path: /etc/udev/rules.d/70-persistent-net.rules
+    state: absent
+

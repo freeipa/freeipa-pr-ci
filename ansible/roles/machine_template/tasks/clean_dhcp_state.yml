@@ -1,0 +1,6 @@
+---
+- name: "clean DHCP state in NetworkManager"
+  shell: rm -f /var/lib/NetworkManager/*
+
+- name: "clean DHCP state in dhcpd"
+  shell: rm -f /var/lib/dhclient/*

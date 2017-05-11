@@ -1,0 +1,15 @@
+---
+# To avoid issues with running out of entropy, install RNG
+# This may no longer be necessary
+
+- name: "install haveged"
+  dnf:
+    name: haveged
+    state: present
+
+- name: "start&enable haveged for RNG noise"
+  service:
+    name: haveged
+    enabled: yes
+    state: started
+

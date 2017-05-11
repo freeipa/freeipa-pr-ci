@@ -1,0 +1,20 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure(2) do |config|
+    config.ssh.insert_key = false
+
+    config.vm.provider "libvirt" do |domain, override|
+        override.vm.box_url = "{{ template_box_url }}"
+        override.vm.box = "{{ template_box }}"
+    end
+
+    config.vm.define "template"  do |template|
+        template.vm.provider "libvirt" do |domain,override|
+            domain.memory = 2048
+            override.vm.network "private_network", type: "dhcp"
+        end
+
+    end
+end
+
