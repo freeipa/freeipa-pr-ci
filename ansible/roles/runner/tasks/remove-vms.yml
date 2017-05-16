@@ -1,0 +1,12 @@
+---
+# This tasks cleans up all virtual machines from RAM and disk.
+
+- name: remove all VMs from RAM
+  shell: "virsh list --uuid | xargs -n 1 virsh destroy"
+
+- name: remove all VMs from disk
+  shell: "virsh list --uuid --all | xargs -n 1 virsh undefine"
+
+- name: clean up machines in vagrant
+  shell: "vagrant global-status --prune"
+

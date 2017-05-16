@@ -1,0 +1,33 @@
+---
+- name: check if nested virtualization is already enabled
+  command: cat /sys/module/kvm_intel/parameters/nested
+  register: nested_virt_enabled
+
+- name: enable nested virtualization in kvm config
+  blockinfile:
+    dest: /etc/modprobe.d/kvm-intel.conf
+    create: yes
+    block: |
+      options kvm-intel nested=1
+  when: nested_virt_enabled.stdout == "N"
+
+- name: restart machine to enable the nested virtualization
+  shell: 'sleep 2 && shutdown -r now "Ansible updates triggered"'
+  async: 1
+  poll: 0
+  ignore_errors: true
+  when: nested_virt_enabled.stdout == "N"
+
+- name: show inv hostname
+  debug:
+    msg: "connecting to {{inventory_hostname }}"
+  when: nested_virt_enabled.stdout == "N"
+
+- name: waiting for server to come back
+  local_action: wait_for
+    host="{{ inventory_hostname }}"
+    port=22
+    delay=10
+    timeout=120
+  when: nested_virt_enabled.stdout == "N"
+
