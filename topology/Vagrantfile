@@ -1,0 +1,170 @@
+
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+#
+NETWORK="192.168.101" # first three octets
+DOMAIN="ipa.test"
+#VM_NAME_PREFIX = "root"
+
+Vagrant.configure(2) do |config|
+
+    config.ssh.username = "root"
+
+    config.vm.synced_folder "../", "/vagrant",
+        type: "nfs",
+        nfs_udp: false
+
+    config.vm.provider "libvirt" do |domain, override|
+        override.vm.box = "freeipa/ci-master-f25"
+        override.vm.box_check_update = true
+
+        # Defaults for masters and replica
+        domain.cpus = 2  # Slightly boosts performance even if overcommitted
+        domain.memory = 2048
+
+        # Nested options
+        domain.nested = true
+        domain.cpu_mode = "host-passthrough"
+
+        # VMs are thrown away in case of power outage
+        domain.volume_cache = "unsafe"
+
+        # Allow remote connections to VNC server
+        domain.graphics_type = "vnc"
+        domain.graphics_ip = "0.0.0.0"  
+
+        # Add connection to public network
+        override.vm.network "public_network",
+            dev: "virbr0",
+            mode: "bridge",
+            type: "bridge"
+    end
+
+    config.vm.define "controller" , primary: true do |controller|
+        controller.vm.provider "libvirt" do |domain,override|
+            # Less resources needed for controller
+            domain.cpus = 1
+            domain.memory = 1024
+
+            override.vm.network "private_network",
+                ip: "#{NETWORK}.100"
+        end
+
+        controller.vm.provision "shell", inline: <<-SHELL
+    [ "$(ls -A /vagrant/topology/rpms)" ] && sudo dnf install /vagrant/topology/rpms/*.rpm --best --allowerasing -y
+sudo echo '127.0.0.1  localhost' > /etc/hosts
+sudo echo '::1  localhost' >> /etc/hosts
+sudo echo '192.168.101.100 controller.ipa.test' >> /etc/hosts
+sudo echo '192.168.101.101 master.ipa.test' >> /etc/hosts
+sudo echo '192.168.101.102 replica1.ipa.test' >> /etc/hosts
+sudo echo '192.168.101.103 replica2.ipa.test' >> /etc/hosts
+sudo echo '192.168.101.104 client1.ipa.test' >> /etc/hosts
+sudo echo 'search ipa.test' > /etc/resolv.conf
+sudo echo 'nameserver 192.168.101.101' >> /etc/resolv.conf
+sudo echo 'nameserver 192.168.101.102' >> /etc/resolv.conf
+sudo echo 'nameserver 192.168.101.103' >> /etc/resolv.conf
+sudo hostnamectl set-hostname controller.ipa.test
+SHELL
+    end
+
+
+    config.vm.define "master"  do |master|
+        master.vm.provider "libvirt" do |domain,override|
+            override.vm.network "private_network",
+                ip: "#{NETWORK}.101"
+        end
+
+        master.vm.provision "shell", inline: <<-SHELL
+[ "$(ls -A /vagrant/topology/rpms)" ] && sudo dnf install /vagrant/topology/rpms/*.rpm --best --allowerasing -y
+sudo echo '127.0.0.1  localhost' > /etc/hosts
+sudo echo '::1  localhost' >> /etc/hosts
+sudo echo '192.168.101.100 controller.ipa.test' >> /etc/hosts
+sudo echo '192.168.101.101 master.ipa.test' >> /etc/hosts
+sudo echo '192.168.101.102 replica1.ipa.test' >> /etc/hosts
+sudo echo '192.168.101.103 replica2.ipa.test' >> /etc/hosts
+sudo echo '192.168.101.104 client1.ipa.test' >> /etc/hosts
+sudo echo 'search ipa.test' > /etc/resolv.conf
+sudo echo 'nameserver 192.168.101.101' >> /etc/resolv.conf
+sudo echo 'nameserver 192.168.101.102' >> /etc/resolv.conf
+sudo echo 'nameserver 192.168.101.103' >> /etc/resolv.conf
+sudo hostnamectl set-hostname master.ipa.test
+SHELL
+    end
+
+
+    config.vm.define "replica1"  do |replica1|
+        replica1.vm.provider "libvirt" do |domain,override|
+            override.vm.network "private_network",
+                ip: "#{NETWORK}.102"
+        end
+
+        replica1.vm.provision "shell", inline: <<-SHELL
+[ "$(ls -A /vagrant/topology/rpms)" ] && sudo dnf install /vagrant/topology/rpms/*.rpm --best --allowerasing -y
+sudo echo '127.0.0.1  localhost' > /etc/hosts
+sudo echo '::1  localhost' >> /etc/hosts
+sudo echo '192.168.101.100 controller.ipa.test' >> /etc/hosts
+sudo echo '192.168.101.101 master.ipa.test' >> /etc/hosts
+sudo echo '192.168.101.102 replica1.ipa.test' >> /etc/hosts
+sudo echo '192.168.101.103 replica2.ipa.test' >> /etc/hosts
+sudo echo '192.168.101.104 client1.ipa.test' >> /etc/hosts
+sudo echo 'search ipa.test' > /etc/resolv.conf
+sudo echo 'nameserver 192.168.101.101' >> /etc/resolv.conf
+sudo echo 'nameserver 192.168.101.102' >> /etc/resolv.conf
+sudo echo 'nameserver 192.168.101.103' >> /etc/resolv.conf
+sudo hostnamectl set-hostname replica1.ipa.test
+SHELL
+    end
+
+
+    config.vm.define "replica2"  do |replica2|
+        replica2.vm.provider "libvirt" do |domain,override|
+            override.vm.network "private_network",
+                ip: "#{NETWORK}.103"
+        end
+
+        replica2.vm.provision "shell", inline: <<-SHELL
+[ "$(ls -A /vagrant/topology/rpms)" ] && sudo dnf install /vagrant/topology/rpms/*.rpm --best --allowerasing -y
+sudo echo '127.0.0.1  localhost' > /etc/hosts
+sudo echo '::1  localhost' >> /etc/hosts
+sudo echo '192.168.101.100 controller.ipa.test' >> /etc/hosts
+sudo echo '192.168.101.101 master.ipa.test' >> /etc/hosts
+sudo echo '192.168.101.102 replica1.ipa.test' >> /etc/hosts
+sudo echo '192.168.101.103 replica2.ipa.test' >> /etc/hosts
+sudo echo '192.168.101.104 client1.ipa.test' >> /etc/hosts
+sudo echo 'search ipa.test' > /etc/resolv.conf
+sudo echo 'nameserver 192.168.101.101' >> /etc/resolv.conf
+sudo echo 'nameserver 192.168.101.102' >> /etc/resolv.conf
+sudo echo 'nameserver 192.168.101.103' >> /etc/resolv.conf
+sudo hostnamectl set-hostname replica2.ipa.test
+SHELL
+    end
+
+
+    config.vm.define "client1"  do |client1|
+        client1.vm.provider "libvirt" do |domain,override|
+            # Less resources needed for client
+            domain.cpus = 1
+            domain.memory = 1024
+
+            override.vm.network "private_network",
+                ip: "#{NETWORK}.104"
+        end
+
+        client1.vm.provision "shell", inline: <<-SHELL
+[ "$(ls -A /vagrant/topology/rpms)" ] && sudo dnf install /vagrant/topology/rpms/*.rpm --best --allowerasing -y
+sudo echo '127.0.0.1  localhost' > /etc/hosts
+sudo echo '::1  localhost' >> /etc/hosts
+sudo echo '192.168.101.100 controller.ipa.test' >> /etc/hosts
+sudo echo '192.168.101.101 master.ipa.test' >> /etc/hosts
+sudo echo '192.168.101.102 replica1.ipa.test' >> /etc/hosts
+sudo echo '192.168.101.103 replica2.ipa.test' >> /etc/hosts
+sudo echo '192.168.101.104 client1.ipa.test' >> /etc/hosts
+sudo echo 'search ipa.test' > /etc/resolv.conf
+sudo echo 'nameserver 192.168.101.101' >> /etc/resolv.conf
+sudo echo 'nameserver 192.168.101.102' >> /etc/resolv.conf
+sudo echo 'nameserver 192.168.101.103' >> /etc/resolv.conf
+sudo hostnamectl set-hostname client1.ipa.test
+SHELL
+    end
+
+end
