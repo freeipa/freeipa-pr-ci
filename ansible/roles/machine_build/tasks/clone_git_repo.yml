@@ -1,0 +1,8 @@
+---
+- name: "clone FreeIPA git repo"
+  git:
+    repo: "{{ freeipa_git_repo }}"
+    dest: /root/freeipa
+    version: "{{ freeipa_git_branch }}"
+    depth: 1
+

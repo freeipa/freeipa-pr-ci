@@ -1,0 +1,6 @@
+---
+- include: install_packages.yml
+- include: setup_mock.yml
+- include: cleanup.yml
+
+

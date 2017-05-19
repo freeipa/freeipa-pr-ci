@@ -1,3 +1,4 @@
 *.retry
 ansible/vault-password
 rpms/*.rpm
+logs/

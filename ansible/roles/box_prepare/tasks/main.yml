@@ -14,11 +14,6 @@
     dest: /tmp/image/Vagrantfile
     mode: 0644
 
-- name: "copy rpms to template box folder"
-  copy:
-    src: ../rpms
-    dest: /tmp/image/
-
 - name: "bring the image online"
   shell: vagrant up
   args:

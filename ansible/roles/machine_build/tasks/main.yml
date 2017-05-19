@@ -1,0 +1,6 @@
+---
+- include: clone_git_repo.yml
+- include: generate_build_version.yml
+- include: create_spec.yml
+- include: create_sources.yml
+- include: create_rpms.yml
