@@ -1,0 +1,15 @@
+---
+- name: "create srpm"
+  shell: |
+    mock --buildsrpm \
+      --spec /root/rpmbuild/SPECS/freeipa.spec \
+      --sources /root/rpmbuild/SOURCES/freeipa-{{ build_version }}.tar.gz \
+      --result /root/rpmbuild/SRPMS/
+
+- name: "create rpms"
+  shell: |
+    mock --rebuild /root/rpmbuild/SRPMS/*.src.rpm \
+      --result /root/rpmbuild/RPMS/
+
+- name: "remove srpm artifact from RPMS dir"
+  shell: rm /root/rpmbuild/RPMS/*.src.rpm

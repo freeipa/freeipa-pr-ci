@@ -1,0 +1,6 @@
+---
+freeipa_git_repo: https://github.com/freeipa/freeipa.git
+freeipa_git_branch: master
+build_chroot: fedora-25-x86_64
+freeipa_copr: "@freeipa/freeipa-master"
+

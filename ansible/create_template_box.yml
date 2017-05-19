@@ -16,6 +16,8 @@
 - hosts: image_box
   name: "modify vagrant box template"
   roles:
+    - role: machine_build_template
+    - role: machine_build  # this caches the packages for mock in root cache
     - role: machine_template
 
 - hosts: runner

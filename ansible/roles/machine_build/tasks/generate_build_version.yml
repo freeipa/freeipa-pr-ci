@@ -1,0 +1,36 @@
+---
+- name: "parse major vesion"
+  shell: |
+    grep '^define(IPA_VERSION_MAJOR' /root/freeipa/VERSION.m4 | \
+    sed 's/define(IPA_VERSION_MAJOR, \?//' | \
+    sed 's/)//'
+  register: major
+
+- name: "parse minor vesion"
+  shell: |
+    grep '^define(IPA_VERSION_MINOR' /root/freeipa/VERSION.m4 | \
+    sed 's/define(IPA_VERSION_MINOR, \?//' | \
+    sed 's/)//'
+  register: minor
+
+- name: "parse release vesion"
+  shell: |
+    grep '^define(IPA_VERSION_RELEASE' /root/freeipa/VERSION.m4 | \
+    sed 's/define(IPA_VERSION_RELEASE, \?//' | \
+    sed 's/)//'
+  register: release
+
+- name: "create timestamp"
+  shell: "date -u +'%Y%m%d%H%M%S'"
+  register: timestamp
+
+- name: "get git revision"
+  shell: "git rev-parse --short HEAD"
+  args:
+    chdir: /root/freeipa
+  register: revision
+
+- name: "create version"
+  set_fact:
+    build_version: "{{ major.stdout }}.{{ minor.stdout }}.{{ release.stdout }}.dev{{ timestamp.stdout }}+git{{ revision.stdout }}"
+

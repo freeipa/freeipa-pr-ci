@@ -4,19 +4,11 @@ Scripts that are used by the PR CI testing infrastructure.
 
 ## Creating vagrant template box
 
-1. Place current RPMs into `rpms/`
-
-   The template box comes with pre-installed FreeIPA dependencies. To install 
-   runtime dependencies, you have to provide RPMs of the target version.
-
-   **TODO**: Use specified git branch to build it automatically during the 
-   box crating process.
-
-2. Run `create-box-template`
+1. Run `create-box-template`
 
    This will create a vagrant box in `/tmp/image/`.
 
-3. Perform some basic tests on the box
+2. Perform some basic tests on the box
 
    **TODO**: Something we want to automate in the future.
 
@@ -28,7 +20,7 @@ Scripts that are used by the PR CI testing infrastructure.
 
    - Verify your recent changes are present
 
-4. Upload the box to [HashiCorp Atlas](https://atlas.hashicorp.com/freeipa)
+3. Upload the box to [HashiCorp Atlas](https://atlas.hashicorp.com/freeipa)
 
    **TODO**: Another step that will be automated in the future.
 
@@ -43,7 +35,7 @@ Scripts that are used by the PR CI testing infrastructure.
      - <change>
    ```
 
-5. Create a PR against FreeIPA with the updated box
+4. Create a PR against FreeIPA with the updated box
 
    **TODO**: This requires GitHub integration with PR CI. Omit this step for
    now and just use the box in Vagrantfiles.

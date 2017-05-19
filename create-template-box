@@ -4,18 +4,6 @@
 chmod 600 keys/vagrant
 chmod 600 keys/freeipa_pr_ci_insecure
 
-# Show contents of rpms directory
-ls rpms
-
-# Prompt for confirmation
-echo -n "Proceed with these packages? [y/N]: "
-read answer
-if [[ ! $answer =~ ^[Yy]$ ]]
-then
-    # handle exits from shell or function but don't exit interactive shell
-    [[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1
-fi
-
 # Run playbook to create box
 ansible-playbook -v -K -i ansible/hosts/runner_localhost \
   ansible/create_template_box.yml
