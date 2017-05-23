@@ -1,0 +1,14 @@
+---
+- name: "run virtlogd service"
+  systemd:
+    name: virtlogd
+    enabled: yes
+    state: started
+
+- name: "run libvirtd service"
+  systemd:
+    name: libvirtd
+    enabled: yes
+    state: started
+
+#TODO is restart needed?

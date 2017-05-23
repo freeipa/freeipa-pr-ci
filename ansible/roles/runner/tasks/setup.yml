@@ -9,4 +9,6 @@
     - libguestfs-tools-c  # required for vagrant package command
     - ansible
     - nfs-utils
+    - git
+    - libvirt
 

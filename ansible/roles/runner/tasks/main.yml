@@ -1,3 +1,4 @@
 ---
 - include: enable-nested-virt.yml
 - include: setup.yml
+- include: service_libvirt.yml
