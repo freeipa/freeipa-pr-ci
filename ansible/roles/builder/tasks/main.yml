@@ -1,0 +1,13 @@
+---
+- include_role:
+    name: builder/prepare
+  tags: template
+
+- include_role:
+    name: builder/build
+  tags: build
+
+- include_role:
+    name: builder/cleanup
+  tags: template
+

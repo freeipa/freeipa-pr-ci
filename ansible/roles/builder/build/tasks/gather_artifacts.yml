@@ -1,0 +1,25 @@
+---
+- name: "remove artifcats directory"
+  file:
+    path: /vagrant/build
+    state: absent
+
+- name: "create artifcats directory"
+  file:
+    path: /vagrant/build
+    state: directory
+
+- name: "gather srpm"
+  shell: mv /root/rpmbuild/SRPMS/*.src.rpm /vagrant/build/
+
+- name: "create rpms directory"
+  file:
+    path: /vagrant/build/rpms
+    state: directory
+
+- name: "gather rpms"
+  shell: mv /root/rpmbuild/RPMS/*.rpm /vagrant/build/rpms/
+
+- name: "gather logs"
+  shell: mv /root/rpmbuild/RPMS/*.log /vagrant/build/
+

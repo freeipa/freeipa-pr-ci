@@ -5,7 +5,7 @@
     state: latest
 
 - name: "install freeipa rpms with dependencies"
-  shell: "dnf install -y /root/rpmbuild/RPMS/*.rpm"
+  shell: "dnf install -y /vagrant/build/rpms/*.rpm"
 
 - name: "remove freeipa packages while keeping dependencies"
   shell: "rpm -e --nodeps '{{ item }}'"
