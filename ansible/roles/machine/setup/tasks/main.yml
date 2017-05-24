@@ -1,0 +1,6 @@
+---
+- include: configuration.yml
+- include: setup_rng.yml
+- include: install_packages.yml
+- include: manage_ssh_keys.yml
+

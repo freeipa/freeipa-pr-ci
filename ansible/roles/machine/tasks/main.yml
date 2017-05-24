@@ -1,0 +1,13 @@
+---
+- include_role:
+    name: machine/setup
+  tags: template
+
+- include_role:
+    name: machine/workarounds
+  tags: template
+
+- include_role:
+    name: machine/cleanup
+  tags: template
+
