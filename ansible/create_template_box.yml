@@ -2,7 +2,7 @@
 - hosts: runner
   name: "prepare vagrant box"
   roles:
-    - box_prepare
+    - box/prepare
 
 # HACK: workaround to install Python2 that is still required by Ansible
 - hosts: image_box
@@ -17,9 +17,9 @@
   name: "modify vagrant box template"
   roles:
     - role: builder
-    - role: machine_template
+    - role: machine
 
 - hosts: runner
   name: "package template box"
   roles:
-    - box_package
+    - box/package
