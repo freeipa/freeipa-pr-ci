@@ -1,0 +1,24 @@
+---
+# https://bugzilla.redhat.com/show_bug.cgi?id=1452881
+#
+# If nfs-utils is installed and nfs in not started,
+# ipa-server-install would fail with:
+#
+#     [11/22]: configuring Gssproxy
+#
+# Command '/bin/systemctl restart gssproxy.service' returned non-zero exit status 1
+#
+# GSS-Proxy is not supported by this kernel since file /proc/net/rpc/use-gss-proxy could not be found: 2 (No such file or directory)
+#
+
+- name: "check if nfs-utils is installed"
+  shell: rpm -q nfs-utils
+  register: rpm_check
+
+- name: "start&enable nfs service to avoid gssproxy issue"
+  service:
+    name: nfs
+    enabled: yes
+    state: started
+  when: rpm_check.rc == 0
+
