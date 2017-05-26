@@ -23,6 +23,12 @@ export SYSTEMD_PAGER=cat
 
 # Make sure we have clean vagrant environment
 vagrant destroy
+if [ $? -ne 0 ]; then
+    # If previous test run didn't end properly in time, kill it
+    pkill -9 bin/vagrant
+    systemctl restart libvirtd
+    vagrant destroy
+fi
 
 # Execute tests
 date
