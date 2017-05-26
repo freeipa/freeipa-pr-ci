@@ -30,9 +30,21 @@ if [ $? -ne 0 ]; then
     vagrant destroy
 fi
 
+# Download new vagrant box if needed
+../scripts/download-box
+if [ $? -ne 0 ]; then
+    echo "===== Box download failed =====" 1>&2
+    exit 1
+fi
+
+# TODO Handle timeout properly and gracefully; attempt retry?
+timeout $((15*60)) vagrant up --parallel
+if [ $? -ne 0 ]; then
+    echo "===== Provisioning timed out =====" 1>&2
+    exit 1
+fi
+
 # Execute tests
-date
-vagrant up --parallel
 vagrant ssh -c "IPATEST_YAML_CONFIG=/vagrant/topology/ipa-test-config.yaml ipa-run-tests $1 --verbose --logging-level=debug 1>/vagrant/$log_dir/run.log --logfile-dir=/vagrant/$log_dir 2>&1"
 
 vagrant destroy

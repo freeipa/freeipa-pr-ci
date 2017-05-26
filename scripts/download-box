@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Check if vargant has to download new box
+box=$(
+    grep -e 'vm.box\s\?=' topology/Vagrantfile | \
+    sed 's/[^"]\+"//' | \
+    sed 's/".*//')
+box_version=$(
+    grep -e 'vm.box_version\s\?=' topology/Vagrantfile | \
+    sed 's/[^"]\+"//' | \
+    sed 's/".*//')
+
+box_exists=$(
+    vagrant box list | \
+    grep "$box" | \
+    grep '(libvirt,' | \
+    grep -e ",\s\?$box_version)")
+
+if [ $? -ne 0 ]; then
+    timeout $((30*60)) vagrant box add $box --box-version $box_version --provider libvirt
+    if [ $? -eq 124 ]; then
+        # download timed out -> out of disk space?
+        # TODO: purge old versions
+        exit 1
+    fi
+fi
+
+exit 0
