@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# Prepend the current time to all input lines
+
+while IFS= read -r line; do
+    echo "$(date +'%Y-%m-%d %H:%M:%S')  $line"
+done
+

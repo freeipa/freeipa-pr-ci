@@ -3,6 +3,9 @@
 # Execute from the topology directory
 cd "$(dirname "$0")/topology"
 
+# Make addlogtime utility script available for ipa-run-tests
+cp ../scripts/addlogtime ./addlogtime
+
 log_dir=logs/$(date +"%F-%H%M%S")
 mkdir -p ../$log_dir
 
@@ -18,41 +21,43 @@ exec 1>../$log_dir/vagrant.log 2>&1
 # Display executed commands 
 set -x
 
-# Prevent systemd from using pager (breaks automation)
-export SYSTEMD_PAGER=cat
+main() {
+    # Prevent systemd from using pager (breaks automation)
+    export SYSTEMD_PAGER=cat
 
-# Make sure we have clean vagrant environment
-vagrant destroy
-if [ $? -ne 0 ]; then
-    # If previous test run didn't end properly in time, kill it
-    pkill -9 bin/vagrant
-    systemctl restart libvirtd
     vagrant destroy
-fi
+    if [ $? -ne 0 ]; then
+        # If previous test run didn't end properly in time, kill it
+        pkill -9 bin/vagrant
+        systemctl restart libvirtd
+        vagrant destroy
+    fi
 
-# Download new vagrant box if needed
-../scripts/download-box
-if [ $? -ne 0 ]; then
-    echo "===== Box download failed =====" 1>&2
-    exit 1
-fi
+    # Download new vagrant box if needed
+    ../scripts/download-box
+    if [ $? -ne 0 ]; then
+        echo "===== Box download failed ====="
+        exit 1
+    fi
 
-# TODO Handle timeout properly and gracefully; attempt retry?
-timeout $((15*60)) vagrant up --parallel
-if [ $? -ne 0 ]; then
-    echo "===== Provisioning timed out =====" 1>&2
-    exit 1
-fi
+    # TODO Handle timeout properly and gracefully; attempt retry?
+    timeout $((15*60)) vagrant up --parallel
+    if [ $? -ne 0 ]; then
+        echo "===== Provisioning timed out ====="
+        exit 1
+    fi
 
-# Execute tests
-vagrant ssh -c "IPATEST_YAML_CONFIG=/vagrant/topology/ipa-test-config.yaml ipa-run-tests $1 --verbose --logging-level=debug 1>/vagrant/$log_dir/run.log --logfile-dir=/vagrant/$log_dir 2>&1"
+    # Execute tests
+    vagrant ssh -c "IPATEST_YAML_CONFIG=/vagrant/topology/ipa-test-config.yaml ipa-run-tests $1 --verbose --logging-level=debug --logfile-dir=/vagrant/$log_dir | /vagrant/addlogtime >> /vagrant/$log_dir/run.log"
 
-vagrant destroy
-date
+    vagrant destroy
 
-# Stop logging to files
-exec 2>&4 1>&3
+    # Stop logging to files
+    exec 2>&4 1>&3
 
-# Compress the logs to save storage space
-find ../$log_dir -type f ! -name '*.gz' -exec gzip "{}" \;
+    # Compress the logs to save storage space
+    find ../$log_dir -type f ! -name '*.gz' -exec gzip "{}" \;
+}
+
+main | ../scripts/addlogtime >> ../$log_dir/vagrant.log
 
