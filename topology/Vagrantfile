@@ -40,6 +40,10 @@ Vagrant.configure(2) do |config|
             type: "bridge"
     end
 
+    config.vm.provision :ansible do |ansible|
+        ansible.playbook = "../ansible/provision.yml"
+    end
+
     config.vm.define "controller" , primary: true do |controller|
         controller.vm.provider "libvirt" do |domain,override|
             # Less resources needed for controller
@@ -50,21 +54,7 @@ Vagrant.configure(2) do |config|
                 ip: "#{NETWORK}.100"
         end
 
-        controller.vm.provision "shell", inline: <<-SHELL
-    [ "$(ls -A /vagrant/topology/rpms)" ] && sudo dnf install /vagrant/topology/rpms/*.rpm --best --allowerasing -y
-sudo echo '127.0.0.1  localhost' > /etc/hosts
-sudo echo '::1  localhost' >> /etc/hosts
-sudo echo '192.168.101.100 controller.ipa.test' >> /etc/hosts
-sudo echo '192.168.101.101 master.ipa.test' >> /etc/hosts
-sudo echo '192.168.101.102 replica1.ipa.test' >> /etc/hosts
-sudo echo '192.168.101.103 replica2.ipa.test' >> /etc/hosts
-sudo echo '192.168.101.104 client1.ipa.test' >> /etc/hosts
-sudo echo 'search ipa.test' > /etc/resolv.conf
-sudo echo 'nameserver 192.168.101.101' >> /etc/resolv.conf
-sudo echo 'nameserver 192.168.101.102' >> /etc/resolv.conf
-sudo echo 'nameserver 192.168.101.103' >> /etc/resolv.conf
-sudo hostnamectl set-hostname controller.ipa.test
-SHELL
+        controller.vm.hostname = "controller.ipa.test"
     end
 
 
@@ -74,21 +64,7 @@ SHELL
                 ip: "#{NETWORK}.101"
         end
 
-        master.vm.provision "shell", inline: <<-SHELL
-[ "$(ls -A /vagrant/topology/rpms)" ] && sudo dnf install /vagrant/topology/rpms/*.rpm --best --allowerasing -y
-sudo echo '127.0.0.1  localhost' > /etc/hosts
-sudo echo '::1  localhost' >> /etc/hosts
-sudo echo '192.168.101.100 controller.ipa.test' >> /etc/hosts
-sudo echo '192.168.101.101 master.ipa.test' >> /etc/hosts
-sudo echo '192.168.101.102 replica1.ipa.test' >> /etc/hosts
-sudo echo '192.168.101.103 replica2.ipa.test' >> /etc/hosts
-sudo echo '192.168.101.104 client1.ipa.test' >> /etc/hosts
-sudo echo 'search ipa.test' > /etc/resolv.conf
-sudo echo 'nameserver 192.168.101.101' >> /etc/resolv.conf
-sudo echo 'nameserver 192.168.101.102' >> /etc/resolv.conf
-sudo echo 'nameserver 192.168.101.103' >> /etc/resolv.conf
-sudo hostnamectl set-hostname master.ipa.test
-SHELL
+        master.vm.hostname = "master.ipa.test"
     end
 
 
@@ -98,21 +74,7 @@ SHELL
                 ip: "#{NETWORK}.102"
         end
 
-        replica1.vm.provision "shell", inline: <<-SHELL
-[ "$(ls -A /vagrant/topology/rpms)" ] && sudo dnf install /vagrant/topology/rpms/*.rpm --best --allowerasing -y
-sudo echo '127.0.0.1  localhost' > /etc/hosts
-sudo echo '::1  localhost' >> /etc/hosts
-sudo echo '192.168.101.100 controller.ipa.test' >> /etc/hosts
-sudo echo '192.168.101.101 master.ipa.test' >> /etc/hosts
-sudo echo '192.168.101.102 replica1.ipa.test' >> /etc/hosts
-sudo echo '192.168.101.103 replica2.ipa.test' >> /etc/hosts
-sudo echo '192.168.101.104 client1.ipa.test' >> /etc/hosts
-sudo echo 'search ipa.test' > /etc/resolv.conf
-sudo echo 'nameserver 192.168.101.101' >> /etc/resolv.conf
-sudo echo 'nameserver 192.168.101.102' >> /etc/resolv.conf
-sudo echo 'nameserver 192.168.101.103' >> /etc/resolv.conf
-sudo hostnamectl set-hostname replica1.ipa.test
-SHELL
+        replica1.vm.hostname = "replica1.ipa.test"
     end
 
 
@@ -122,21 +84,7 @@ SHELL
                 ip: "#{NETWORK}.103"
         end
 
-        replica2.vm.provision "shell", inline: <<-SHELL
-[ "$(ls -A /vagrant/topology/rpms)" ] && sudo dnf install /vagrant/topology/rpms/*.rpm --best --allowerasing -y
-sudo echo '127.0.0.1  localhost' > /etc/hosts
-sudo echo '::1  localhost' >> /etc/hosts
-sudo echo '192.168.101.100 controller.ipa.test' >> /etc/hosts
-sudo echo '192.168.101.101 master.ipa.test' >> /etc/hosts
-sudo echo '192.168.101.102 replica1.ipa.test' >> /etc/hosts
-sudo echo '192.168.101.103 replica2.ipa.test' >> /etc/hosts
-sudo echo '192.168.101.104 client1.ipa.test' >> /etc/hosts
-sudo echo 'search ipa.test' > /etc/resolv.conf
-sudo echo 'nameserver 192.168.101.101' >> /etc/resolv.conf
-sudo echo 'nameserver 192.168.101.102' >> /etc/resolv.conf
-sudo echo 'nameserver 192.168.101.103' >> /etc/resolv.conf
-sudo hostnamectl set-hostname replica2.ipa.test
-SHELL
+        replica2.vm.hostname = "replica2.ipa.test"
     end
 
 
@@ -150,21 +98,7 @@ SHELL
                 ip: "#{NETWORK}.104"
         end
 
-        client1.vm.provision "shell", inline: <<-SHELL
-[ "$(ls -A /vagrant/topology/rpms)" ] && sudo dnf install /vagrant/topology/rpms/*.rpm --best --allowerasing -y
-sudo echo '127.0.0.1  localhost' > /etc/hosts
-sudo echo '::1  localhost' >> /etc/hosts
-sudo echo '192.168.101.100 controller.ipa.test' >> /etc/hosts
-sudo echo '192.168.101.101 master.ipa.test' >> /etc/hosts
-sudo echo '192.168.101.102 replica1.ipa.test' >> /etc/hosts
-sudo echo '192.168.101.103 replica2.ipa.test' >> /etc/hosts
-sudo echo '192.168.101.104 client1.ipa.test' >> /etc/hosts
-sudo echo 'search ipa.test' > /etc/resolv.conf
-sudo echo 'nameserver 192.168.101.101' >> /etc/resolv.conf
-sudo echo 'nameserver 192.168.101.102' >> /etc/resolv.conf
-sudo echo 'nameserver 192.168.101.103' >> /etc/resolv.conf
-sudo hostnamectl set-hostname client1.ipa.test
-SHELL
-    end
+        client1.vm.hostname = "client1.ipa.test"
+   end
 
 end

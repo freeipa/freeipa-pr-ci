@@ -1,0 +1,7 @@
+127.0.0.1  localhost
+::1  localhost
+192.168.101.100 controller.ipa.test
+192.168.101.101 master.ipa.test
+192.168.101.102 replica1.ipa.test
+192.168.101.103 replica2.ipa.test
+192.168.101.104 client1.ipa.test

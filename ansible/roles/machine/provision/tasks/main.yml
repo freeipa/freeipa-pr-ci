@@ -1,0 +1,4 @@
+---
+- include: install_freeipa_packages.yml
+- include: modify_hosts_file.yml
+- include: modify_resolv_conf.yml

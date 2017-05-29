@@ -1,0 +1,11 @@
+---
+- name: "remove existing /etc/resolv.conf"
+  file:
+    path: /etc/resolv.conf
+    state: absent
+
+- name: "create /etc/resolv.conf file from template"
+  copy:
+    src: resolv.conf
+    dest: /etc/resolv.conf
+
