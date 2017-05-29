@@ -2,11 +2,11 @@
 
 # Check if vargant has to download new box
 box=$(
-    grep -e 'vm.box\s\?=' topology/Vagrantfile | \
+    grep -e 'vm.box\s\?=' Vagrantfile | \
     sed 's/[^"]\+"//' | \
     sed 's/".*//')
 box_version=$(
-    grep -e 'vm.box_version\s\?=' topology/Vagrantfile | \
+    grep -e 'vm.box_version\s\?=' Vagrantfile | \
     sed 's/[^"]\+"//' | \
     sed 's/".*//')
 
