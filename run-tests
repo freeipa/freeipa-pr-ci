@@ -42,14 +42,14 @@ main() {
     # TODO Handle timeout properly and gracefully; attempt retry?
     timeout $((10*60)) vagrant up --parallel
     if [ $? -ne 0 ]; then
-        echo "<3>Provisioning (vagrant up) timed out"
+        echo "<3>Provisioning (vagrant up) failed (timed out?)"
         exit 1
     fi
 
     ../scripts/fix-keys-permissions
     timeout $((10*60)) ansible-playbook -i hosts ../ansible/provision.yml
     if [ $? -ne 0 ]; then
-        echo "<3>Provisioning (ansible) timed out"
+        echo "<3>Provisioning (ansible) failed (missing rpms?, timed out?)"
         exit 1
     fi
 
