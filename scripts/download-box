@@ -1,12 +1,16 @@
 #!/bin/bash
 
 # Check if vargant has to download new box
+
+VAGRANTFILE=$(dirname -- "$0")/../topology/Vagrantfile
+
 box=$(
-    grep -e 'vm.box\s\?=' Vagrantfile | \
+    grep -e 'vm.box\s\?=' $VAGRANTFILE | \
     sed 's/[^"]\+"//' | \
     sed 's/".*//')
+
 box_version=$(
-    grep -e 'vm.box_version\s\?=' Vagrantfile | \
+    grep -e 'vm.box_version\s\?=' $VAGRANTFILE | \
     sed 's/[^"]\+"//' | \
     sed 's/".*//')
 
