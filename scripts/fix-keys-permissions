@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Private key used to connect to VMs is kept in the git repo.
+# Git repo doesn't keep file permissions and ansible will fail when
+# attempting to use the private key file, because the default 
+# permissions are too permissive.
+
+# This script restricts the permission of the keys folder
+
+KEYS_DIR=$(dirname -- "$0")/../keys
+
+find $KEYS_DIR -type f ! -name "*.pub" -exec chmod 600 {} \;
+

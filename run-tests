@@ -46,6 +46,7 @@ main() {
         exit 1
     fi
 
+    ../scripts/fix-keys-permissions
     timeout $((10*60)) ansible-playbook -i hosts ../ansible/provision.yml
     if [ $? -ne 0 ]; then
         echo "<3>Provisioning (ansible) timed out"
