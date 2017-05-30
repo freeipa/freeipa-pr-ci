@@ -66,5 +66,5 @@ main() {
     find ../$log_dir -type f ! -name '*.gz' -exec gzip "{}" \;
 }
 
-main | systemd-cat -t 'ipaci-provision' -p debug
+main "$@" | systemd-cat -t 'ipaci-provision' -p debug
 
