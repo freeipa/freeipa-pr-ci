@@ -6,7 +6,7 @@ taskid=$(uuidgen)
 cd "$(dirname "$0")/topology"
 
 log_dir=logs/$(date +"%F-%H%M%S")
-mkdir -p ../$log_dir
+mkdir -p $log_dir
 
 # Prevent systemd from using pager (breaks automation)
 export SYSTEMD_PAGER=cat
@@ -17,7 +17,7 @@ set -x
 collect_log() {
     # get PID from task UUID
     pid=$(journalctl -o short-iso --no-hostname -t $1 | grep $taskid | head -n 1 | cut -d "[" -f2 | cut -d "]" -f1)
-    journalctl -o short-iso --no-hostname -t $1 _PID=$pid > ../$log_dir/$1.log
+    journalctl -o short-iso --no-hostname -t $1 _PID=$pid > $log_dir/$1.log
 }
 
 
@@ -54,7 +54,7 @@ main() {
     fi
 
     # Execute tests
-    vagrant ssh -c "echo $taskid; IPATEST_YAML_CONFIG=/vagrant/topology/ipa-test-config.yaml ipa-run-tests $1 --verbose --logging-level=debug --logfile-dir=/vagrant/$log_dir" | systemd-cat -t 'ipaci-run' -p debug
+    vagrant ssh -c "echo $taskid; IPATEST_YAML_CONFIG=/vagrant/ipa-test-config.yaml ipa-run-tests $1 --verbose --logging-level=debug --logfile-dir=/vagrant/$log_dir" | systemd-cat -t 'ipaci-run' -p debug
 
     vagrant destroy
 
@@ -63,7 +63,12 @@ main() {
     collect_log ipaci-provision 
 
     # Compress the logs to save storage space
-    find ../$log_dir -type f ! -name '*.gz' -exec gzip "{}" \;
+    find $log_dir -type f ! -name '*.gz' -exec gzip "{}" \;
+
+    # Move logs to long term storage
+    # TODO Upload to remote storage
+    mkdir -p ../logs
+    mv $log_dir ../logs/
 }
 
 main "$@" | systemd-cat -t 'ipaci-provision' -p debug

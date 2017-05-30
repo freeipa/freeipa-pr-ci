@@ -1,5 +1,5 @@
 ---
-- shell: ls /vagrant/topology/rpms/*.rpm
+- shell: ls /vagrant/rpms/*.rpm
   register: rpms
 
 - name: "install rpms"
