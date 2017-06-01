@@ -39,41 +39,60 @@ main() {
     # Download new vagrant box if needed
     ../scripts/download-box
     if [ $? -ne 0 ]; then
-        echo "<3>Box download failed"
-        exit 1
+        echo "<2>Box download failed"
+        return 64
     fi
 
     # TODO Handle timeout properly and gracefully; attempt retry?
-    timeout $((10*60)) vagrant up --parallel
+    timeout $((10*60)) vagrant up --parallel 2>&1
     if [ $? -ne 0 ]; then
-        echo "<3>Provisioning (vagrant up) failed (timed out?)"
-        exit 1
+        echo "<2>Provisioning (vagrant up) failed (timed out?)"
+        return 65
     fi
 
     ../scripts/fix-keys-permissions
-    timeout $((10*60)) ansible-playbook -i hosts.run-tests ../ansible/provision.yml
+    timeout $((10*60)) ansible-playbook -i hosts.run-tests ../ansible/provision.yml 2>&1
     if [ $? -ne 0 ]; then
-        echo "<3>Provisioning (ansible) failed (missing rpms?, timed out?)"
-        exit 1
+        echo "<2>Provisioning (ansible) failed (missing rpms?, timed out?)"
+        return 66
     fi
 
     # Execute tests
-    vagrant ssh -c "echo '<6>$taskid'; echo '<6>Executing tests: $1'; IPATEST_YAML_CONFIG=/vagrant/ipa-test-config.yaml ipa-run-tests $1 --verbose --logging-level=debug --logfile-dir=/vagrant/$log_dir" | systemd-cat -t 'ipaci-run' -p debug
+    vagrant ssh -c "echo '<6>$taskid'; echo '<6>Executing tests: $1'; IPATEST_YAML_CONFIG=/vagrant/ipa-test-config.yaml ipa-run-tests $1 --verbose --logging-level=debug --logfile-dir=/vagrant/$log_dir; echo \$? > /vagrant/$log_dir/pytest.exit" | systemd-cat -t 'ipaci-run' -p debug
 
-    vagrant destroy
-
-    # Collect journal from this run
-    collect_log ipaci-run
-    collect_log ipaci-provision 
-
-    # Compress the logs to save storage space
-    find $log_dir -type f ! -name '*.gz' -exec gzip "{}" \;
-
-    # Move logs to long term storage
-    # TODO Upload to remote storage
-    mkdir -p ../logs
-    mv $log_dir ../logs/
+    # Pytest exit codes: https://docs.pytest.org/en/latest/usage.html#possible-exit-codes
+    pytest_exit=$(cat $log_dir/pytest.exit)
+    case $pytest_exit in
+    0)
+        echo '<5>All tests passed'
+        return 0
+        ;;
+    1)
+        echo '<3>Tests are failing'
+        return 1
+        ;;
+    *)
+        echo '<2>Pytest error'
+        return 67  # Generic pytest error
+        ;;
+    esac
 }
 
-main "$@" | systemd-cat -t 'ipaci-provision' -p debug
+main "$@" | systemd-cat -t 'ipaci-run' -p debug
+exit_code=${PIPESTATUS[0]}
+
+vagrant destroy 1>/dev/null 2>&1
+
+# Collect journal from this run
+collect_log ipaci-run
+
+# Compress the logs to save storage space
+find $log_dir -type f ! -name '*.gz' -exec gzip "{}" \;
+
+# Move logs to long term storage
+# TODO Upload to remote storage
+mkdir -p ../logs
+mv $log_dir ../logs/
+
+exit $exit_code
 
