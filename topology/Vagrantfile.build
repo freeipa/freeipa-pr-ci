@@ -1,0 +1,47 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+#
+NETWORK="192.168.102" # first three octets
+DOMAIN="ipa.test"
+#VM_NAME_PREFIX = "root"
+
+Vagrant.configure(2) do |config|
+
+    config.ssh.username = "root"
+
+    config.vm.synced_folder "./", "/vagrant",
+        type: "nfs",
+        nfs_udp: false
+
+    config.vm.box = "freeipa/ci-master-f25"
+    config.vm.box_version = "0.2.3"
+
+    config.vm.provider "libvirt" do |domain, override|
+        # Nested virtualization options
+        domain.nested = true
+        domain.cpu_mode = "host-passthrough"
+
+        # VMs are thrown away in case of power outage
+        domain.volume_cache = "unsafe"
+
+        # Allow remote connections to VNC server
+        domain.graphics_type = "vnc"
+        domain.graphics_ip = "0.0.0.0"  
+
+        # Add connection to public network
+        override.vm.network "public_network",
+            dev: "virbr0",
+            mode: "bridge",
+            type: "bridge"
+    end
+
+    config.vm.define "builder"  do |master|
+        master.vm.provider "libvirt" do |domain,override|
+            domain.cpus = 4
+            domain.memory = 4096
+            override.vm.network "private_network",
+                ip: "#{NETWORK}.101"
+        end
+    end
+
+end

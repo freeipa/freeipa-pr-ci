@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 taskid=$(uuidgen)
 
 # Execute from the topology directory
@@ -33,8 +34,8 @@ main() {
     fi
 
     # TODO Fix this ugly hack and do it properly when migrating scripts to Python
-    # Use Vagrantfile for run-tests
-    cp Vagrantfile.run-tests Vagrantfile
+    # Use Vagrantfile for build
+    cp Vagrantfile.build Vagrantfile
 
     # Download new vagrant box if needed
     ../scripts/download-box
@@ -51,20 +52,19 @@ main() {
     fi
 
     ../scripts/fix-keys-permissions
-    timeout $((10*60)) ansible-playbook -i hosts.run-tests ../ansible/provision.yml
+    timeout $((10*60)) ansible-playbook -e git_pr=$1 -i hosts.build ../ansible/build.yml
     if [ $? -ne 0 ]; then
-        echo "<3>Provisioning (ansible) failed (missing rpms?, timed out?)"
+        echo "<3>Build failed (timed out?)"
         exit 1
     fi
-
-    # Execute tests
-    vagrant ssh -c "echo '<6>$taskid'; echo '<6>Executing tests: $1'; IPATEST_YAML_CONFIG=/vagrant/ipa-test-config.yaml ipa-run-tests $1 --verbose --logging-level=debug --logfile-dir=/vagrant/$log_dir" | systemd-cat -t 'ipaci-run' -p debug
 
     vagrant destroy
 
     # Collect journal from this run
-    collect_log ipaci-run
-    collect_log ipaci-provision 
+    collect_log ipaci-build
+
+    # Collect logs from build dir
+    cp build/*.log $log_dir/
 
     # Compress the logs to save storage space
     find $log_dir -type f ! -name '*.gz' -exec gzip "{}" \;
@@ -75,5 +75,4 @@ main() {
     mv $log_dir ../logs/
 }
 
-main "$@" | systemd-cat -t 'ipaci-provision' -p debug
-
+main "$@" | systemd-cat -t 'ipaci-build' -p debug

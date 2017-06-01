@@ -1,4 +1,3 @@
-
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 #
@@ -24,7 +23,7 @@ Vagrant.configure(2) do |config|
         domain.cpus = 1
         domain.memory = 2048
 
-        # Nested options
+        # Nested virtualization options
         domain.nested = true
         domain.cpu_mode = "host-passthrough"
 

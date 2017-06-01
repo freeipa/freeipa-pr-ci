@@ -1,8 +1,18 @@
 ---
-- name: "clone FreeIPA git repo"
+- name: "clone git repo and checkout PR's head"
   git:
-    repo: "{{ freeipa_git_repo }}"
+    repo: "{{ git_repo }}"
     dest: /root/freeipa
-    version: "{{ freeipa_git_branch }}"
-    depth: 1
+    version: "{{ git_version | default('pr_head') }}"
+    refspec: "pull/{{ git_pr }}/head:pr_head"
+    force: yes
+  when: git_pr is defined
+
+- name: "checkout git repo and checkout version"
+  git:
+    repo: "{{ git_repo }}"
+    dest: /root/freeipa
+    version: "{{ git_version | default('master') }}"
+    force: yes
+  when: git_pr is undefined
 

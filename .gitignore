@@ -2,3 +2,8 @@
 ansible/vault-password
 rpms/*.rpm
 logs/
+
+topology/.vagrant
+topology/build
+topology/rpms
+topology/Vagrantfile
