@@ -2,6 +2,9 @@
 
 # Execute build and run test on PR given as argument
 
+# Execute from the topology directory
+cd "$(dirname "$0")"
+
 ./build $1
 if [ $? -ne 0 ]; then
     exit $?
