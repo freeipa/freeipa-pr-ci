@@ -1,12 +1,12 @@
 ---
-- name: "clone git repo and checkout PR's head"
+- name: "clone git repo and checkout refspec's head"
   git:
     repo: "{{ git_repo }}"
     dest: /root/freeipa
-    version: "{{ git_version | default('pr_head') }}"
-    refspec: "pull/{{ git_pr }}/head:pr_head"
+    version: "{{ git_version | default('build') }}"
+    refspec: "{{ git_refspec }}:build"
     force: yes
-  when: git_pr is defined
+  when: git_refspec is defined
 
 - name: "checkout git repo and checkout version"
   git:
@@ -14,5 +14,5 @@
     dest: /root/freeipa
     version: "{{ git_version | default('master') }}"
     force: yes
-  when: git_pr is undefined
+  when: git_refspec is undefined
 
