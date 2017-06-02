@@ -53,8 +53,8 @@ main() {
 
     ../scripts/fix-keys-permissions
     timeout $((10*60)) ansible-playbook -e git_refspec=$1 -i hosts.build ../ansible/build.yml 2>&1
-    rpms_exist=$(ls build/rpms/*.rpm)
-    if [ $rpms_exist -ne 0 ]; then
+    ls build/rpms/*.rpm 1>/dev/null 2>&1
+    if [ $? -ne 0 ]; then
         echo "<3>Build failed (timed out?)"
         return 1
     else
