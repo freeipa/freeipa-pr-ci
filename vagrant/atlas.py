@@ -1,17 +1,29 @@
 #!/usr/bin/python
 
-from .base import Context, CRUD, Mapping
-
 import collections
+import os
 import requests
+import timeit
+import tqdm
 from urlparse import urljoin
 import logging
+
+logger = logging.getLogger('atlas')
+
+
+def chunked_file_with_progressbar(f):
+    pb = tqdm.tqdm(total=os.stat(f.name).st_size, unit='B', unit_scale=True)
+    for chunk in f:
+        pb.update(len(chunk))
+        yield chunk
+    pb.close()
 
 
 class CRUD(object):
     path_template = {}
     primary_keys = set()
     data_keys = set()
+    data_name = None
 
     @classmethod
     def _path(cls, method, **keys):
@@ -23,11 +35,20 @@ class CRUD(object):
 
     @classmethod
     def _prepare_data(cls, **kwargs):
-        return {k: v for k, v in kwargs.items() if k in cls.data_keys and v}
+        return {cls.data_name: {
+            k: v for k, v in kwargs.items() if k in cls.data_keys and v
+        }}
 
     def _refresh(self):
         path = self._path('read', **self.keys)
-        self.data = self.context.get(path)
+        result = self.context.get(path)
+        if 'success' in result and not result['success']:
+            err_msg = ' '.join(result['errors'])
+            logger.error('Failed to retrieve {}: {}'.format(
+                self.__class__.__name__, err_msg))
+            raise RuntimeError(err_msg)
+
+        self.data = result
 
     def __init__(self, context, **kwargs):
         self.context = context
@@ -41,12 +62,10 @@ class CRUD(object):
         data = cls._prepare_data(**kwargs)
 
         try:
-            return context.post(path, data)
+            context.post(path, data)
         except Exception as e:
             logger.error('Failed to create {}: {}'.format(cls.__name__, e))
             raise
-
-        return cls(context, **keys)
 
     def update(self, **kwargs):
         path = self._path('update', **self.keys)
@@ -94,7 +113,7 @@ class Mapping(collections.Mapping):
 
     def __init__(self, parent):
         self.parent = parent
-        
+
     def __getitem__(self, key):
         try:
             return self.obj_cls(self.parent, key)
@@ -110,21 +129,6 @@ class Mapping(collections.Mapping):
         return len(self.parent.data[self.obj_key])
 
 
-class BoxVersions(Mapping):
-    obj_cls = BoxVersion
-    obj_key = 'versions'
-    id_key = 'version'
-
-    def max(self):
-        return max(self, key=lambda v: [int(i) for i in v.split('.')])
-
-
-class BoxProviders(Mapping):
-    obj_cls = BoxProvider
-    obj_key = 'providers'
-    id_key = 'name'
-
-
 class BoxProvider(CRUD):
     path_template = {
         'create': 'api/v1/box/{username}/{name}/version/{version}/providers',
@@ -135,11 +139,18 @@ class BoxProvider(CRUD):
         'download': '{username}/{name}/version/{version}/providers/{provider}.box',
     }
     primary_keys = {'username', 'name', 'version', 'provider'}
-    data_keys = primary_keys.union({'url'})
+    data_keys = {'provider', 'url'}
+    data_name = 'provider'
+
+    @classmethod
+    def _prepare_data(cls, **kwargs):
+        data = super(BoxProvider, cls)._prepare_data(**kwargs)
+        data[cls.data_name]['name'] = data[cls.data_name].pop('provider')
+        return data
 
     @classmethod
     def create(cls, boxversion, provider, url=None):
-        return super(BoxProvider, cls).create(boxversion.context
+        return super(BoxProvider, cls).create(boxversion.context,
             name=boxversion.keys['name'], username=boxversion.keys['username'],
             version=boxversion.keys['version'], provider=provider, url=url)
 
@@ -158,7 +169,14 @@ class BoxProvider(CRUD):
 
         try:
             with open(boxpath) as boxfile:
-                return self.context.put(url['upload_path'], data=boxfile)
+                upload_start = timeit.default_timer()
+
+                self.context.put(url['upload_path'],
+                    data=chunked_file_with_progressbar(boxfile))
+
+                upload_end = timeit.default_timer()
+                logger.info('Upload took {:0.2f} seconds'.format(
+                    upload_end-upload_start))
         except Exception as e:
             logger.error('Failed to upload box: {}'.format(e))
             raise
@@ -176,6 +194,12 @@ class BoxProvider(CRUD):
             raise
 
 
+class BoxProviders(Mapping):
+    obj_cls = BoxProvider
+    obj_key = 'providers'
+    id_key = 'name'
+
+
 class BoxVersion(CRUD):
     path_template = {
         'create': 'api/v1/box/{username}/{name}/versions',
@@ -187,6 +211,7 @@ class BoxVersion(CRUD):
     }
     primary_keys = {'username', 'name', 'version'}
     data_keys = {'version', 'description'}
+    data_name = 'version'
 
     @classmethod
     def create(cls, box, version, description=None):
@@ -201,18 +226,18 @@ class BoxVersion(CRUD):
         self.providers = BoxProviders(self)
 
     def release(self):
-        self._path('release', **self.keys)
+        path = self._path('release', **self.keys)
         try:
-            return self.context.put(_path)
+            self.context.put(path)
         except Exception as e:
             logger.error('Failed to release {}: {}'. format(
                 self.__class__.__name__, e))
             raise
 
     def revoke(self):
-        self._path('revoke', **self.keys)
+        path = self._path('revoke', **self.keys)
         try:
-            return self.context.put(_path)
+            self.context.put(path)
         except Exception as e:
             logger.error('Failed to release {}: {}'. format(
                 self.__class__.__name__, e))
@@ -221,14 +246,25 @@ class BoxVersion(CRUD):
     def add_provider(self, provider, filename=None, url=None):
         if url and filename:
             raise RuntimeError("filename and url can't be specified together")
-        elif url:
-            return BoxProvider.create(self, provider, url)
-        elif filename:
-            boxprovider = BoxProvider.create(self, provider)
-            boxprovider.upload(filename)
-            return boxprovider
         else:
-            raise RuntimeError("filename or url must be specified")
+            BoxProvider.create(self, provider)
+            boxprovider = BoxProvider(self, provider)
+
+            if url:
+                boxprovider.update(url=url)
+            elif filename:
+                boxprovider.upload(filename)
+
+            return boxprovider
+
+
+class BoxVersions(Mapping):
+    obj_cls = BoxVersion
+    obj_key = 'versions'
+    id_key = 'version'
+
+    def max(self):
+        return max(self, key=lambda v: [int(i) for i in v.split('.')])
 
 
 class Box(CRUD):
@@ -241,20 +277,27 @@ class Box(CRUD):
     primary_keys = {'username', 'name'}
     data_keys = primary_keys.union({
         'short_description', 'description', 'is_private'})
+    data_name = 'box'
 
     @classmethod
-    def create(self, context, name, username, short_description=None,
+    def create(cls, context, name, username, short_description=None,
                description=None, is_private=None):
-        return super(Box, self).create(context,
+        if not username:
+            username = context.username
+
+        return super(Box, cls).create(context,
             name=name, username=username, short_description=short_description,
             description=description, is_private=is_private)
 
-    def __init__(self, context, name, username):
+    def __init__(self, context, name, username=None):
+        if not username:
+            username = context.username
         super(Box, self).__init__(context, name=name, username=username)
         self.versions = BoxVersions(self)
 
     def add_version(self, version, description=None):
-        return BoxVersion.create(self, version, description)
+        BoxVersion.create(self, version, description)
+        return BoxVersion(self, version)
 
 
 class Context(object):
@@ -265,27 +308,61 @@ class Context(object):
         self.auth_header = {'X-Atlas-Token': token}
         self.boxes = Boxes(self)
 
+    @staticmethod
+    def custom_data_encode(data):
+        exprs = []
+        ret = []
+
+        def _encode(data, chain=()):
+            for key, value in data.items():
+                if isinstance(value, dict):
+                    _encode(value, tuple(list(chain) + [key]))
+                else:
+                    exprs.append((tuple(list(chain) + [key]), value))
+
+        _encode(data)
+
+        for var in exprs:
+            path, value = var
+            keys = ''.join(['[{}]'.format(k) for k in path[1:]])
+            var = path[0]
+            ret.append('{}{}={}'.format(var, keys, value))
+
+        return '&'.join(ret)
+
     def get(self, path, data=None):
         url = urljoin(self.base_url, path)
         logging.debug('GET: {}, {}'.format(url, data))
-        return requests.get(url, params=data, headers=self.auth_header).json()
+        response = requests.get(url, params=data, headers=self.auth_header)
+        response.raise_for_status()
+        return response.json()
 
     def post(self, path, data=None):
         url = urljoin(self.base_url, path)
+        if isinstance(data, dict):
+            data = self.custom_data_encode(data)
         logging.debug('POST: {}, {}'.format(url, data))
-        return requests.post(url, data=data, headers=self.auth_header).json()
+        response = requests.post(url, data=data, headers=self.auth_header)
+        response.raise_for_status()
+        return response.json()
 
     def put(self, path, data=None):
         url = urljoin(self.base_url, path)
+        if isinstance(data, dict):
+            data = self.custom_data_encode(data)
+
         logging.debug('PUT: {}, {}'.format(url, data))
-        return requests.put(url, data=data, headers=self.auth_header).json()
+        response = requests.put(url, data=data, headers=self.auth_header)
+        response.raise_for_status()
 
     def delete(self, path):
         url = urljoin(self.base_url, path)
         logging.debug('DELETE: {}'.format(url))
-        return requests.delete(url, headers=self.auth_header).json()
+        response = requests.delete(url, headers=self.auth_header)
+        response.raise_for_status()
 
     def add_box(self, name, username=None, short_description=None,
                 description=None, is_private=None):
-        return Box.create(self, name, username, short_description,
-                          description, is_private)
+        Box.create(self, name, username, short_description,
+                   description, is_private)
+        return Box(self, name, username)

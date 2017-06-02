@@ -37,41 +37,71 @@ def _get_user_config(user_config_path=None):
 
 
 def create_parser():
-    parser = argparse.ArgumentParser('Upload vagrant box to HashiCorp Atlas.')
+    parser = argparse.ArgumentParser(description='Upload vagrant box to HashiCorp Atlas.')
     parser.add_argument('name', type=str, help='name of the box visible in Atlas')
     parser.add_argument('box', type=file, help='box to upload')
-    parser.add_argument('-d', '--description', type=str)
-    parser.add_argument('-p', '--provider', type=str, default='libvirt',
+    parser.add_argument('--description', type=str)
+    parser.add_argument('--provider', type=str, default='libvirt',
                         help='provider that box run on')
-    parser.add_argument('-c', '--config-file', type=str,
+    parser.add_argument('--config-file', type=str,
                         help='user configuration file')
 
-    group_version = parser.add_mutually_exclusive_group()
-    group.add_argument('-v', '--version', type=str, default='revision',
+    group = parser.add_argument_group('Logging')
+    group.add_argument('--log-level', default='warning',
+                       choices=['error', 'warning', 'info', 'debug'])
+    group.add_argument('--log-facility', type=str, nargs='*')
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--version', action='store',
                        help='upload Box as this version')
-    group.add_argument('-M', '--bump-major', type=bool, default=False,
-                       action='store_const', const='major', target='version',
+    group.add_argument('--bump-major', action='store_const',
+                       const='major', dest='version',
                        help='use latest box version and bump major')
-    group.add_argument('-m', '--bump-minor',  type=bool, default=False,
-                       action='store_const', const='minor', target='version',
+    group.add_argument('--bump-minor', action='store_const',
+                       const='minor', dest='version',
                        help='use latest box version and bump minor')
-    group.add_argument('-r', '--bump-revision',  type=bool, default=False,
-                       action='store_const', const='revision', target='version',
+    group.add_argument('--bump-revision', action='store_const',
+                       const='revision', dest='version',
                        help='use latest box version and bump minor')
+    parser.set_defaults(version='revision')
 
     return parser
-    
+
+def get_next_version(box, box_version_arg):
+    if box_version_arg in {'major', 'minor', 'revision'}:
+        try:
+            major, minor, revision = [int(i) for i in box.versions.max().split('.')]
+        except ValueError:
+            box_version = '0.0.0'
+        else:
+            if box_version_arg == 'major':
+                major += 1
+                minor = 0
+                revision = 0
+            elif box_version_arg == 'minor':
+                minor += 1
+                revision = 0
+            elif box_version_arg == 'revision':
+                revision += 1
+
+            box_version = '{}.{}.{}'.format(major, minor, revision)
+    else:
+        box_version = box_version_arg
+
+    return box_version
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger('box_uploader')
 
     args = create_parser().parse_args()
 
-    box_name = args['name']
-    box_version = args['version']
-    box_filename = args['box'].name
-    config_file = args['config-file']
-    provider = args['provider']
+    box_name = args.name
+    box_version = args.version
+    box_filename = args.box.name
+    config_file = args.config_file
+    box_provider = args.provider
 
     user_config = _get_user_config(config_file)
 
@@ -83,28 +113,18 @@ if __name__ == '__main__':
     except KeyError:
         box = context.add_box(box_name)
 
-
-    if box_version in {'major', 'minor', 'revision'}:
-        try:
-            major, minor, revision = [int(i) for i in box.versions.max().split('.')]
-        except ValueError:
-            box_version = '0.0.0'
-        else:
-            if box_version == 'major':
-                major += 1
-                minor = 0
-                revision = 0
-            elif box_version == 'minor':
-                minor += 1
-                revision = 0
-            elif box_version == 'revision':
-                revision = +1
-
-            box_version = '{}.{}.{}'.format(major, minor, revision)
+    box_version = get_next_version(box, box_version)
 
     try:
         version = box.versions[box_version]
     except KeyError:
         version = box.add_version(box_version)
 
-    provider = version.add_provider(provider, box_filename)
+    try:
+        provider = version.providers[box_provider]
+    except KeyError:
+        provider = version.add_provider(box_provider)
+
+    provider.upload(box_filename)
+
+    version.release()
