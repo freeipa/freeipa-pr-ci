@@ -9,4 +9,3 @@ ansible/vault-password
 # Python
 *.py[cod]
 __pycache__/
-
