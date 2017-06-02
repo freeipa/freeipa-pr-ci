@@ -29,22 +29,6 @@
                                       ||              |        | .collect_logs |
                                        |--------------|        |---------------|
 
-++++++++++++++++++++++++++++++++++
-while True:
-  try:
-    pull = PullQueue.get_pull_without_tasks()
-  except NoSuchPull:
-    pass
-  else:
-    generate_tasks(pull)
-
-  try:
-    task = TaskQueue.take()
-  except NoTask:
-    pass
-  else:
-    task.execute() // job.run(), job.collect_logs()
-    task.report_result()
 """
 import abc
 import collections
@@ -239,18 +223,21 @@ class Task(object):
         Status.create(self.repo, self.pull, self.name, description, url, state)
 
 
-class Job(collections.Callable):
+class AbstractJob(collections.Callable):
     __metaclass__ = abc.ABCMeta
-    def __init__(self, cmd, target):
+    def __init__(self, cmd, build_target, depends_results=()):
         """
         @param cmd - job specific data from task definition
-        @param target - tuple of git repo url and refspec
-                        git clone target[0]
-                        git fetch origin build:target[1]
-                        git checkout build
+        @param build_target - tuple of git repo url and refspec
+                              git clone build_target[0]
+                              git fetch origin build:build_target[1]
+                              git checkout build
+        @param depends_results - dict of tuples task_name: (description, url)
         """
         self.cmd = cmd
-        self.target = target
+        self.target = build_target
+        self.depends_results = depends_results
+
 
     @abc.abstractmethod
     def __call__(self):

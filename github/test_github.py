@@ -5,14 +5,16 @@ import operator
 import pytest
 import threading
 import time
+import yaml
 
 from prci_github import get_pull_priority
 from prci_github import PullQueue, TaskQueue
-from prci_github import NoTaskAvailable, TaskAlreadyTaken, Job
+from prci_github import NoTaskAvailable, TaskAlreadyTaken, AbstractJob
 
-# GH_REPO =
-# GH_USER = 
-# GH_TOKEN =
+with open('test_github.yaml') as f:
+    gh_config = yaml.load(f)
+GH_REPO = gh_config['repo']
+GH_TOKEN = gh_config['token']
 PULL_COUNT = 10
 PRIORITY_COUNT = 3
 branch_name_template = 'test_branch_{{:0{}d}}'.format(int(math.ceil(math.log(PULL_COUNT, 10))))
@@ -45,16 +47,29 @@ def ismonotonic(seq, op):
     return True
 
 
-class J(Job):
+class J(AbstractJob):
     def __call__(self):
-        import random
-        time.sleep(random.randint(5, 30))
-        return (True, '')
+        dep_results = {}
+        for task_name, result in self.depends_results.items():
+            desc, url = result
+            dep_results['{}_description'.format(task_name)] = desc
+            dep_resutls['{}_url'.format(task_name)] = url
+
+        cmd = self.cmd.format(
+            repo_url=self.target[0],
+            pull_ref=self.target[1],
+            **dep_results
+        )
+
+        import subprocess
+        url = subprocess.check_output(build, shell=True)
+
+        return (True, url)
 
 
 @pytest.fixture(scope='module')
 def repo(request):
-    gh = github3.login(GH_USER, token=GH_TOKEN)
+    gh = github3.login(token=GH_TOKEN)
     repo = gh.create_repository(
         GH_REPO,
         has_issues=False,
@@ -130,7 +145,7 @@ class TestPRCI(object):
             "Priorities are not nonincreasing: {}".format(priorities))
 
     def test_task_queue_ordering(self, repo):
-        tq = TaskQueue(repo, 'tasks.conf', J)
+        tq = TaskQueue(repo, 'test_tasks.yaml', J)
         tq.create_tasks_for_pulls()
 
         tasks_done = []
@@ -142,7 +157,6 @@ class TestPRCI(object):
                 continue
             else:
                 task.execute()
-                task.report_result()
 
             tasks_done.append({
                 'pull_num': task.pull.number,
