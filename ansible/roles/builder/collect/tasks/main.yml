@@ -1,0 +1,5 @@
+---
+- include: prepare_directory.yml
+- include: collect_logs.yml
+- include: collect_pkgs.yml
+

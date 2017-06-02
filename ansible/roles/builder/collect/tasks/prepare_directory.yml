@@ -1,0 +1,11 @@
+---
+- name: "remove artifacts directory"
+  file:
+    path: /vagrant/build
+    state: absent
+
+- name: "create artifcats directory"
+  file:
+    path: /vagrant/build
+    state: directory
+

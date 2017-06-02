@@ -7,7 +7,7 @@
     - vagrant
     - vagrant-libvirt
     - libguestfs-tools-c  # required for vagrant package command
-    - ansible
+    - ansible  # TODO requires >= 2.3 
     - nfs-utils
     - git
     - libvirt

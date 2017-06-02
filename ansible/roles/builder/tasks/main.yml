@@ -8,6 +8,10 @@
   tags: build
 
 - include_role:
+    name: builder/collect
+  tags: build
+
+- include_role:
     name: builder/cleanup
   tags: template
 

@@ -2,4 +2,5 @@
 - hosts: builder
   roles:
     - builder/build
+    - builder/collect
 
