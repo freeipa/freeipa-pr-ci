@@ -4,5 +4,4 @@
 - include: create_spec.yml
 - include: create_sources.yml
 - include: create_rpms.yml
-- include: gather_artifacts.yml
 
