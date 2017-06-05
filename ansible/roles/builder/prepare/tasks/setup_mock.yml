@@ -22,6 +22,17 @@
     dest: /etc/mock/default.cfg
     insertbefore: '^\[fedora\]'
 
+- name: "enable tmpfs to speed up mock"
+  blockinfile:
+    block: |
+      config_opts['plugin_conf']['tmpfs_enable'] = True
+      config_opts['plugin_conf']['tmpfs_opts'] = {}
+      config_opts['plugin_conf']['tmpfs_opts']['required_ram_mb'] = 1024
+      config_opts['plugin_conf']['tmpfs_opts']['max_fs_size'] = '4g'
+      config_opts['plugin_conf']['tmpfs_opts']['mode'] = '0755'
+      config_opts['plugin_conf']['tmpfs_opts']['keep_mounted'] = False
+    dest: /etc/mock/site-defaults.cfg
+
 # TODO: optimize mock
 # https://fedoraproject.org/wiki/Using_Mock_to_test_package_builds#Speeding_up
 
