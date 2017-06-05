@@ -21,10 +21,15 @@ box_exists=$(
     grep -e ",\s\?$box_version)")
 
 if [ $? -ne 0 ]; then
-    timeout $((30*60)) vagrant box add $box --box-version $box_version --provider libvirt
+    timeout $((30*60)) vagrant box add $box --box-version $box_version --provider libvirt 2>&1
     if [ $? -eq 124 ]; then
-        # download timed out -> out of disk space?
+        # download timed out
+        echo 'vagrant box add timed out'
+        exit 1
+    elif [ $? -ne 0 ]; then
+        # download failed, most likely out of disk space to download/unpack
         # TODO: purge old versions
+        echo 'vagrant box add failed (out of disk space?)'
         exit 1
     fi
 fi
