@@ -52,7 +52,9 @@ main() {
     fi
 
     ../scripts/fix-keys-permissions
-    timeout $((20*60)) ansible-playbook -e git_refspec=$1 -i hosts.build -v ../ansible/build.yml 2>&1
+    timeout $((20*60)) ansible-playbook -e git_refspec=$1 -i hosts.build -vvv ../ansible/build.yml 2>&1
+    # TODO ansible failures should be properly addressed
+    # HACK This produces false positives when you still have old rpms in dir
     ls build/rpms/*.rpm 1>/dev/null 2>&1
     if [ $? -ne 0 ]; then
         echo "<3>Build failed (timed out?)"
