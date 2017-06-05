@@ -11,4 +11,5 @@
     - nfs-utils
     - git
     - libvirt
+    - python-github3
 
