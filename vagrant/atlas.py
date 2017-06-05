@@ -4,7 +4,7 @@ import collections
 import os
 import requests
 import timeit
-import tqdm
+import tqdm  # dnf install python{2,3}-tqdm
 from urllib import urlencode
 from urlparse import urljoin
 import logging
