@@ -37,12 +37,32 @@ def _get_user_config(user_config_path=None):
 
 
 def create_parser():
+
+    def read_from_file(path):
+        try:
+            with open(path) as f:
+                return f.read()
+        except IOError as e:
+            raise argparse.ArgumentTypeError(e)
+
     parser = argparse.ArgumentParser(description='Upload vagrant box to HashiCorp Atlas.')
     parser.add_argument('name', type=str, help='name of the box visible in Atlas')
     parser.add_argument('box', type=file, help='box to upload')
-    parser.add_argument('--description', type=str)
-    parser.add_argument('--provider', type=str, default='libvirt',
-                        help='provider that box run on')
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--box-description', type=str)
+    group.add_argument('--box-description-file', type=read_from_file, dest='box_description')
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--box-short-description', type=str)
+    group.add_argument('--box-short-description-file', type=read_from_file, dest='box_short_description')
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--version-description', type=str)
+    group.add_argument('--version-description-file', type=read_from_file, dest='version_description')
+
+    parser.add_argument('--provider', type=str,
+                        help='provider that box run on (libvirt by default)')
     parser.add_argument('--config-file', type=str,
                         help='user configuration file')
 
@@ -64,6 +84,8 @@ def create_parser():
                        const='revision', dest='version',
                        help='use latest box version and bump minor')
 
+    # defaults
+    parser.set_defaults(provider='libvirt')
     parser.set_defaults(log_level='warning')
     parser.set_defaults(version='revision')
 
@@ -108,10 +130,13 @@ if __name__ == '__main__':
     logger = logging.getLogger('box_uploader')
 
     box_name = args.name
+    box_short_description = args.box_short_description
+    box_description = args.box_description
     box_version = args.version
     box_filename = args.box.name
     config_file = args.config_file
     box_provider = args.provider
+    version_description = args.version_description
 
     user_config = _get_user_config(config_file)
 
@@ -121,14 +146,15 @@ if __name__ == '__main__':
     try:
         box = context.boxes[box_name]
     except KeyError:
-        box = context.add_box(box_name)
+        box = context.add_box(box_name, short_description=box_short_description,
+                              description=box_description)
 
     box_version = get_next_version(box, box_version)
 
     try:
         version = box.versions[box_version]
     except KeyError:
-        version = box.add_version(box_version)
+        version = box.add_version(box_version, description=version_description)
 
     try:
         provider = version.providers[box_provider]
