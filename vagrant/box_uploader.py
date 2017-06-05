@@ -47,7 +47,7 @@ def create_parser():
                         help='user configuration file')
 
     group = parser.add_argument_group('Logging')
-    group.add_argument('--log-level', default='warning',
+    group.add_argument('--log-level',
                        choices=['error', 'warning', 'info', 'debug'])
     group.add_argument('--log-facility', type=str, nargs='*')
 
@@ -63,6 +63,8 @@ def create_parser():
     group.add_argument('--bump-revision', action='store_const',
                        const='revision', dest='version',
                        help='use latest box version and bump minor')
+
+    parser.set_defaults(log_level='warning')
     parser.set_defaults(version='revision')
 
     return parser
@@ -90,12 +92,20 @@ def get_next_version(box, box_version_arg):
 
     return box_version
 
+def conv_log_level(level):
+    return {
+        'error': logging.ERROR,
+        'warning': logging.WARNING,
+        'info': logging.INFO,
+        'debug': logging.DEBUG,
+    }[level]
+
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
-    logger = logging.getLogger('box_uploader')
-
     args = create_parser().parse_args()
+
+    logging.basicConfig(level=conv_log_level(args.log_level))
+    logger = logging.getLogger('box_uploader')
 
     box_name = args.name
     box_version = args.version
