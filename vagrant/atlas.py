@@ -5,6 +5,7 @@ import os
 import requests
 import timeit
 import tqdm
+from urllib import urlencode
 from urlparse import urljoin
 import logging
 
@@ -326,7 +327,7 @@ class Context(object):
             path, value = var
             keys = ''.join(['[{}]'.format(k) for k in path[1:]])
             var = path[0]
-            ret.append('{}{}={}'.format(var, keys, value))
+            ret.append('{}{}{}'.format(var, keys, urlencode({'': value})))
 
         return '&'.join(ret)
 
