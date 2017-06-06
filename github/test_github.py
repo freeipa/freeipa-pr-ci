@@ -54,12 +54,11 @@ def ismonotonic(seq, op):
 
 
 class J(AbstractJob):
-    def __call__(self):
+    def __call__(self, depends_results={}):
         dep_results = {}
-        for task_name, result in self.depends_results.items():
-            desc, url = result
-            dep_results['{}_description'.format(task_name)] = desc
-            dep_resutls['{}_url'.format(task_name)] = url
+        for task_name, result in depends_results.items():
+            dep_results['{}_description'.format(task_name)] = result.description
+            dep_results['{}_url'.format(task_name)] = result.url
 
         cmd = self.cmd.format(
             repo_url=self.target[0],

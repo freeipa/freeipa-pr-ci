@@ -210,8 +210,14 @@ class Task(object):
             raise TaskAlreadyTaken(status.description)
 
     def execute(self):
+        depends_results = {}
+        for dep in self.requires:
+            status = Status(self.repo, self.pull, dep)
+            depends_results[dep] = JobResult(
+                status.state, status.description, status.target_url)
+
         try:
-            result = self.job()
+            result = self.job(depends_results)
         except Exception as e:
             state = 'error'
             description = getattr(e, 'description', str(e))
@@ -237,23 +243,21 @@ class JobResult(object):
 
 class AbstractJob(collections.Callable):
     __metaclass__ = abc.ABCMeta
-    def __init__(self, cmd, build_target, depends_results=()):
+    def __init__(self, cmd, build_target):
         """
         @param cmd - job specific data from task definition
         @param build_target - tuple of git repo url and refspec
                               git clone build_target[0]
                               git fetch origin build:build_target[1]
                               git checkout build
-        @param depends_results - dict of tuples task_name: (description, url)
         """
         self.cmd = cmd
         self.target = build_target
-        self.depends_results = depends_results
-
 
     @abc.abstractmethod
-    def __call__(self):
+    def __call__(self, depends_results={}):
         """
-        @returns tuple of success (bool) and link to results (str)
+        @param depends_results - dict of task_name: JobResult
+        @returns JobResult instance
         """
         return JobResult('success', 'description', 'url')
