@@ -17,7 +17,8 @@ set -x
 collect_log() {
     # get PID from task UUID
     pid=$(journalctl -o short-iso --no-hostname -t $1 | grep $taskid | head -n 1 | cut -d "[" -f2 | cut -d "]" -f1)
-    journalctl -o short-iso --no-hostname -t $1 _PID=$pid > $log_dir/$1.log
+    pid2=$(journalctl -o short-iso --no-hostname -t $1 | grep $taskid | head -n 2 | tail -n 1 | cut -d "[" -f2 | cut -d "]" -f1)
+    journalctl -o short-iso --no-hostname -t $1 _PID=$pid + _PID=$pid2 > $log_dir/$1.log
 }
 
 
