@@ -3,13 +3,14 @@ import github3
 import math
 import operator
 import pytest
+import subprocess
 import threading
 import time
 import yaml
 
 from prci_github import get_pull_priority
 from prci_github import PullQueue, TaskQueue
-from prci_github import NoTaskAvailable, TaskAlreadyTaken, AbstractJob
+from prci_github import NoTaskAvailable, TaskAlreadyTaken, AbstractJob, JobResult
 
 with open('test_github.yaml') as f:
     gh_config = yaml.load(f)
@@ -61,10 +62,22 @@ class J(AbstractJob):
             **dep_results
         )
 
-        import subprocess
-        url = subprocess.check_output(build, shell=True)
+        try:
+            url = subprocess.check_output(cmd, shell=True)
+        except subprocess.CalledProcessError as e:
+            if e.returncode == 1:
+                state = 'failure'
+                description = 'Test failed: {}'.format(e)
+                url = ''
+            else:
+                state = 'error'
+                description = 'An unexpected error occured: {}'.format(e)
+                url = ''
+        else:
+            state = 'success'
+            description = 'Test passed'
 
-        return (True, url)
+        return JobResult(state, description, url)
 
 
 @pytest.fixture(scope='module')

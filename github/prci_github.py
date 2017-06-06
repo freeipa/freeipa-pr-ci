@@ -211,16 +211,28 @@ class Task(object):
 
     def execute(self):
         try:
-            success, url = self.job()
+            result = self.job()
         except Exception as e:
             state = 'error'
-            description = str(e)
-            url = ''
+            description = getattr(e, 'description', str(e))
+            url = getattr(e, 'url', '')
         else:
-            state = 'success' if success else 'failure'
-            description = ''
+            state = result.state
+            description = result.description
+            url = result.url
             
         Status.create(self.repo, self.pull, self.name, description, url, state)
+
+
+class JobResult(object):
+    valid_states = ('success', 'error', 'failure',)
+
+    def __init__(self, state, description=None, url=None):
+        if state not in self.valid_states:
+            raise ValueError('invalid state: {}'.format(state))
+        self.state = state
+        self.description = description
+        self.url = url
 
 
 class AbstractJob(collections.Callable):
@@ -244,4 +256,4 @@ class AbstractJob(collections.Callable):
         """
         @returns tuple of success (bool) and link to results (str)
         """
-        return (True, '')
+        return JobResult('success', 'description', 'url')

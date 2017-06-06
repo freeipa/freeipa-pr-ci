@@ -4,7 +4,7 @@ import subprocess
 import time
 import yaml
 
-from prci_github import TaskQueue, AbstractJob, TaskAlreadyTaken
+from prci_github import TaskQueue, AbstractJob, TaskAlreadyTaken, JobResult
 
 
 def quit(signum, _ignore):
@@ -14,18 +14,23 @@ def quit(signum, _ignore):
 
 class Job(AbstractJob):
     def __call__(self):
+        url = None
+        description = None
         cmd = self.cmd.format(target_refspec=self.target)
-        ok = True
         try:
             url = subprocess.check_output(cmd, shell=True)
         except subprocess.CalledProcessError as e:
             if e.returncode == 1:
-                ok = False
+                state = 'error'
                 url = ''
             else:
                 raise
+        else:
+            state = 'success'
+            description = ''
 
-        return (ok, url,)
+        return JobResult(state, description, url)
+
 
 with open('freeipa_github.yaml') as f:
     config = yaml.load(f)
