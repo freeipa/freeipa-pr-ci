@@ -2,6 +2,7 @@ import colorsys
 import github3
 import math
 import operator
+import os
 import pytest
 import subprocess
 import threading
@@ -12,7 +13,11 @@ from prci_github import get_pull_priority
 from prci_github import PullQueue, TaskQueue
 from prci_github import NoTaskAvailable, TaskAlreadyTaken, AbstractJob, JobResult
 
-with open('test_github.yaml') as f:
+path = os.path.dirname(os.path.realpath(__file__))
+ACCOUNT_CONFIG = os.path.join(path, 'test_github.yaml')
+TASKS_CONFIG = os.path.join(path, 'test_tasks.yaml')
+
+with open(ACCOUNT_CONFIG) as f:
     gh_config = yaml.load(f)
 GH_REPO = gh_config['repo']
 GH_TOKEN = gh_config['token']
@@ -158,7 +163,7 @@ class TestPRCI(object):
             "Priorities are not nonincreasing: {}".format(priorities))
 
     def test_task_queue_ordering(self, repo):
-        tq = TaskQueue(repo, 'test_tasks.yaml', J)
+        tq = TaskQueue(repo, TASKS_CONFIG, J)
         tq.create_tasks_for_pulls()
 
         tasks_done = []
