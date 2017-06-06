@@ -9,9 +9,9 @@ import threading
 import time
 import yaml
 
-from prci_github import get_pull_priority
-from prci_github import PullQueue, TaskQueue
-from prci_github import NoTaskAvailable, TaskAlreadyTaken, AbstractJob, JobResult
+from ..prci_github.internals import get_pull_priority
+from ..prci_github.internals import PullQueue, NoTaskAvailable
+from ..prci_github import TaskQueue, TaskAlreadyTaken, AbstractJob, JobResult
 
 path = os.path.dirname(os.path.realpath(__file__))
 ACCOUNT_CONFIG = os.path.join(path, 'test_github.yaml')
