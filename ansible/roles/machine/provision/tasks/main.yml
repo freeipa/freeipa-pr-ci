@@ -1,5 +1,4 @@
 ---
-- include: get_rpms_from_build.yml
 - include: install_freeipa_packages.yml
 - include: modify_hosts_file.yml
 - include: modify_resolv_conf.yml

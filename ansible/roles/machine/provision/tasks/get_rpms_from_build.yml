@@ -1,6 +1,0 @@
----
-# TODO obtain RPMs from remote storage
-- name: "copy RPMs from build"
-  shell: cp -r /vagrant/build/rpms /vagrant/rpms
-  ignore_errors: yes
-
