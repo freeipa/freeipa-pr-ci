@@ -89,5 +89,10 @@ collect_log ipaci-run
 # Compress the logs to save storage space
 find $log_dir -type f ! -name '*.gz' -exec gzip "{}" \;
 
+# Move logs to long term storage
+dir=$(readlink current)
+# TODO Rename ipaci-run log to avoid collisions with other test runs
+../upload "$dir/logs"
+
 exit $exit_code
 

@@ -1,4 +1,10 @@
+topology/*
+
+# Ansible
 *.retry
 ansible/vault-password
-topology/*
- 
+
+# Python
+*.py[cod]
+__pycache__/
+

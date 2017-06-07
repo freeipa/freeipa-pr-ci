@@ -12,4 +12,5 @@
     - git
     - libvirt
     - python-github3
+    - rsync
 

@@ -74,5 +74,9 @@ collect_log ipaci-build
 # Compress the logs to save storage space
 find $build_dir -type f ! -name '*.gz' -a ! -name '*.rpm' -exec gzip "{}" \;
 
+# Publish build artifacts
+dir=$(readlink current)
+../upload "$dir/build/"
+
 exit $exit_code
 
