@@ -1,12 +1,9 @@
 ---
-- name: "gather srpm"
-  shell: mv /root/rpmbuild/SRPMS/*.src.rpm /vagrant/build/
-
 - name: "create rpms directory"
   file:
-    path: /vagrant/build/rpms
+    path: "/vagrant/current/build/rpms"
     state: directory
 
 - name: "gather rpms"
-  shell: mv /root/rpmbuild/RPMS/*.rpm /vagrant/build/rpms/
+  shell: "mv /root/rpmbuild/RPMS/*.rpm /vagrant/current/build/rpms/"
 

@@ -10,10 +10,6 @@ if [ $? -ne 0 ]; then
     exit $?
 fi
 
-# TODO Replace this with downloading packages from URL
-rm -rf topology/rpms
-cp -r topology/build/rpms topology/
-
 ./run-tests test_integration/test_simple_replication.py
 exit $?
 

@@ -5,8 +5,7 @@ taskid=$(uuidgen)
 # Execute from the topology directory
 cd "$(dirname "$0")/topology"
 
-log_dir=logs/$(date +"%F-%H%M%S")
-mkdir -p $log_dir
+log_dir=current/logs
 
 # Prevent systemd from using pager (breaks automation)
 export SYSTEMD_PAGER=cat
@@ -89,11 +88,6 @@ collect_log ipaci-run
 
 # Compress the logs to save storage space
 find $log_dir -type f ! -name '*.gz' -exec gzip "{}" \;
-
-# Move logs to long term storage
-# TODO Upload to remote storage
-mkdir -p ../logs
-mv $log_dir ../logs/
 
 exit $exit_code
 

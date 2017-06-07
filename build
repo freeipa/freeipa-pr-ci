@@ -6,8 +6,7 @@ taskid=$(uuidgen)
 # Execute from the topology directory
 cd "$(dirname "$0")/topology"
 
-log_dir=logs/$(date +"%F-%H%M%S")
-mkdir -p $log_dir
+build_dir=current/build
 
 # Prevent systemd from using pager (breaks automation)
 export SYSTEMD_PAGER=cat
@@ -18,7 +17,7 @@ set -x
 collect_log() {
     # get PID from task UUID
     pid=$(journalctl -o short-iso --no-hostname -t $1 | grep $taskid | head -n 1 | cut -d "[" -f2 | cut -d "]" -f1)
-    journalctl -o short-iso --no-hostname -t $1 _PID=$pid > $log_dir/$1.log
+    journalctl -o short-iso --no-hostname -t $1 _PID=$pid > $build_dir/$1.log
 }
 
 
@@ -54,8 +53,7 @@ main() {
     ../scripts/fix-keys-permissions
     timeout $((20*60)) ansible-playbook -e git_refspec=$1 -i hosts.build -vvv ../ansible/build.yml 2>&1
     # TODO ansible failures should be properly addressed
-    # HACK This produces false positives when you still have old rpms in dir
-    ls build/rpms/*.rpm 1>/dev/null 2>&1
+    ls $build_dir/rpms/*.rpm 1>/dev/null 2>&1
     if [ $? -ne 0 ]; then
         echo "<3>Build failed (timed out?)"
         return 1
@@ -73,16 +71,8 @@ vagrant destroy 1>/dev/null 2>&1
 # Collect journal from this run
 collect_log ipaci-build
 
-# Collect logs from build dir
-cp build/*.log $log_dir/
-
 # Compress the logs to save storage space
-find $log_dir -type f ! -name '*.gz' -exec gzip "{}" \;
-
-# Move logs to long term storage
-# TODO Upload to remote storage
-mkdir -p ../logs
-mv $log_dir ../logs/
+find $build_dir -type f ! -name '*.gz' -a ! -name '*.rpm' -exec gzip "{}" \;
 
 exit $exit_code
 

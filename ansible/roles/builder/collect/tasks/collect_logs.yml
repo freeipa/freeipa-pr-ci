@@ -1,4 +1,4 @@
 ---
 - name: "gather logs"
-  shell: mv /root/rpmbuild/RPMS/*.log /vagrant/build/
+  shell: mv /root/rpmbuild/RPMS/*.log /vagrant/current/build/
 

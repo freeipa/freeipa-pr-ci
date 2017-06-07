@@ -1,5 +1,5 @@
 ---
-- shell: ls /vagrant/rpms/*.rpm
+- shell: ls /vagrant/current/build/rpms/*.rpm
   register: rpms
 
 - name: "install rpms"
