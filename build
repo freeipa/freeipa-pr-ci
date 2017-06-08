@@ -77,6 +77,10 @@ find $build_dir -type f ! -name '*.gz' -a ! -name '*.rpm' -exec gzip "{}" \;
 # Publish build artifacts
 dir=$(readlink current)
 ../upload "$dir/build/"
+if [ $? -ne 0 ]; then
+    echo "<2>Can't upload build"
+    exit 68
+fi
 
 exit $exit_code
 

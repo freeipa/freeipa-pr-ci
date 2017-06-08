@@ -5,7 +5,7 @@ taskid=$(uuidgen)
 # Execute from the topology directory
 cd "$(dirname "$0")/topology"
 
-log_dir=current/logs
+log_dir=current/logs/$taskid
 
 # Prevent systemd from using pager (breaks automation)
 export SYSTEMD_PAGER=cat
@@ -23,6 +23,19 @@ collect_log() {
 
 main() {
     echo "<6>$taskid"
+
+    # FIXME Do not use current dir, this can fail miserably
+    # Get new build, otherwise use current one
+    if [ -n "$2" ]; then
+        ../download "$2"
+        if [ $? -ne 0 ]; then
+            echo "<2>Can't download build"
+            exit 68
+        fi
+
+    fi
+
+    mkdir -p $log_dir
 
     vagrant destroy
     if [ $? -ne 0 ]; then
@@ -91,8 +104,11 @@ find $log_dir -type f ! -name '*.gz' -exec gzip "{}" \;
 
 # Move logs to long term storage
 dir=$(readlink current)
-# TODO Rename ipaci-run log to avoid collisions with other test runs
 ../upload "$dir/logs"
+if [ $? -ne 0 ]; then
+    echo "<2>Can't upload logs"
+    exit 68
+fi
 
 exit $exit_code
 
