@@ -36,6 +36,9 @@ main() {
     fi
 
     mkdir -p $log_dir
+    # FIXME Hack to fix permission denied from vagrant when running as root
+    # on a local machine
+    chmod -R 777 $log_dir
 
     vagrant destroy
     if [ $? -ne 0 ]; then
