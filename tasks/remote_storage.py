@@ -63,12 +63,13 @@ class FedoraPeopleUpload(SshRsyncTask):
 
 class FedoraPeopleDownload(SshRsyncTask):
     def __init__(self, build):
-        match = re.match(BUILD_RE + '$')
+        match = re.match(BUILD_RE + '$', build)
         if not match:
-            raise TaskException("Invalid build number: {build}".format(build))
+            raise TaskException("Invalid build id: {build}".format(
+                build=build))
 
         super(FedoraPeopleDownload, self).__init__(
-            FEDORAPEOPLE_DIR.format(path=src),
+            FEDORAPEOPLE_DIR.format(path=build),
             './',
             ssh_private_key_path=FEDORAPEOPLE_KEY_PATH
         )

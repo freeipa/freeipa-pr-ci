@@ -1,0 +1,18 @@
+#!/bin/python
+
+import sys
+import re
+from tasks.task import PopenTask
+from tasks.remote_storage import FedoraPeopleDownload, BUILD_RE
+
+
+build = sys.argv[1]
+match = re.search(BUILD_RE, build)
+if match is not None:
+    build = match.group(0)
+
+FedoraPeopleDownload(build).run()
+
+# TODO Remote 'current' hack and directly use a test number for a run
+PopenTask(['ln', '-f', '-s', build, 'current']).run()
+
