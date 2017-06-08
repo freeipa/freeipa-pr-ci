@@ -35,7 +35,8 @@ class SshRsyncTask(RsyncTask):
                 '-e',
                 ('ssh -i {key} '
                  '-o "StrictHostKeyChecking no" '
-                 '-o "UserKnownHostsFile=/dev/null"'
+                 '-o "UserKnownHostsFile /dev/null" '
+                 '-o "LogLevel ERROR"'
                 ).format(key=ssh_private_key_path)
             ])
 
