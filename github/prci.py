@@ -1,15 +1,46 @@
+import argparse
 import github3
+from github3.null import NullObject
 import signal
 import subprocess
+import sys
 import time
 import yaml
 
 from prci_github import TaskQueue, AbstractJob, TaskAlreadyTaken, JobResult
 
 
-def quit(signum, _ignore):
-    global done
-    done = True
+class ExitHandler(object):
+    done = False
+    abort = False
+    task = None
+
+    def finish(self):
+        if self.done:
+            return self.abort()
+
+        logger.info("Waiting for current task to finish. This may take long.")
+        self.done = True
+
+    def abort(self):
+        if self.abort:
+            return self.quit()
+
+        if self.task:
+            task.abort()
+            logger.info("Waiting for aborted task to clean up. This may take few minutes.")
+
+        self.abort = True
+
+    def quit(self):
+        logger.info("Quiting just now! No results will be reported.")
+        sys.exit()
+
+    def register_task(self, task):
+        self.task = task
+
+    def unregister_task(self):
+        self.task = None
 
 
 class Job(AbstractJob):
@@ -32,30 +63,71 @@ class Job(AbstractJob):
         return JobResult(state, description, url)
 
 
-with open('freeipa_github.yaml') as f:
-    config = yaml.load(f)
+def create_parser():
+    def log_level(l):
+        try:
+            return getattr(logging, l)
+        except AttributeError:
+            raise argparse.ArgumentTypeError(
+                '{} is not valid logging level'.format(l))
 
-done = False
-gh = github3.login(token=config['token'])
-repo = gh.repository(config['user'], config['repo'])
-tq = TaskQueue(repo, 'freeipa_tasks.yaml', Job)
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--id', type=str, required=True,
+        help='Unique runner ID',
+    )
+    parser.add_argument(
+        '--credentials', type=file, required=True,
+        help='YAML file containig at least user, token and repository',
+    )
+    parser.add_argument(
+        '--tasks', type=file, required=True,
+        help='YAML file with definiton of tasks',
+    )
+    parser.add_argument(
+        '--log-level', type=log_level,
+    )
 
-signal.signal(signal.SIGINT, quit)
-signal.signal(signal.SIGTERM, quit)
-signal.signal(signal.SIGQUIT, quit)
+    return parser
 
-while not done:
-    tq.create_tasks_for_pulls()
 
-    try:
-        task = tq.next()
-    except StopIteration:
-        time.sleep(1)
-        continue
+if __name__ == '__main__':
+    parser = create_parser()
+    args = parser.parse_args()
 
-    try:
-        task.take('R#0')
-    except TaskAlreadyTaken:
-        continue
+    runner_id = args.id
+    creds = yaml.load(args.credentials)
+    tasks_file = args.tasks
 
-    task.execute()
+    logging.basicConfig(level=args.log_level)
+
+    gh = github3.login(token=creds['token'])
+    if isinstance(gh, (NullObject, None)):
+        logging.error("")
+
+
+    repo = gh.repository(creds['user'], creds['repo'])
+    tq = TaskQueue(repo, tasks_file.name, Job)
+
+    handler = ExitHandler()
+
+    signal.signal(signal.SIGINT, handler.finish)
+    signal.signal(signal.SIGTERM, handler.abort)
+
+    while not handler.done:
+        tq.create_tasks_for_pulls()
+
+        try:
+            task = tq.next()
+        except StopIteration:
+            time.sleep(1)
+            continue
+
+        try:
+            task.take(runner_id)
+        except TaskAlreadyTaken:
+            continue
+
+        handler.register_task(task)
+        task.execute()
+        handler.unregister_task()
