@@ -1,6 +1,7 @@
 import argparse
 import github3
 from github3.null import NullObject
+import logging
 import signal
 import subprocess
 import sys
@@ -44,10 +45,18 @@ class ExitHandler(object):
 
 
 class Job(AbstractJob):
-    def __call__(self):
+    def __call__(self, depends_results={}):
         url = None
         description = None
-        cmd = self.cmd.format(target_refspec=self.target)
+
+        dep_results = {}
+        for task_name, result in depends_results.items():
+            dep_results['{}_description'.format(task_name)] = result.description
+            dep_results['{}_url'.format(task_name)] = result.url
+
+
+        cmd = self.cmd.format(target_refspec=self.target, **dep_results)
+
         try:
             url = subprocess.check_output(cmd, shell=True)
         except subprocess.CalledProcessError as e:
@@ -102,9 +111,6 @@ if __name__ == '__main__':
     logging.basicConfig(level=args.log_level)
 
     gh = github3.login(token=creds['token'])
-    if isinstance(gh, (NullObject, None)):
-        logging.error("")
-
 
     repo = gh.repository(creds['user'], creds['repo'])
     tq = TaskQueue(repo, tasks_file.name, Job)
