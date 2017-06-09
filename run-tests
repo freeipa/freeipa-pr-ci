@@ -69,7 +69,7 @@ main() {
     fi
 
     ../scripts/fix-keys-permissions
-    timeout $((10*60)) ansible-playbook -i hosts.run-tests ../ansible/provision.yml 2>&1
+    timeout $((20*60)) ansible-playbook -i hosts.run-tests ../ansible/provision.yml 2>&1
     if [ $? -ne 0 ]; then
         echo "<2>Provisioning (ansible) failed (missing rpms?, timed out?)"
         return 66
