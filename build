@@ -1,5 +1,6 @@
 #!/bin/bash
 
+rm -f /tmp/build_url
 
 taskid=$(uuidgen)
 
@@ -81,6 +82,9 @@ if [ $? -ne 0 ]; then
     echo "<2>Can't upload build"
     exit 68
 fi
+
+# Generate URL
+echo "https://fedorapeople.org/groups/freeipa/prci/$dir/build/" > /tmp/build_url
 
 exit $exit_code
 
