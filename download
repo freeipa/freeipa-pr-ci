@@ -14,5 +14,5 @@ if match is not None:
 FedoraPeopleDownload(build).run()
 
 # TODO Remote 'current' hack and directly use a test number for a run
-PopenTask(['ln', '-f', '-s', build, 'current']).run()
+PopenTask(['ln', '-f', '-n', '-s', build, 'current']).run()
 
