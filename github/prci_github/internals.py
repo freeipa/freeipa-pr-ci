@@ -36,7 +36,7 @@ import yaml
 import time
 
 
-RACE_TIMEOUT = 1
+RACE_TIMEOUT = 10
 
 
 class NoTaskAvailable(Exception):

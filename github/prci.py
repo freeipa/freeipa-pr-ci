@@ -126,7 +126,7 @@ if __name__ == '__main__':
         try:
             task = tq.next()
         except StopIteration:
-            time.sleep(1)
+            time.sleep(30)
             continue
 
         try:
