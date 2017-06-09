@@ -1,5 +1,7 @@
 #!/bin/bash
 
+rm -f /tmp/log_url
+
 taskid=$(uuidgen)
 
 # Execute from the topology directory
@@ -112,6 +114,9 @@ if [ $? -ne 0 ]; then
     echo "<2>Can't upload logs"
     exit 68
 fi
+
+# Generate URL
+echo "https://fedorapeople.org/groups/freeipa/prci/$dir/logs/$taskid" > /tmp/log_url
 
 exit $exit_code
 
