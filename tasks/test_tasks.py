@@ -1,6 +1,8 @@
 import logging
 from task import PopenTask, TimeoutException, TaskException, TaskSequence
+from vagrant import VagrantBoxDownload
 import pytest
+import os
 
 
 def test_timeout():
@@ -68,4 +70,15 @@ def test_popen():
     task = PopenTask('ls /tmp/$DIR', shell=True, env=env, severity=logging.WARNING)
     task()
     assert task.returncode == 2
+
+
+def test_vagrant_box_download():
+    path = os.path.dirname(os.path.realpath(__file__))
+    task = VagrantBoxDownload(
+        vagrantfile='Vagrantfile.mock',
+        path=os.path.dirname(os.path.realpath(__file__)))
+    vagrantfile = task.get_vagrantfile()
+
+    assert vagrantfile.vm.box == 'freeipa/ci-master-f25'
+    assert vagrantfile.vm.box_version == '0.2.5'
 
