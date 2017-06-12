@@ -2,6 +2,7 @@ import abc
 import collections
 import errno
 import logging
+import os
 import subprocess
 import threading
 
@@ -93,15 +94,20 @@ class FallibleTask(Task):
 
 
 class PopenTask(FallibleTask):
-    def __init__(self, cmd, shell=False, **kwargs):
+    def __init__(self, cmd, shell=False, env=None, **kwargs):
         super(PopenTask, self).__init__(**kwargs)
         self.cmd = cmd 
         self.shell = shell
+        self.env = env
+        if self.env is not None:
+            self.env = os.environ.copy()
+            self.env.update(env)
 
     def _run(self):
         self.process = subprocess.Popen(
             self.cmd,
             shell=self.shell,
+            env=self.env,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE)
 

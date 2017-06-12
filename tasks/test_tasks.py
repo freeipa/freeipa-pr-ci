@@ -49,6 +49,23 @@ def test_task_sequence_timeout():
     assert exc_info.value.task == timeout_task
 
 
-def test_popen_shell():
+def test_popen():
+    task = PopenTask(['ls', '/tmp'])
+    task()
+    assert task.returncode == 0
+
+    task = PopenTask(['ls', '/tmp/adsdasafgsag'], severity=logging.WARNING)
+    task()
+    assert task.returncode == 2
+
     PopenTask('for i in `seq 3`; do echo $i; done', shell=True)()
+
+    task = PopenTask('ls /tmp/$DIR', shell=True, severity=logging.WARNING)
+    task()
+    assert task.returncode == 0
+
+    env = dict(DIR='gfdsgsdfgsfd')
+    task = PopenTask('ls /tmp/$DIR', shell=True, env=env, severity=logging.WARNING)
+    task()
+    assert task.returncode == 2
 
