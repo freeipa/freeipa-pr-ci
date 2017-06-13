@@ -45,6 +45,13 @@ def create_parser():
         except IOError as e:
             raise argparse.ArgumentTypeError(e)
 
+    def log_level(level):
+        try:
+            return getattr(logging, level.upper())
+        except AttributeError:
+            raise argparse.ArgumentTypeError(
+                '{} is not valid logging level'.format(level))
+
     parser = argparse.ArgumentParser(description='Upload vagrant box to HashiCorp Atlas.')
     parser.add_argument('name', type=str, help='name of the box visible in Atlas')
     parser.add_argument('box', type=file, help='box to upload')
@@ -67,8 +74,7 @@ def create_parser():
                         help='user configuration file')
 
     group = parser.add_argument_group('Logging')
-    group.add_argument('--log-level',
-                       choices=['error', 'warning', 'info', 'debug'])
+    group.add_argument('--log-level', type=log_level)
     group.add_argument('--log-facility', type=str, nargs='*')
 
     group = parser.add_mutually_exclusive_group()
@@ -114,19 +120,11 @@ def get_next_version(box, box_version_arg):
 
     return box_version
 
-def conv_log_level(level):
-    return {
-        'error': logging.ERROR,
-        'warning': logging.WARNING,
-        'info': logging.INFO,
-        'debug': logging.DEBUG,
-    }[level]
-
 
 if __name__ == '__main__':
     args = create_parser().parse_args()
 
-    logging.basicConfig(level=conv_log_level(args.log_level))
+    logging.basicConfig(level=args.log_level)
     logger = logging.getLogger('box_uploader')
 
     box_name = args.name
