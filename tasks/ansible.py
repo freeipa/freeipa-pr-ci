@@ -18,7 +18,7 @@ class AnsibleFixKeysPermissions(FallibleTask):
 
 class AnsiblePlaybook(PopenTask):
     def __init__(self, playbook=None, inventory='hosts', extra_vars=None,
-                 verbosity=None):
+                 verbosity=None, **kwargs):
         self.extra_vars = extra_vars
         self.playbook = playbook
         self.inventory = inventory
@@ -28,8 +28,6 @@ class AnsiblePlaybook(PopenTask):
         if self.playbook is None:
             raise TaskException(self, 'playbook is required')
 
-    @property
-    def cmd(self):
         cmd = [
             "ansible-playbook",
             "-i", self.inventory,
@@ -44,5 +42,5 @@ class AnsiblePlaybook(PopenTask):
         if self.verbosity is not None:
             cmd.append('-{verbosity}'.format(verbosity=self.verbosity))
 
-        return cmd
+        super(AnsiblePlaybook, self).__init__(cmd, **kwargs)
 
