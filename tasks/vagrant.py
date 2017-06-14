@@ -1,5 +1,5 @@
 from logging import WARNING, INFO
-from tasks.task import PopenTask, PopenException, FallibleTask, TaskException
+from task import PopenTask, PopenException, FallibleTask, TaskException
 from pyvagrantfile.Parser import VagrantParser
 import os
 
@@ -17,11 +17,11 @@ class VagrantCleanup(VagrantTask):
             PopenTask(['vagrant', 'destroy'], env=self.env, timeout=60)()
         except PopenException:
             PopenTask(['pkill', '-9', 'bin/vagrant'],
-                severity=WARNING, env=self.env, timeout=60)()
+                raise_on_err=False, env=self.env, timeout=60)()
             PopenTask(['systemctl', 'restart', 'libvirt'],
-                severity=WARNING, env=self.env, timeout=60)()
+                raise_on_err=False, env=self.env, timeout=60)()
             PopenTask(['vagrant', 'destroy'],
-                severity=WARNING, env=self.env, timeout=60)()
+                raise_on_err=False, env=self.env, timeout=60)()
 
 
 class VagrantBoxDownload(VagrantTask):
@@ -40,7 +40,7 @@ class VagrantBoxDownload(VagrantTask):
                     '--provider', box.provider])()
             except TaskException as exc:
                 # TODO handle PopenException: remove older versions and retry?
-                logging.log(self.severity, "Box download failed")
+                logging.warning("Box download failed")
                 raise exc
 
     def get_vagrantfile(self):
@@ -78,7 +78,7 @@ class VagrantBox(object):
                 name=self.name,
                 provider=self.provider,
                 version=self.version)
-        task = PopenTask(cmd, shell=True, severity=INFO)
+        task = PopenTask(cmd, shell=True, raise_on_err=False)
         task()
         return task.returncode == 0
 

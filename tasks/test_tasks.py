@@ -23,7 +23,7 @@ def test_fallible_task():
     assert exc_info.value.task == task
     assert task.returncode != 0
 
-    task = PopenTask(['ls', '/tmp/ag34feqfdafasdf'], severity=logging.WARNING)
+    task = PopenTask(['ls', '/tmp/ag34feqfdafasdf'], raise_on_err=False)
     task()
     assert task.returncode != 0
 
@@ -57,18 +57,18 @@ def test_popen():
     task()
     assert task.returncode == 0
 
-    task = PopenTask(['ls', '/tmp/adsdasafgsag'], severity=logging.WARNING)
+    task = PopenTask(['ls', '/tmp/adsdasafgsag'], raise_on_err=False)
     task()
     assert task.returncode == 2
 
     PopenTask('for i in `seq 3`; do echo $i; done', shell=True)()
 
-    task = PopenTask('ls /tmp/$DIR', shell=True, severity=logging.WARNING)
+    task = PopenTask('ls /tmp/$DIR', shell=True, raise_on_err=False)
     task()
     assert task.returncode == 0
 
     env = dict(DIR='gfdsgsdfgsfd')
-    task = PopenTask('ls /tmp/$DIR', shell=True, env=env, severity=logging.WARNING)
+    task = PopenTask('ls /tmp/$DIR', shell=True, env=env, raise_on_err=False)
     task()
     assert task.returncode == 2
 

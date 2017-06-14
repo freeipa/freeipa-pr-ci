@@ -7,10 +7,6 @@ import subprocess
 import threading
 
 
-FORMAT = '%(asctime)-15s %(levelname)8s  %(message)s'
-logging.basicConfig(level=logging.DEBUG, format=FORMAT)
-
-
 class TaskException(Exception):
     def __init__(self, task, msg=None):
         self.task = task
@@ -58,6 +54,7 @@ class Task(collections.Callable):
             self.exc = exc
 
     def __call__(self):
+        logging.info('Executing: {task}'.format(task=self))
         thread = threading.Thread(target=self.__target)
         thread.start()
         thread.join(self.timeout)
@@ -79,18 +76,18 @@ class Task(collections.Callable):
 
 
 class FallibleTask(Task):
-    def __init__(self, *args, **kwargs):
-        timeout = kwargs.get('timeout', None)
-        self.severity = kwargs.get('severity', logging.ERROR)
-        super(FallibleTask, self).__init__(timeout)
+    def __init__(self, raise_on_err=True, **kwargs):
+        super(FallibleTask, self).__init__(**kwargs)
+        self.raise_on_err = raise_on_err
 
     def __call__(self):
         try:
             super(FallibleTask, self).__call__()
         except TaskException as exc:
-            logging.log(self.severity, exc)
-            if self.severity >= logging.ERROR:
+            if self.raise_on_err:
                 raise exc
+            else:
+                logging.warning(exc)
 
 
 class PopenTask(FallibleTask):
@@ -109,17 +106,11 @@ class PopenTask(FallibleTask):
             shell=self.shell,
             env=self.env,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE)
+            stderr=subprocess.STDOUT)
 
-        def stdout_log():
-            for line in iter(self.process.stdout.readline, b''):
-                logging.debug(line.rstrip('\n'))
+        for line in iter(self.process.stdout.readline, b''):
+            logging.debug(line.rstrip('\n'))
 
-        t = threading.Thread(target=stdout_log)
-        t.start()
-        for line in iter(self.process.stderr.readline, b''):
-            logging.log(self.severity, line.rstrip('\n'))
-        t.join()
         self.process.wait()
         self.returncode = self.process.returncode
         if self.returncode != 0:
@@ -140,5 +131,4 @@ class TaskSequence(FallibleTask, collections.deque):
     def _run(self):
         for task in self:
             task()
-
 
