@@ -1,5 +1,5 @@
 import logging
-from task import PopenTask, TimeoutException, TaskException, TaskSequence
+from common import PopenTask, TimeoutException, TaskException, TaskSequence
 from vagrant import VagrantBoxDownload
 from ansible import AnsiblePlaybook
 import pytest

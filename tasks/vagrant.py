@@ -1,5 +1,5 @@
 from logging import WARNING, INFO
-from task import PopenTask, PopenException, FallibleTask, TaskException
+from common import PopenTask, PopenException, FallibleTask, TaskException
 from pyvagrantfile.Parser import VagrantParser
 import os
 
