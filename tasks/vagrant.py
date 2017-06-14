@@ -1,7 +1,8 @@
-from logging import WARNING, INFO
-from common import PopenTask, PopenException, FallibleTask, TaskException
-from pyvagrantfile.Parser import VagrantParser
+import logging
 import os
+from pyvagrantfile.Parser import VagrantParser
+
+from common import PopenTask, PopenException, FallibleTask, TaskException
 
 
 class VagrantTask(FallibleTask):
@@ -17,11 +18,11 @@ class VagrantCleanup(VagrantTask):
             PopenTask(['vagrant', 'destroy'], env=self.env, timeout=60)()
         except PopenException:
             PopenTask(['pkill', '-9', 'bin/vagrant'],
-                raise_on_err=False, env=self.env, timeout=60)()
+                      raise_on_err=False, env=self.env, timeout=60)()
             PopenTask(['systemctl', 'restart', 'libvirt'],
-                raise_on_err=False, env=self.env, timeout=60)()
+                      raise_on_err=False, env=self.env, timeout=60)()
             PopenTask(['vagrant', 'destroy'],
-                raise_on_err=False, env=self.env, timeout=60)()
+                      raise_on_err=False, env=self.env, timeout=60)()
 
 
 class VagrantBoxDownload(VagrantTask):
@@ -50,7 +51,7 @@ class VagrantBoxDownload(VagrantTask):
         try:
             with open(path) as vf:
                 content = vf.read()
-        except (OSError, IOError) as exc:
+        except (OSError, IOError):
             raise TaskException(self, 'unable to open "{path}"'.format(
                 path=path))
         return VagrantParser.parses(content=content)
@@ -62,7 +63,7 @@ class VagrantBox(object):
         self.version = version
         self.provider = provider
 
-    @staticmethod 
+    @staticmethod
     def from_vagrantfile(vagrantfile):
         try:
             box = vagrantfile.vm.box
@@ -81,4 +82,3 @@ class VagrantBox(object):
         task = PopenTask(cmd, shell=True, raise_on_err=False)
         task()
         return task.returncode == 0
-

@@ -1,9 +1,9 @@
-import logging
+import os
+import pytest
+
+from ansible import AnsiblePlaybook
 from common import PopenTask, TimeoutException, TaskException, TaskSequence
 from vagrant import VagrantBoxDownload
-from ansible import AnsiblePlaybook
-import pytest
-import os
 
 
 def test_timeout():
@@ -77,7 +77,7 @@ def test_vagrant_box_download():
     path = os.path.dirname(os.path.realpath(__file__))
     task = VagrantBoxDownload(
         vagrantfile='Vagrantfile.mock',
-        path=os.path.dirname(os.path.realpath(__file__)))
+        path=path)
     vagrantfile = task.get_vagrantfile()
 
     assert vagrantfile.vm.box == 'freeipa/ci-master-f25'
@@ -89,10 +89,10 @@ def test_ansible_playbook():
         AnsiblePlaybook(playbook='a.yml', inventory='hosts.test').cmd
         ) == 'ansible-playbook -i hosts.test a.yml'
 
-    assert ' '.join(AnsiblePlaybook(playbook='a.yml', inventory='hosts.test',
-        extra_vars={'a': 1, 'b': 'xyz'}, verbosity='vvv').cmd
+    assert ' '.join(
+        AnsiblePlaybook(playbook='a.yml', inventory='hosts.test',
+                        extra_vars={'a': 1, 'b': 'xyz'}, verbosity='vvv').cmd
         ) == 'ansible-playbook -i hosts.test -e b=xyz -e a=1 a.yml -vvv'
 
-    with pytest.raises(TaskException) as exc_info:
+    with pytest.raises(TaskException):
         AnsiblePlaybook()
-

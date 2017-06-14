@@ -24,7 +24,8 @@ class TaskException(Exception):
 class TimeoutException(TaskException):
     def __init__(self, task):
         super(TimeoutException, self).__init__(task)
-        self.msg = 'timed out after {timeout}s'.format(timeout=self.task.timeout)
+        self.msg = 'timed out after {timeout}s'.format(
+            timeout=self.task.timeout)
 
 
 class PopenException(TaskException):
@@ -36,6 +37,7 @@ class PopenException(TaskException):
 
 class Task(collections.Callable):
     __metaclass__ = abc.ABCMeta
+
     def __init__(self, timeout=None):
         self.timeout = timeout
         self.process = None
@@ -93,7 +95,7 @@ class FallibleTask(Task):
 class PopenTask(FallibleTask):
     def __init__(self, cmd, shell=False, env=None, **kwargs):
         super(PopenTask, self).__init__(**kwargs)
-        self.cmd = cmd 
+        self.cmd = cmd
         self.shell = shell
         self.env = env
         if self.env is not None:
@@ -131,4 +133,3 @@ class TaskSequence(FallibleTask, collections.deque):
     def _run(self):
         for task in self:
             task()
-

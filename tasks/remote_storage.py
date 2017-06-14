@@ -1,12 +1,13 @@
-from common import PopenTask, TaskException
 import re
+
+from common import PopenTask, TaskException
 
 
 # TODO Set up proper ipa-maint account and ssh key
-FEDORAPEOPLE_KEY_PATH='/home/sharp/.ssh/fedorapeople'
-FEDORAPEOPLE_DIR='tkrizek@fedorapeople.org:/srv/groups/freeipa/prci/{path}'
+FEDORAPEOPLE_KEY_PATH = '/home/sharp/.ssh/fedorapeople'
+FEDORAPEOPLE_DIR = 'tkrizek@fedorapeople.org:/srv/groups/freeipa/prci/{path}'
 
-BUILD_RE='\d{14}\+git[0-9a-f]{7}'
+BUILD_RE = '\d{14}\+git[0-9a-f]{7}'
 
 
 class GzipLogFiles(PopenTask):
@@ -48,10 +49,11 @@ class SshRsyncTask(RsyncTask):
         if ssh_private_key_path is not None:
             extra_args.extend([
                 '-e',
-                ('ssh -i {key} '
-                 '-o "StrictHostKeyChecking no" '
-                 '-o "UserKnownHostsFile /dev/null" '
-                 '-o "LogLevel ERROR"'
+                (
+                    'ssh -i {key} '
+                    '-o "StrictHostKeyChecking no" '
+                    '-o "UserKnownHostsFile /dev/null" '
+                    '-o "LogLevel ERROR"'
                 ).format(key=ssh_private_key_path)
             ])
 
@@ -90,4 +92,3 @@ class FedoraPeopleDownload(SshRsyncTask):
             ssh_private_key_path=FEDORAPEOPLE_KEY_PATH,
             **kwargs
         )
-

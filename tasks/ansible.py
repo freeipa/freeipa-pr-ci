@@ -1,4 +1,5 @@
 import os
+
 from common import PopenTask, FallibleTask, TaskException
 
 
@@ -43,4 +44,3 @@ class AnsiblePlaybook(PopenTask):
             cmd.append('-{verbosity}'.format(verbosity=self.verbosity))
 
         super(AnsiblePlaybook, self).__init__(cmd, **kwargs)
-
