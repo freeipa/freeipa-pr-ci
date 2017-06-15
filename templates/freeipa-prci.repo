@@ -1,0 +1,5 @@
+[freeipa-prci]
+name=FreeIPA PR CI testing packages
+baseurl={{ build_url }}/build/rpms
+enabled=1
+gpgcheck=0

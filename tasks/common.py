@@ -1,10 +1,13 @@
 import abc
 import collections
 import errno
+import jinja2
 import logging
 import os
 import subprocess
 import threading
+
+import constants
 
 
 LOG_FILE_HANDLER = None
@@ -130,7 +133,7 @@ class PopenTask(FallibleTask):
         self.process = None
         if self.returncode != 0:
             raise PopenException(self)
-    
+
     def _terminate(self):
         if self.process is None:
             return
@@ -163,3 +166,13 @@ def init_logging():
     logger.addHandler(fh)
     logger.addHandler(ch)
     LOG_FILE_HANDLER = fh
+
+
+def create_file_from_template(template_path, dest, data):
+    env = jinja2.Environment(
+        loader=jinja2.FileSystemLoader(constants.TEMPLATE_DIR))
+    template = env.get_template(template_path)
+    rendered_template = template.render(**data)
+
+    with open(dest, "wb") as fh:
+        fh.write(rendered_template)

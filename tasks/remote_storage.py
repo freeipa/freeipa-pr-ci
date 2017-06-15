@@ -1,13 +1,7 @@
 import re
 
 from common import PopenTask, TaskException
-
-
-# TODO Set up proper ipa-maint account and ssh key
-FEDORAPEOPLE_KEY_PATH = '/home/sharp/.ssh/fedorapeople'
-FEDORAPEOPLE_DIR = 'tkrizek@fedorapeople.org:/srv/groups/freeipa/prci/{path}'
-
-BUILD_RE = '\d{14}\+git[0-9a-f]{7}'
+from constants import FEDORAPEOPLE_KEY_PATH, FEDORAPEOPLE_DIR, BUILD_RE
 
 
 class GzipLogFiles(PopenTask):

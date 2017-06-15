@@ -3,12 +3,14 @@ import logging
 import json
 import os
 import shutil
+import urlparse
 
 from ansible import AnsiblePlaybook
-from common import FallibleTask, TaskException, LOG_FILE_HANDLER, init_logging
+from common import (FallibleTask, TaskException, LOG_FILE_HANDLER,
+                    PopenTask, init_logging, create_file_from_template)
 import constants
 from remote_storage import GzipLogFiles, FedoraPeopleUpload
-from vagrant import VagrantUp, VagrantCleanup, VagrantBoxDownload
+from vagrant import VagrantUp, VagrantCleanup
 
 
 def with_vagrant(func):
@@ -106,6 +108,7 @@ class Build(ActionTask):
         super(Build, self).__init__(**kwargs)
         self.git_refspec = git_refspec
         self.publish_artifacts = publish_artifacts
+        self.build_id = None
 
     @with_vagrant
     def _run(self):
@@ -122,7 +125,10 @@ class Build(ActionTask):
             self.collect_runner_log()
             self.compress_logs()
             if self.publish_artifacts:
-                self.upload_artifacts()
+                try:
+                    self.create_yum_repo()
+                finally:
+                    self.upload_artifacts()
 
     def create_current_symlink(self):
         try:
@@ -135,8 +141,8 @@ class Build(ActionTask):
                     'Failed to read build_id from "{path}"'.format(
                         path=path))
                 raise
-            build_id = data['build_id']
-            create_current_symlink_from_build_id(build_id)
+            self.build_id = data['build_id']
+            create_current_symlink_from_build_id(self.build_id)
         except Exception:
             raise TaskException(self, 'Failed to create "current" symlink')
 
@@ -154,6 +160,21 @@ class Build(ActionTask):
                 playbook=constants.ANSIBLE_PLAYBOOK_COLLECT_BUILD,
                 inventory=self.ansible_inventory,
                 raise_on_err=False))
+
+    def create_yum_repo(self, base_url=constants.FEDORAPEOPLE_BASE_URL):
+        repo_path = os.path.join(self.data_dir, 'rpms')
+        self.execute_subtask(
+            PopenTask(['createrepo', repo_path]))
+        try:
+            create_file_from_template(
+                constants.FREEIPA_PRCI_REPOFILE,
+                os.path.join(repo_path, constants.FREEIPA_PRCI_REPOFILE),
+                dict(build_url=urlparse.urljoin(base_url, self.build_id)))
+        except (OSError, IOError) as exc:
+            msg = 'Failed to create repo file'
+            logging.debug(exc)
+            logging.error(msg)
+            raise TaskException(self, msg)
 
 
 if __name__ == '__main__':
