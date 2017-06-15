@@ -68,6 +68,7 @@ class FedoraPeopleUpload(SshRsyncTask):
         match = re.match(BUILD_RE + '/(.*/)?$', src)
         if not match:
             raise TaskException(
+                self,
                 "Directory has to start with: YYYYMMDDHHMMSS+git<sha>")
 
         super(FedoraPeopleUpload, self).__init__(
@@ -83,8 +84,9 @@ class FedoraPeopleDownload(SshRsyncTask):
     def __init__(self, build, **kwargs):
         match = re.match(BUILD_RE + '$', build)
         if not match:
-            raise TaskException("Invalid build id: {build}".format(
-                build=build))
+            raise TaskException(
+                self,
+                "Invalid build id: {build}".format(build=build))
 
         super(FedoraPeopleDownload, self).__init__(
             FEDORAPEOPLE_DIR.format(path=build),

@@ -9,20 +9,32 @@ class VagrantTask(FallibleTask):
     def __init__(self, vagrantfile='Vagrantfile', **kwargs):
         super(VagrantTask, self).__init__(**kwargs)
         self.vagrantfile = vagrantfile
-        self.env = {'VAGRANTFILE': vagrantfile}
-        
+        self.timeout = None
+        self.env = {'VAGRANT_VAGRANTFILE': vagrantfile}
+
+
+class VagrantUp(VagrantTask):
+    def _run(self):
+        self.execute_subtask(
+            PopenTask(['vagrant', 'up', '--parallel'],
+                      env=self.env))
+
 
 class VagrantCleanup(VagrantTask):
     def _run(self):
         try:
-            PopenTask(['vagrant', 'destroy'], env=self.env, timeout=60)()
+            self.execute_subtask(
+                PopenTask(['vagrant', 'destroy'], env=self.env))
         except PopenException:
-            PopenTask(['pkill', '-9', 'bin/vagrant'],
-                      raise_on_err=False, env=self.env, timeout=60)()
-            PopenTask(['systemctl', 'restart', 'libvirt'],
-                      raise_on_err=False, env=self.env, timeout=60)()
-            PopenTask(['vagrant', 'destroy'],
-                      raise_on_err=False, env=self.env, timeout=60)()
+            self.execute_subtask(
+                PopenTask(['pkill', '-9', 'bin/vagrant'],
+                          raise_on_err=False, env=self.env))
+            self.execute_subtask(
+                PopenTask(['systemctl', 'restart', 'libvirt'],
+                          raise_on_err=False, env=self.env))
+            self.execute_subtask(
+                PopenTask(['vagrant', 'destroy'],
+                          raise_on_err=False, env=self.env))
 
 
 class VagrantBoxDownload(VagrantTask):
@@ -31,14 +43,17 @@ class VagrantBoxDownload(VagrantTask):
         self.path = path
 
     def _run(self):
+        raise NotImplementedError
+        # FIXME pyvagrantfile hangs on our vagrantfile for some reason
         vagrantfile = self.get_vagrantfile()
         box = VagrantBox.from_vagrantfile(vagrantfile)
         if not box.exists():
             try:
-                PopenTask([
-                    'vagrant', 'box', 'add', box.name,
-                    '--box-version', box.version,
-                    '--provider', box.provider])()
+                self.execute_task(
+                    PopenTask([
+                        'vagrant', 'box', 'add', box.name,
+                        '--box-version', box.version,
+                        '--provider', box.provider]))
             except TaskException as exc:
                 # TODO handle PopenException: remove older versions and retry?
                 logging.warning("Box download failed")
@@ -80,5 +95,5 @@ class VagrantBox(object):
                 provider=self.provider,
                 version=self.version)
         task = PopenTask(cmd, shell=True, raise_on_err=False)
-        task()
+        self.execute_subtask(task)
         return task.returncode == 0

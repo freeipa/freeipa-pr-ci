@@ -2,12 +2,13 @@ import os
 import pytest
 
 from ansible import AnsiblePlaybook
-from common import PopenTask, TimeoutException, TaskException, TaskSequence
+from common import PopenTask, TimeoutException, TaskException
 from vagrant import VagrantBoxDownload
 
 
 def test_timeout():
     PopenTask(['sleep', '0.1'])()
+    PopenTask(['sleep', '0.1'], timeout=None)()
     PopenTask(['sleep', '0.1'], timeout=0.2)()
 
     task = PopenTask(['sleep', '0.1'], timeout=0.01)
@@ -26,30 +27,6 @@ def test_fallible_task():
     task = PopenTask(['ls', '/tmp/ag34feqfdafasdf'], raise_on_err=False)
     task()
     assert task.returncode != 0
-
-
-def test_task_sequence():
-    seq = TaskSequence([
-        PopenTask(['touch', '/tmp/dfssdgadg15']),
-        PopenTask(['rm', '/tmp/dfssdgadg15'])
-    ])
-    seq()
-
-    fail_task = PopenTask(['rm', '/tmp/dfssdgadg15'])
-    seq.append(fail_task)
-    with pytest.raises(TaskException) as exc_info:
-        seq()
-    assert exc_info.value.task == fail_task
-
-
-def test_task_sequence_timeout():
-    seq = TaskSequence()
-    seq.append(PopenTask(['sleep', '0.1'], timeout=0.2))
-    timeout_task = PopenTask(['sleep', '0.1'], timeout=0.01)
-    seq.append(timeout_task)
-    with pytest.raises(TimeoutException) as exc_info:
-        seq()
-    assert exc_info.value.task == timeout_task
 
 
 def test_popen():

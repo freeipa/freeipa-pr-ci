@@ -1,90 +1,10 @@
-#!/bin/bash
-
-rm -f /tmp/build_url
-
-taskid=$(uuidgen)
-
-# Execute from the topology directory
-cd "$(dirname "$0")/topology"
-
-build_dir=current/build
-
-# Prevent systemd from using pager (breaks automation)
-export SYSTEMD_PAGER=cat
-
-# Display executed commands 
-set -x
-
-collect_log() {
-    # get PID from task UUID
-    pid=$(journalctl -o short-iso --no-hostname -t $1 | grep $taskid | head -n 1 | cut -d "[" -f2 | cut -d "]" -f1)
-    journalctl -o short-iso --no-hostname -t $1 _PID=$pid > $build_dir/$1.log
-}
+#!/bin/python
+import sys
+from tasks import init_logging, Build
 
 
-main() {
-    echo "<6>$taskid"
+# TODO implement argparse
+git_refspec = sys.argv[1]
 
-    vagrant destroy
-    if [ $? -ne 0 ]; then
-        # If previous test run didn't end properly in time, kill it
-        pkill -9 bin/vagrant
-        systemctl restart libvirtd
-        vagrant destroy
-    fi
-
-    # TODO Fix this ugly hack and do it properly when migrating scripts to Python
-    # Use Vagrantfile for build
-    cp Vagrantfile.build Vagrantfile
-
-    # Download new vagrant box if needed
-    ../scripts/download-box
-    if [ $? -ne 0 ]; then
-        echo "<2>Box download failed"
-        return 64
-    fi
-
-    # TODO Handle timeout properly and gracefully; attempt retry?
-    timeout $((10*60)) vagrant up --parallel 2>&1
-    if [ $? -ne 0 ]; then
-        echo "<2>Provisioning (vagrant up) failed (timed out?)"
-        return 65
-    fi
-
-    ../scripts/fix-keys-permissions
-    timeout $((20*60)) ansible-playbook -e git_refspec=$1 -i hosts.build -vvv ../ansible/build.yml 2>&1
-    # TODO ansible failures should be properly addressed
-    ls $build_dir/rpms/*.rpm 1>/dev/null 2>&1
-    if [ $? -ne 0 ]; then
-        echo "<3>Build failed (timed out?)"
-        return 1
-    else
-        echo "<5>Build passed"
-        return 0
-    fi
-}
-
-main "$@" | systemd-cat -t 'ipaci-build' -p debug
-exit_code=${PIPESTATUS[0]}
-
-vagrant destroy 1>/dev/null 2>&1
-
-# Collect journal from this run
-collect_log ipaci-build
-
-# Compress the logs to save storage space
-find $build_dir -type f ! -name '*.gz' -a ! -name '*.rpm' -exec gzip "{}" \;
-
-# Publish build artifacts
-dir=$(readlink current)
-../upload "$dir/build/"
-if [ $? -ne 0 ]; then
-    echo "<2>Can't upload build"
-    exit 68
-fi
-
-# Generate URL
-echo "https://fedorapeople.org/groups/freeipa/prci/$dir/build/" > /tmp/build_url
-
-exit $exit_code
-
+init_logging()
+Build(git_refspec)()

@@ -1,25 +1,5 @@
 ---
-- name: "get build number from srpm"
-  shell: |
-    ls /root/rpmbuild/SRPMS/*.src.rpm | \
-    sed 's/.*dev//' | \
-    sed 's/-.*//'
-  register: build
-
 - name: "create artifacts directory"
   file:
-    path: "/vagrant/{{ build.stdout }}/build"
+    path: "/vagrant/current/build"
     state: directory
-
-- name: "remove symlink to directory"
-  file:
-    path: "/vagrant/current"
-    state: absent
-
-# This creates symlink in the NFS shared directory,
-# do not use ansible file module, the link will be broken
-- name: "create symlink to current build dir"
-  shell: "ln -s {{ build.stdout }} current"
-  args:
-    chdir: /vagrant
-

@@ -1,0 +1,6 @@
+---
+- name: "create build directory"
+  file:
+    path: "/vagrant/{{ build_id }}"
+    state: directory
+

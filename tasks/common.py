@@ -7,6 +7,10 @@ import subprocess
 import threading
 
 
+LOG_FILE_HANDLER = None
+LOG_FORMAT = '%(asctime)-15s %(levelname)8s  %(message)s'
+
+
 class TaskException(Exception):
     def __init__(self, task, msg=None):
         self.task = task
@@ -38,15 +42,26 @@ class PopenException(TaskException):
 class Task(collections.Callable):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, timeout=None):
+    def __init__(self, timeout=120):
         self.timeout = timeout
-        self.process = None
-        self.returncode = None
+        self.tasks = []
         self.exc = None
+
+    def execute_subtask(self, task):
+        self.tasks.append(task)
+        task()
 
     @abc.abstractmethod
     def _run(self):
         pass
+
+    def _terminate(self):
+        pass
+
+    def terminate(self):
+        for task in self.tasks:
+            task.terminate()
+        self._terminate()
 
     def __target(self):
         self.exc = None
@@ -61,12 +76,7 @@ class Task(collections.Callable):
         thread.start()
         thread.join(self.timeout)
         if thread.is_alive():
-            try:
-                self.process.terminate()
-            except OSError as exc:
-                if exc.errno != errno.ESRCH:
-                    # ESRCH -> process doesn't exist (already ended)
-                    raise exc
+            self.terminate()
             thread.join()
             raise TimeoutException(self)
         if self.exc is not None:
@@ -98,6 +108,8 @@ class PopenTask(FallibleTask):
         self.cmd = cmd
         self.shell = shell
         self.env = env
+        self.process = None
+        self.returncode = None
         if self.env is not None:
             self.env = os.environ.copy()
             self.env.update(env)
@@ -115,8 +127,19 @@ class PopenTask(FallibleTask):
 
         self.process.wait()
         self.returncode = self.process.returncode
+        self.process = None
         if self.returncode != 0:
             raise PopenException(self)
+    
+    def _terminate(self):
+        if self.process is None:
+            return
+        try:
+            self.process.terminate()
+        except OSError as exc:
+            if exc.errno != errno.ESRCH:
+                # ESRCH -> process doesn't exist (already ended)
+                raise exc
 
     def __str__(self):
         if not isinstance(self.cmd, basestring):
@@ -126,10 +149,17 @@ class PopenTask(FallibleTask):
         return 'Process "{cmd}"'.format(cmd=cmd)
 
 
-class TaskSequence(FallibleTask, collections.deque):
-    def __init__(self, *args, **kwargs):
-        super(TaskSequence, self).__init__(*args, **kwargs)
-
-    def _run(self):
-        for task in self:
-            task()
+def init_logging():
+    global LOG_FILE_HANDLER
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+    fh = logging.FileHandler('runner.log', mode='w')
+    fh.setLevel(logging.DEBUG)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(LOG_FORMAT)
+    fh.setFormatter(formatter)
+    ch.setFormatter(formatter)
+    logger.addHandler(fh)
+    logger.addHandler(ch)
+    LOG_FILE_HANDLER = fh

@@ -10,7 +10,6 @@
   shell: |
     mock --rebuild /root/rpmbuild/SRPMS/*.src.rpm \
       --result /root/rpmbuild/RPMS/
-  ignore_errors: yes
 
 - name: "remove srpm artifact from RPMS dir"
   shell: rm /root/rpmbuild/RPMS/*.src.rpm
