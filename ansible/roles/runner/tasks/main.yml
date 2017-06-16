@@ -1,7 +1,7 @@
 ---
 - include: manage_ssh_keys.yml
   tags: fedorapeople
-- include: enable-nested-virt.yml
+- include: enable_nested_virt.yml
   tags: nested_virt
 - include: setup.yml
 - include: service_libvirtd.yml
