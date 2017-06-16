@@ -1,0 +1,7 @@
+---
+# vagrant up requires nfs service restart after package installation
+- name: "restart nfs service"
+  systemd:
+    name: nfs
+    enabled: yes
+    state: restarted

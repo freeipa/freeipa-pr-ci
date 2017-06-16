@@ -5,3 +5,4 @@
   tags: nested_virt
 - include: setup.yml
 - include: service_libvirtd.yml
+- include: service_nfs.yml
