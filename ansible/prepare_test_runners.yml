@@ -1,6 +1,5 @@
 ---
-
-- hosts: test_runners
+- hosts: runner
   name: prepare test runners
   roles:
     - runner

@@ -1,0 +1,16 @@
+---
+- name: "create /root/.ssh directory"
+  file:
+    path: /root/.ssh
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+
+- name: "add freeipa_pr_ci private key"
+  copy:
+    src: ../keys/freeipa_pr_ci
+    dest: /root/.ssh/freeipa_pr_ci
+    mode: 0600
+    owner: root
+    group: root

@@ -5,8 +5,8 @@ TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
 JOB_DIR = os.path.join(BASE_DIR, 'jobs')
 
 
-FEDORAPEOPLE_KEY_PATH = '/home/sharp/.ssh/fedorapeople'
-FEDORAPEOPLE_DIR = 'tkrizek@fedorapeople.org:/srv/groups/freeipa/prci/{path}'
+FEDORAPEOPLE_KEY_PATH = '/root/.ssh/freeipa_pr_ci'
+FEDORAPEOPLE_DIR = 'ipa-maint@fedorapeople.org:/srv/groups/freeipa/prci/{path}'
 FEDORAPEOPLE_BASE_URL = 'https://fedorapeople.org/groups/freeipa/prci/'
 
 BUILD_RE = '\d{14}\+git[0-9a-f]{7}'
