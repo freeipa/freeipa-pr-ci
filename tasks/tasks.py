@@ -41,9 +41,9 @@ def create_current_symlink_from_build_id(build_id):
         raise TaskException(msg)
 
 
-class ActionTask(FallibleTask):
+class JobTask(FallibleTask):
     def __init__(self, **kwargs):
-        super(ActionTask, self).__init__(**kwargs)
+        super(JobTask, self).__init__(**kwargs)
         self.timeout = kwargs.get('timeout', None)
 
     @property
@@ -101,7 +101,7 @@ class ActionTask(FallibleTask):
             raise TaskException(self, "Failed to publish artifacts")
 
 
-class Build(ActionTask):
+class Build(JobTask):
     action_name = 'build'
 
     def __init__(self, git_refspec, publish_artifacts=True, **kwargs):
