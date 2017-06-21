@@ -1,3 +1,4 @@
+import cachecontrol
 import colorsys
 import github3
 import math
@@ -87,6 +88,7 @@ class J(AbstractJob):
 @pytest.fixture(scope='module')
 def repo(request):
     gh = github3.login(token=GH_TOKEN)
+    cachecontrol.CacheControl(gh.session)
     repo = gh.create_repository(
         GH_REPO,
         has_issues=False,
