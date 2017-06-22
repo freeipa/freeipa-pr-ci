@@ -1,5 +1,4 @@
 import argparse
-import cachecontrol
 import github3
 from github3.null import NullObject
 import logging
@@ -10,6 +9,7 @@ import time
 import yaml
 
 from prci_github import TaskQueue, AbstractJob, TaskAlreadyTaken, JobResult
+from prci_github.adapter import GitHubAdapter
 
 
 class ExitHandler(object):
@@ -112,6 +112,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=args.log_level)
 
     gh = github3.login(token=creds['token'])
+    gh.session.mount('https://api.github.com', GitHubAdapter())
 
     repo = gh.repository(creds['user'], creds['repo'])
     tq = TaskQueue(repo, tasks_file.name, Job)
