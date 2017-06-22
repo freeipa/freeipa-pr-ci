@@ -37,6 +37,7 @@ import time
 
 
 RACE_TIMEOUT = 10
+CREATE_TIMEOUT = 5
 
 
 class NoTaskAvailable(Exception):
@@ -61,7 +62,16 @@ class Status(object):
     def create(cls, repo, pull, context, description, target_url, state):
         sha = repo.commit(pull.head.sha).sha
         repo.create_status(sha, state, target_url, description, context)
-        return cls(repo, pull, context)
+
+        last_e = RuntimeError()
+        for _ in range(CREATE_TIMEOUT):
+            try:
+                return cls(repo, pull, context)
+            except Exception as e:
+                last_e = e
+                time.sleep(1)
+        else:
+            raise last_e
 
     def __init__(self, repo, pull, context):
         self.repo = repo
