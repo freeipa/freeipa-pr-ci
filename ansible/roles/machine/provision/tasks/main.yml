@@ -1,5 +1,24 @@
 ---
-- include: install_freeipa_packages.yml
-- include: modify_hosts_file.yml
-- include: modify_resolv_conf.yml
-- include: set_hostname.yml
+- name: get list of rpms
+  shell: ls /vagrant/current/build/rpms/*.rpm
+  register: rpms
+
+- name: install rpms
+  dnf:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{ rpms.stdout_lines }}"
+
+- name: create hosts file from template
+  template:
+    src: hosts
+    dest: /etc/hosts
+
+- name: create /etc/resolv.conf file from template
+  template:
+    src: resolv.conf
+    dest: /etc/resolv.conf
+
+- name: set hostname
+  hostname:
+    name: "{{ inventory_hostname }}.ipa.test"

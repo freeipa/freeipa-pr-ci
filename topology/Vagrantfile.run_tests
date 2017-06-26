@@ -1,9 +1,6 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 #
-NETWORK="192.168.101" # first three octets
-DOMAIN="ipa.test"
-#VM_NAME_PREFIX = "root"
 
 Vagrant.configure(2) do |config|
 
@@ -47,33 +44,24 @@ Vagrant.configure(2) do |config|
             domain.cpus = 1
             domain.memory = 1024
 
-            override.vm.network "private_network",
-                ip: "#{NETWORK}.100"
+            controller.vm.provision :ansible do |ansible|
+                # Disable default limit to connect to all the machines
+                ansible.limit = "all"
+                ansible.playbook = "../ansible/provision.yml"
+            end
         end
     end
 
 
     config.vm.define "master"  do |master|
-        master.vm.provider "libvirt" do |domain,override|
-            override.vm.network "private_network",
-                ip: "#{NETWORK}.101"
-        end
     end
 
 
     config.vm.define "replica1"  do |replica1|
-        replica1.vm.provider "libvirt" do |domain,override|
-            override.vm.network "private_network",
-                ip: "#{NETWORK}.102"
-        end
     end
 
 
     config.vm.define "replica2"  do |replica2|
-        replica2.vm.provider "libvirt" do |domain,override|
-            override.vm.network "private_network",
-                ip: "#{NETWORK}.103"
-        end
     end
 
 
@@ -82,9 +70,6 @@ Vagrant.configure(2) do |config|
             # Less resources needed for client
             domain.cpus = 1
             domain.memory = 1024
-
-            override.vm.network "private_network",
-                ip: "#{NETWORK}.104"
         end
    end
 

@@ -1,9 +1,0 @@
----
-- shell: ls /vagrant/current/build/rpms/*.rpm
-  register: rpms
-
-- name: "install rpms"
-  dnf:
-    name: "{{ item }}"
-    state: present
-  with_items: "{{ rpms.stdout_lines }}"

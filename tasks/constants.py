@@ -27,4 +27,3 @@ ANSIBLE_PLAYBOOK_COLLECT_BUILD = os.path.join(ANSIBLE_PLAYBOOK_DIR,
 
 
 VAGRANTFILE_FILENAME = 'Vagrantfile.{action_name}'
-ANSIBLE_INVENTORY_FILENAME = 'hosts.{action_name}'

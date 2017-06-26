@@ -1,0 +1,8 @@
+---
+# Dummy playbook
+#
+# It is used with vagrant provisioner to force generation of dynamic ansible
+# inventory
+
+- hosts: all
+  tasks: []

@@ -51,8 +51,8 @@ main() {
     fi
 
     # TODO Fix this ugly hack and do it properly when migrating scripts to Python
-    # Use Vagrantfile for run-tests
-    cp Vagrantfile.run-tests Vagrantfile
+    # Use Vagrantfile for run_tests
+    cp Vagrantfile.run_tests Vagrantfile
 
     # Download new vagrant box if needed
     ../scripts/download-box
@@ -62,14 +62,13 @@ main() {
     fi
 
     # TODO Handle timeout properly and gracefully; attempt retry?
-    timeout $((10*60)) vagrant up --parallel 2>&1
+    timeout $((10*60)) vagrant up --no-provision --parallel 2>&1
     if [ $? -ne 0 ]; then
         echo "<2>Provisioning (vagrant up) failed (timed out?)"
         return 65
     fi
 
-    ../scripts/fix-keys-permissions
-    timeout $((20*60)) ansible-playbook -i hosts.run-tests ../ansible/provision.yml 2>&1
+    timeout $((20*60)) vagrant provision 2>&1
     if [ $? -ne 0 ]; then
         echo "<2>Provisioning (ansible) failed (missing rpms?, timed out?)"
         return 66

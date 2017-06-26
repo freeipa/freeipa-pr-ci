@@ -16,7 +16,14 @@ class VagrantTask(FallibleTask):
 class VagrantUp(VagrantTask):
     def _run(self):
         self.execute_subtask(
-            PopenTask(['vagrant', 'up', '--parallel'],
+            PopenTask(['vagrant', 'up', '--no-provision', '--parallel'],
+                      env=self.env))
+
+
+class VagrantProvision(VagrantTask):
+    def _run(self):
+        self.execute_subtask(
+            PopenTask(['vagrant', 'provision'],
                       env=self.env))
 
 

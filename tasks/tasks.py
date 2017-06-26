@@ -10,7 +10,7 @@ from common import (FallibleTask, TaskException, LOG_FILE_HANDLER,
                     PopenTask, init_logging, create_file_from_template)
 import constants
 from remote_storage import GzipLogFiles, FedoraPeopleUpload
-from vagrant import VagrantUp, VagrantCleanup
+from vagrant import VagrantUp, VagrantProvision, VagrantCleanup
 
 
 def with_vagrant(func):
@@ -18,6 +18,8 @@ def with_vagrant(func):
         try:
             self.execute_subtask(
                 VagrantUp(vagrantfile=self.vagrantfile, timeout=None))
+            self.execute_subtask(
+                VagrantProvision(vagrantfile=self.vagrantfile, timeout=None))
         except TaskException as exc:
             logging.critical('vagrant up failed')
             raise exc
@@ -49,11 +51,6 @@ class JobTask(FallibleTask):
     @property
     def vagrantfile(self):
         return constants.VAGRANTFILE_FILENAME.format(
-            action_name=self.action_name)
-
-    @property
-    def ansible_inventory(self):
-        return constants.ANSIBLE_INVENTORY_FILENAME.format(
             action_name=self.action_name)
 
     @property
@@ -151,14 +148,12 @@ class Build(JobTask):
             AnsiblePlaybook(
                 playbook=constants.ANSIBLE_PLAYBOOK_BUILD,
                 extra_vars={'git_refspec': self.git_refspec},
-                inventory=self.ansible_inventory,
                 timeout=20*60))
 
     def collect_build_artifacts(self):
         self.execute_subtask(
             AnsiblePlaybook(
                 playbook=constants.ANSIBLE_PLAYBOOK_COLLECT_BUILD,
-                inventory=self.ansible_inventory,
                 raise_on_err=False))
 
     def create_yum_repo(self, base_url=constants.FEDORAPEOPLE_BASE_URL):
