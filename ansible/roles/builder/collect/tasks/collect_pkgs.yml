@@ -1,9 +1,0 @@
----
-- name: "create rpms directory"
-  file:
-    path: "/vagrant/current/build/rpms"
-    state: directory
-
-- name: "gather rpms"
-  shell: "mv /root/rpmbuild/RPMS/*.rpm /vagrant/current/build/rpms/"
-

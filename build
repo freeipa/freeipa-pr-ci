@@ -1,10 +1,10 @@
 #!/bin/python
 import sys
-from tasks import init_logging, Build
+from tasks import logging_init_stream_handler, Build
 
 
 # TODO implement argparse
 git_refspec = sys.argv[1]
 
-init_logging()
+logging_init_stream_handler()
 Build(git_refspec)()

@@ -1,5 +1,0 @@
----
-- name: "create artifacts directory"
-  file:
-    path: "/vagrant/current/build"
-    state: directory

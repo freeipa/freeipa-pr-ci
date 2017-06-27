@@ -6,42 +6,38 @@ from common import PopenTask, PopenException, FallibleTask, TaskException
 
 
 class VagrantTask(FallibleTask):
-    def __init__(self, vagrantfile='Vagrantfile', **kwargs):
+    def __init__(self, **kwargs):
         super(VagrantTask, self).__init__(**kwargs)
-        self.vagrantfile = vagrantfile
-        self.timeout = None
-        self.env = {'VAGRANT_VAGRANTFILE': vagrantfile}
+        self.timeout = kwargs.get('timeout', None)
 
 
 class VagrantUp(VagrantTask):
     def _run(self):
         self.execute_subtask(
-            PopenTask(['vagrant', 'up', '--no-provision', '--parallel'],
-                      env=self.env))
+            PopenTask(['vagrant', 'up', '--no-provision', '--parallel']))
 
 
 class VagrantProvision(VagrantTask):
     def _run(self):
         self.execute_subtask(
-            PopenTask(['vagrant', 'provision'],
-                      env=self.env))
+            PopenTask(['vagrant', 'provision']))
 
 
 class VagrantCleanup(VagrantTask):
     def _run(self):
         try:
             self.execute_subtask(
-                PopenTask(['vagrant', 'destroy'], env=self.env))
+                PopenTask(['vagrant', 'destroy']))
         except PopenException:
             self.execute_subtask(
                 PopenTask(['pkill', '-9', 'bin/vagrant'],
-                          raise_on_err=False, env=self.env))
+                          raise_on_err=False))
             self.execute_subtask(
                 PopenTask(['systemctl', 'restart', 'libvirt'],
-                          raise_on_err=False, env=self.env))
+                          raise_on_err=False))
             self.execute_subtask(
                 PopenTask(['vagrant', 'destroy'],
-                          raise_on_err=False, env=self.env))
+                          raise_on_err=False))
 
 
 class VagrantBoxDownload(VagrantTask):
@@ -67,6 +63,7 @@ class VagrantBoxDownload(VagrantTask):
                 raise exc
 
     def get_vagrantfile(self):
+        raise NotImplementedError
         path = self.vagrantfile
         if self.path is not None:
             path = os.path.join(self.path, path)

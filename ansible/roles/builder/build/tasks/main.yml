@@ -3,7 +3,6 @@
 - include: clone_git_repo.yml
 - include: check_4_5_build_system.yml
 - include: generate_build_version.yml
-- include: create_build_dir.yml
 - include: create_spec.yml
 - include: create_sources.yml
 - include: create_rpms.yml

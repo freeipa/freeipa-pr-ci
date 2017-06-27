@@ -58,6 +58,12 @@ class Task(collections.Callable):
     def _run(self):
         pass
 
+    def _before(self):
+        pass
+
+    def _after(self):
+        pass
+
     def _terminate(self):
         pass
 
@@ -69,7 +75,9 @@ class Task(collections.Callable):
     def __target(self):
         self.exc = None
         try:
+            self._before()
             self._run()
+            self._after()
         except TaskException as exc:
             self.exc = exc
 
@@ -152,25 +160,31 @@ class PopenTask(FallibleTask):
         return 'Process "{cmd}"'.format(cmd=cmd)
 
 
-def init_logging():
-    global LOG_FILE_HANDLER
+def logging_init_stream_handler():
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
-    fh = logging.FileHandler('runner.log', mode='w')
-    fh.setLevel(logging.DEBUG)
     ch = logging.StreamHandler()
     ch.setLevel(logging.DEBUG)
     formatter = logging.Formatter(LOG_FORMAT)
-    fh.setFormatter(formatter)
     ch.setFormatter(formatter)
-    logger.addHandler(fh)
     logger.addHandler(ch)
+
+
+def logging_init_file_handler():
+    global LOG_FILE_HANDLER
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+    fh = logging.FileHandler(constants.RUNNER_LOG, mode='w')
+    fh.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(LOG_FORMAT)
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
     LOG_FILE_HANDLER = fh
 
 
 def create_file_from_template(template_path, dest, data):
     env = jinja2.Environment(
-        loader=jinja2.FileSystemLoader(constants.TEMPLATE_DIR))
+        loader=jinja2.FileSystemLoader(constants.TEMPLATES_DIR))
     template = env.get_template(template_path)
     rendered_template = template.render(**data)
 

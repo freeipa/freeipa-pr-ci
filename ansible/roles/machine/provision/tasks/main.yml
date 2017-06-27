@@ -1,6 +1,6 @@
 ---
 - name: get list of rpms
-  shell: ls /vagrant/current/build/rpms/*.rpm
+  shell: ls /vagrant/current/build/rpms/*.rpm  # FIXME replace with repofile
   register: rpms
 
 - name: install rpms

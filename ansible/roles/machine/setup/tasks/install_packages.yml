@@ -1,13 +1,13 @@
 ---
-- name: "update distro packages"
+- name: update distro packages
   dnf:
-    name: "*"
+    name: *
     state: latest
 
-- name: "install freeipa rpms with dependencies"
-  shell: "dnf install -y /vagrant/current/build/rpms/*.rpm"
+- name: install freeipa rpms with dependencies
+  shell: dnf install -y /vagrant/rpms/*.rpm
 
-- name: "remove freeipa packages while keeping dependencies"
+- name: remove freeipa packages while keeping dependencies
   shell: "rpm -e --nodeps '{{ item }}'"
   with_items:
     - freeipa-client
@@ -28,12 +28,12 @@
     - python3-ipaserver
     - python3-ipatests
 
-- name: "install ipa-vagrant-ci dependencies"
+- name: install ipa-vagrant-ci dependencies
   dnf:
     name: PyYAML
     state: latest
 
-- name: "install vim"
+- name: install vim
   dnf:
     name: vim
     state: latest

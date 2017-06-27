@@ -4,5 +4,4 @@ import sys
 from tasks.remote_storage import FedoraPeopleUpload
 
 
-FedoraPeopleUpload(sys.argv[1]).run()
-
+FedoraPeopleUpload(sys.argv[1])()

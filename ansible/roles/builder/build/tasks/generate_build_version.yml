@@ -37,9 +37,3 @@
 - name: "create build_id"
   set_fact:
     build_id: "{{ timestamp.stdout }}+git{{ revision.stdout }}"
-
-- name: "write build_id to file"
-  template:
-    src: build_id.json.j2
-    dest: /vagrant/build_id.json
-    mode: 0644

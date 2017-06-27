@@ -1,5 +1,11 @@
 ---
-- include: prepare_directory.yml
-- include: collect_logs.yml
-- include: collect_pkgs.yml
+- name: gather logs
+  shell: mv /root/rpmbuild/RPMS/*.log /vagrant/
 
+- name: create rpms directory
+  file:
+    path: /vagrant/rpms
+    state: directory
+
+- name: gather rpms
+  shell: mv /root/rpmbuild/RPMS/*.rpm /vagrant/rpms/

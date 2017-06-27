@@ -1,7 +1,9 @@
+import os
 import re
 
 from common import PopenTask, TaskException
-from constants import FEDORAPEOPLE_KEY_PATH, FEDORAPEOPLE_DIR, BUILD_RE
+from constants import (FEDORAPEOPLE_KEY_PATH, FEDORAPEOPLE_DIR, UUID_RE,
+                       JOBS_DIR)
 
 
 class GzipLogFiles(PopenTask):
@@ -11,8 +13,12 @@ class GzipLogFiles(PopenTask):
         self.cmd = (
             'find {directory} '
             '-type f '
-            '! -name "*.gz" '
-            '-a ! -name "*.rpm" '
+            '! -path "*/.vagrant/*" '
+            '-a ! -path "*/rpms/*" '
+            '-a ! -name "*.gz" '
+            '-a ! -name "Vagrantfile" '
+            '-a ! -name "ipa-test-config.yml" '
+            '-a ! -name "ansible.cfg" '
             '-exec gzip "{{}}" \;'
         ).format(directory=directory)
         self.shell = True
@@ -55,36 +61,26 @@ class SshRsyncTask(RsyncTask):
 
 
 class FedoraPeopleUpload(SshRsyncTask):
-    def __init__(self, src, **kwargs):
-        if not src.endswith('/'):
-            src += '/'
-
-        match = re.match(BUILD_RE + '/(.*/)?$', src)
-        if not match:
-            raise TaskException(
-                self,
-                "Directory has to start with: YYYYMMDDHHMMSS+git<sha>")
+    def __init__(self, uuid, **kwargs):
+        if not re.match(UUID_RE, uuid):
+            raise TaskException(self, "Invalid job UUID")
 
         super(FedoraPeopleUpload, self).__init__(
-            src,
-            FEDORAPEOPLE_DIR.format(path=''),
-            extra_args=['-R'],  # No need to create dirs with relative path
+            os.path.join(JOBS_DIR, uuid),
+            FEDORAPEOPLE_DIR.format(path='jobs/'),
             ssh_private_key_path=FEDORAPEOPLE_KEY_PATH,
             **kwargs
         )
 
 
 class FedoraPeopleDownload(SshRsyncTask):
-    def __init__(self, build, **kwargs):
-        match = re.match(BUILD_RE + '$', build)
-        if not match:
-            raise TaskException(
-                self,
-                "Invalid build id: {build}".format(build=build))
+    def __init__(self, uuid, **kwargs):
+        if not re.match(UUID_RE, uuid):
+            raise TaskException(self, "Invalid job UUID")
 
         super(FedoraPeopleDownload, self).__init__(
-            FEDORAPEOPLE_DIR.format(path=build),
-            './',
+            FEDORAPEOPLE_DIR.format(path='jobs/' + uuid),
+            JOBS_DIR,
             ssh_private_key_path=FEDORAPEOPLE_KEY_PATH,
             **kwargs
         )
