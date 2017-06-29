@@ -6,3 +6,4 @@
 - include: setup.yml
 - include: service_libvirtd.yml
 - include: service_nfs.yml
+- include: deploy_pr_ci.yml
