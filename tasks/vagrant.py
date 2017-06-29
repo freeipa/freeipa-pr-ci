@@ -14,13 +14,14 @@ class VagrantTask(FallibleTask):
 class VagrantUp(VagrantTask):
     def _run(self):
         self.execute_subtask(
-            PopenTask(['vagrant', 'up', '--no-provision', '--parallel']))
+            PopenTask(['vagrant', 'up', '--no-provision', '--parallel'],
+                      timeout=None))
 
 
 class VagrantProvision(VagrantTask):
     def _run(self):
         self.execute_subtask(
-            PopenTask(['vagrant', 'provision']))
+            PopenTask(['vagrant', 'provision'], timeout=None))
 
 
 class VagrantCleanup(VagrantTask):
