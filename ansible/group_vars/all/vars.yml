@@ -1,5 +1,4 @@
 ---
-git_repo: https://github.com/dkupka/freeipa.git
+git_repo: https://github.com/freeipa/freeipa.git
 build_chroot: fedora-25-x86_64
 freeipa_copr: "@freeipa/freeipa-master"
-

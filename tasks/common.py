@@ -160,11 +160,13 @@ class PopenTask(FallibleTask):
         return 'Process "{cmd}"'.format(cmd=cmd)
 
 
-def logging_init_stream_handler():
+def logging_init_stream_handler(noout=False):
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
     ch = logging.StreamHandler()
     ch.setLevel(logging.DEBUG)
+    if noout:
+        ch.setLevel(logging.CRITICAL+1)
     formatter = logging.Formatter(LOG_FORMAT)
     ch.setFormatter(formatter)
     logger.addHandler(ch)

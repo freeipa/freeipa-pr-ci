@@ -1,15 +1,12 @@
-from abc import abstractmethod
 import logging
-import json
 import os
 import shutil
 import urlparse
 import uuid
 
 from ansible import AnsiblePlaybook
-from common import (FallibleTask, TaskException, LOG_FILE_HANDLER,
-                    PopenTask, logging_init_file_handler,
-                    logging_init_stream_handler, create_file_from_template)
+from common import (FallibleTask, TaskException, PopenTask,
+                    logging_init_file_handler, create_file_from_template)
 import constants
 from remote_storage import GzipLogFiles, FedoraPeopleUpload
 from vagrant import VagrantUp, VagrantProvision, VagrantCleanup
@@ -39,6 +36,8 @@ class JobTask(FallibleTask):
         super(JobTask, self).__init__(**kwargs)
         self.timeout = kwargs.get('timeout', None)
         self.uuid = str(uuid.uuid1())
+        self.remote_url = ''
+        self.returncode = 1
 
     @property
     def data_dir(self):
@@ -63,7 +62,7 @@ class JobTask(FallibleTask):
         logging_init_file_handler()
 
         logging.info("Initializing job {uuid}".format(uuid=self.uuid))
-        
+
         # Prepare files for vagrant
         try:
             shutil.copy(constants.ANSIBLE_CFG_FILE, self.data_dir)
@@ -83,14 +82,22 @@ class JobTask(FallibleTask):
         except Exception as exc:
             logging.debug(exc)
             raise TaskException(self, "Failed to publish artifacts")
+        else:
+            self.remote_url = urlparse.urljoin(
+                constants.FEDORAPEOPLE_JOBS_URL, self.uuid)
+            logging.info('Job published at: {remote_url}'.format(
+                remote_url=self.remote_url))
 
 
 class Build(JobTask):
     action_name = 'build'
 
-    def __init__(self, git_refspec, publish_artifacts=True, **kwargs):
+    def __init__(self, git_refspec=None, git_version=None, git_repo=None,
+                 publish_artifacts=True, **kwargs):
         super(Build, self).__init__(**kwargs)
         self.git_refspec = git_refspec
+        self.git_version = git_version
+        self.git_repo = git_repo
         self.publish_artifacts = publish_artifacts
 
     @with_vagrant
@@ -98,15 +105,18 @@ class Build(JobTask):
         try:
             self.build()
             logging.info('Build passed')
+            self.returncode = 0
         except TaskException:
             logging.error('Build failed')
-            raise
         finally:
             self.collect_build_artifacts()
             self.compress_logs()
             if self.publish_artifacts:
                 try:
                     self.create_yum_repo()
+                except TaskException:
+                    logging.error('Failed to create repo')
+                    self.returncode = 1
                 finally:
                     self.upload_artifacts()
 
@@ -114,7 +124,10 @@ class Build(JobTask):
         self.execute_subtask(
             AnsiblePlaybook(
                 playbook=constants.ANSIBLE_PLAYBOOK_BUILD,
-                extra_vars={'git_refspec': self.git_refspec},
+                extra_vars={
+                    'git_refspec': self.git_refspec,
+                    'git_version': self.git_version,
+                    'git_repo': self.git_repo},
                 timeout=20*60))
 
     def collect_build_artifacts(self):
@@ -137,8 +150,3 @@ class Build(JobTask):
             logging.debug(exc)
             logging.error(msg)
             raise TaskException(self, msg)
-
-
-if __name__ == '__main__':
-    logging_init_stream_handler()
-    Build('pull/4/head')()

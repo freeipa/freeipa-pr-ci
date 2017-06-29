@@ -34,7 +34,9 @@ class AnsiblePlaybook(PopenTask):
 
         if self.extra_vars is not None:
             for name, value in self.extra_vars.items():
-                cmd[3:3] = ['-e', '{name}={value}'.format(
+                if value is None:
+                    continue
+                cmd[2:2] = ['-e', '{name}={value}'.format(
                     name=name,
                     value=value)]
 

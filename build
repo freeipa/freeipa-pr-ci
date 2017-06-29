@@ -1,10 +1,52 @@
 #!/bin/python
+import argparse
+import logging
 import sys
 from tasks import logging_init_stream_handler, Build
 
 
-# TODO implement argparse
-git_refspec = sys.argv[1]
+def parse_args():
+    desc = 'Build FreeIPA RPMs from specified git pull-request or version.'
+    parser = argparse.ArgumentParser(
+        prog='build',
+        description=desc)
 
-logging_init_stream_handler()
-Build(git_refspec)()
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('--pull-request', '-p',
+        help='Number of pull-request to build',
+        type=int)
+    group.add_argument('--version',
+        help='Git version (tag, commit) to build')
+
+    parser.add_argument('--url-only', '-u',
+        help='Disable stdout logging and only print job URL',
+        action='store_true',
+        default=False)
+    parser.add_argument('--repo', '-r',
+        help='URL to git repository to use (FreeIPA upstream is default)')
+
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+    git_repo = None
+    git_refspec = None
+    git_version = None
+    if args.repo:
+        git_repo = args.repo
+    if args.pull_request:
+        git_refspec = 'pull/{pr}/head'.format(pr=args.pull_request)
+    if args.version:
+        git_version = args.version
+    logging_init_stream_handler(noout=args.url_only)
+    job = Build(git_refspec=git_refspec, git_version=git_version,
+                git_repo=git_repo)
+    job()
+    if args.url_only:
+        print(job.remote_url)
+    sys.exit(job.returncode)
+
+
+if __name__ == '__main__':
+    main()
