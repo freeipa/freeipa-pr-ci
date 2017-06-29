@@ -1,6 +1,6 @@
 import logging
 import os
-#from pyvagrantfile.Parser import VagrantParser
+# from pyvagrantfile.Parser import VagrantParser
 
 from common import PopenTask, PopenException, FallibleTask, TaskException
 

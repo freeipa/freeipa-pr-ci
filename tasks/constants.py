@@ -18,7 +18,7 @@ FREEIPA_PRCI_REPOFILE = 'freeipa-prci.repo'
 
 ANSIBLE_CFG_FILE = os.path.join(os.path.join(TEMPLATES_DIR, 'ansible.cfg'))
 VAGRANTFILE_FILE = os.path.join(os.path.join(TOPOLOGIES_DIR,
-    'Vagrantfile.{action_name}'))
+                                'Vagrantfile.{action_name}'))
 
 # Playbooks
 ANSIBLE_PLAYBOOK_DIR = os.path.join(BASE_DIR, 'ansible')
