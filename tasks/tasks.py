@@ -89,12 +89,26 @@ class JobTask(FallibleTask):
                 remote_url=self.remote_url))
 
 
+    def terminate(self):
+        logging.critical(
+            "Terminating execution, runtime exceeded {seconds}s".format(
+                seconds=self.timeout))
+
+        # Common cause of job timeout: out of disk space
+        stat = os.statvfs(self.data_dir)
+        if stat.f_bavail == 0:
+            logging.critical('No free disk space')
+
+        super(JobTask, self).terminate()
+
+
 class Build(JobTask):
     action_name = 'build'
 
     def __init__(self, git_refspec=None, git_version=None, git_repo=None,
-                 publish_artifacts=True, **kwargs):
-        super(Build, self).__init__(**kwargs)
+                 publish_artifacts=True, timeout=constants.BUILD_TIMEOUT,
+                 **kwargs):
+        super(Build, self).__init__(timeout=timeout, **kwargs)
         self.git_refspec = git_refspec
         self.git_version = git_version
         self.git_repo = git_repo
@@ -157,8 +171,8 @@ class RunTests(JobTask):
     action_name = 'run_tests'
 
     def __init__(self, build_url, test_suite, publish_artifacts=True,
-                 **kwargs):
-        super(RunTests, self).__init__(**kwargs)
+                 timeout=constants.RUN_TESTS_TIMEOUT, **kwargs):
+        super(RunTests, self).__init__(timeout=timeout, **kwargs)
         self.build_url = build_url
         self.test_suite = test_suite
         self.publish_artifacts = publish_artifacts
