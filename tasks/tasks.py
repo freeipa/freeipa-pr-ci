@@ -104,10 +104,11 @@ class Build(JobTask):
     def _run(self):
         try:
             self.build()
-            logging.info('Build passed')
+            logging.info('>>>>>> BUILD PASSED <<<<<<')
             self.returncode = 0
         except TaskException:
-            logging.error('Build failed')
+            logging.error('>>>>>> BUILD FAILED <<<<<<')
+            self.returncode = 1
         finally:
             self.collect_build_artifacts()
             self.compress_logs()
@@ -150,3 +151,57 @@ class Build(JobTask):
             logging.debug(exc)
             logging.error(msg)
             raise TaskException(self, msg)
+
+
+class RunTests(JobTask):
+    action_name = 'run_tests'
+
+    def __init__(self, build_url, test_suite, publish_artifacts=True,
+                 **kwargs):
+        super(RunTests, self).__init__(**kwargs)
+        self.build_url = build_url
+        self.test_suite = test_suite
+        self.publish_artifacts = publish_artifacts
+
+    def _before(self):
+        super(RunTests, self)._before()
+
+        # Prepare test config files
+        try:
+            shutil.copy(constants.TEST_CONFIG_FILE, self.data_dir)
+            create_file_from_template(
+                constants.ANSIBLE_VARS_TEMPLATE.format(
+                    action_name=self.action_name),
+                os.path.join(self.data_dir, 'vars.yml'),
+                dict(repofile_url=urlparse.urljoin(
+                        self.build_url, 'rpms/freeipa-prci.repo')))
+        except (OSError, IOError) as exc:
+            msg = "Failed to prepare test config files"
+            logging.debug(exc, exc_info=True)
+            logging.critical(msg)
+            raise exc
+
+    @with_vagrant
+    def _run(self):
+        try:
+            self.run_tests()
+            logging.info('>>>>> TESTS PASSED <<<<<<')
+            self.returncode = 0
+        except TaskException as exc:
+            if exc.task.returncode == 1:
+                logging.error('>>>>>> TESTS FAILED <<<<<<')
+            else:
+                logging.error('>>>>>> PYTEST ERROR <<<<<<')
+            self.returncode = exc.task.returncode
+        finally:
+            self.compress_logs()
+            if self.publish_artifacts:
+                self.upload_artifacts()
+
+    def run_tests(self):
+        self.execute_subtask(
+            PopenTask(['vagrant', 'ssh', '-c',
+                ('IPATEST_YAML_CONFIG=/vagrant/ipa-test-config.yaml '
+                 'ipa-run-tests {test_suite} '
+                 '--verbose --logging-level=debug --logfile-dir=/vagrant/'
+                ).format(test_suite=self.test_suite)]))

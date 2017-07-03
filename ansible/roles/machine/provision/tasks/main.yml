@@ -1,13 +1,18 @@
 ---
-- name: get list of rpms
-  shell: ls /vagrant/current/build/rpms/*.rpm  # FIXME replace with repofile
-  register: rpms
+- name: add PR build repository
+  get_url:
+    dest: /etc/yum.repos.d/
+    url: "{{ repofile_url }}"
 
-- name: install rpms
+# This works as long as the version to be tested is newer than what's
+# available in the distro repositories
+- name: install freeipa packages
   dnf:
     name: "{{ item }}"
-    state: present
-  with_items: "{{ rpms.stdout_lines }}"
+    state: latest
+  with_items:
+    - freeipa-*
+    - python*-ipatests
 
 - name: create hosts file from template
   template:

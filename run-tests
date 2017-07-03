@@ -1,121 +1,39 @@
-#!/bin/bash
-
-rm -f /tmp/log_url
-
-taskid=$(uuidgen)
-
-# Execute from the topology directory
-cd "$(dirname "$0")/topology"
-
-log_dir=current/logs/$taskid
-
-# Prevent systemd from using pager (breaks automation)
-export SYSTEMD_PAGER=cat
-
-# Display executed commands 
-set -x
-
-collect_log() {
-    # get PID from task UUID
-    pid=$(journalctl -o short-iso --no-hostname -t $1 | grep $taskid | head -n 1 | cut -d "[" -f2 | cut -d "]" -f1)
-    pid2=$(journalctl -o short-iso --no-hostname -t $1 | grep $taskid | head -n 2 | tail -n 1 | cut -d "[" -f2 | cut -d "]" -f1)
-    journalctl -o short-iso --no-hostname -t $1 _PID=$pid + _PID=$pid2 > $log_dir/$1.log
-}
+#!/bin/python
+import argparse
+import logging
+import sys
+from tasks import logging_init_stream_handler, RunTests
 
 
-main() {
-    echo "<6>$taskid"
+def parse_args():
+    desc = 'Run FreeIPA pytests'
+    parser = argparse.ArgumentParser(
+        prog='run-tests',
+        description=desc)
 
-    # FIXME Do not use current dir, this can fail miserably
-    # Get new build, otherwise use current one
-    if [ -n "$2" ]; then
-        ../download "$2"
-        if [ $? -ne 0 ]; then
-            echo "<2>Can't download build"
-            exit 68
-        fi
+    parser.add_argument('--build_url', '-b',
+        help='URL of build job to be tested',
+        required=True)
+    parser.add_argument('--test-suite', '-t',
+        help='Pytest test suite to be executed',
+        required=True)
+    parser.add_argument('--url-only', '-u',
+        help='Disable stdout logging and only print job URL',
+        action='store_true',
+        default=False)
 
-    fi
+    return parser.parse_args()
 
-    mkdir -p $log_dir
-    # FIXME Hack to fix permission denied from vagrant when running as root
-    # on a local machine
-    chmod -R 777 $log_dir
 
-    vagrant destroy
-    if [ $? -ne 0 ]; then
-        # If previous test run didn't end properly in time, kill it
-        pkill -9 bin/vagrant
-        systemctl restart libvirtd
-        vagrant destroy
-    fi
+def main():
+    args = parse_args()
+    logging_init_stream_handler(noout=args.url_only)
+    job = RunTests(build_url=args.build_url, test_suite=args.test_suite)
+    job()
+    if args.url_only:
+        print(job.remote_url)
+    sys.exit(job.returncode)
 
-    # TODO Fix this ugly hack and do it properly when migrating scripts to Python
-    # Use Vagrantfile for run_tests
-    cp Vagrantfile.run_tests Vagrantfile
 
-    # Download new vagrant box if needed
-    ../scripts/download-box
-    if [ $? -ne 0 ]; then
-        echo "<2>Box download failed"
-        return 64
-    fi
-
-    # TODO Handle timeout properly and gracefully; attempt retry?
-    timeout $((10*60)) vagrant up --no-provision --parallel 2>&1
-    if [ $? -ne 0 ]; then
-        echo "<2>Provisioning (vagrant up) failed (timed out?)"
-        return 65
-    fi
-
-    timeout $((20*60)) vagrant provision 2>&1
-    if [ $? -ne 0 ]; then
-        echo "<2>Provisioning (ansible) failed (missing rpms?, timed out?)"
-        return 66
-    fi
-
-    # Execute tests
-    vagrant ssh -c "echo '<6>$taskid'; echo '<6>Executing tests: $1'; IPATEST_YAML_CONFIG=/vagrant/ipa-test-config.yaml ipa-run-tests $1 --verbose --logging-level=debug --logfile-dir=/vagrant/$log_dir; echo \$? > /vagrant/$log_dir/pytest.exit" | systemd-cat -t 'ipaci-run' -p debug
-
-    # Pytest exit codes: https://docs.pytest.org/en/latest/usage.html#possible-exit-codes
-    pytest_exit=$(cat $log_dir/pytest.exit)
-    case $pytest_exit in
-    0)
-        echo '<5>All tests passed'
-        return 0
-        ;;
-    1)
-        echo '<3>Tests are failing'
-        return 1
-        ;;
-    *)
-        echo '<2>Pytest error'
-        return 67  # Generic pytest error
-        ;;
-    esac
-}
-
-main "$@" | systemd-cat -t 'ipaci-run' -p debug
-exit_code=${PIPESTATUS[0]}
-
-vagrant destroy 1>/dev/null 2>&1
-
-# Collect journal from this run
-collect_log ipaci-run
-
-# Compress the logs to save storage space
-find $log_dir -type f ! -name '*.gz' -exec gzip "{}" \;
-
-# Move logs to long term storage
-dir=$(readlink current)
-../upload "$dir/logs"
-if [ $? -ne 0 ]; then
-    echo "<2>Can't upload logs"
-    exit 68
-fi
-
-# Generate URL
-echo "https://fedorapeople.org/groups/freeipa/prci/$dir/logs/$taskid" > /tmp/log_url
-
-exit $exit_code
-
+if __name__ == '__main__':
+    main()
