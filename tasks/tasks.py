@@ -173,7 +173,7 @@ class RunTests(JobTask):
                     action_name=self.action_name),
                 os.path.join(self.data_dir, 'vars.yml'),
                 dict(repofile_url=urlparse.urljoin(
-                        self.build_url, 'rpms/freeipa-prci.repo')))
+                        self.build_url, '/rpms/freeipa-prci.repo')))
         except (OSError, IOError) as exc:
             msg = "Failed to prepare test config files"
             logging.debug(exc, exc_info=True)
@@ -187,11 +187,12 @@ class RunTests(JobTask):
             logging.info('>>>>> TESTS PASSED <<<<<<')
             self.returncode = 0
         except TaskException as exc:
-            if exc.task.returncode == 1:
+            self.returncode = exc.task.returncode
+            if self.returncode == 1:
                 logging.error('>>>>>> TESTS FAILED <<<<<<')
             else:
-                logging.error('>>>>>> PYTEST ERROR <<<<<<')
-            self.returncode = exc.task.returncode
+                logging.error('>>>>>> PYTEST ERROR ({code}) <<<<<<'.format(
+                    code=self.returncode))
         finally:
             self.compress_logs()
             if self.publish_artifacts:
