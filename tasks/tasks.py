@@ -203,5 +203,6 @@ class RunTests(JobTask):
             PopenTask(['vagrant', 'ssh', '-c',
                 ('IPATEST_YAML_CONFIG=/vagrant/ipa-test-config.yaml '
                  'ipa-run-tests {test_suite} '
-                 '--verbose --logging-level=debug --logfile-dir=/vagrant/'
+                 '--verbose --logging-level=debug --logfile-dir=/vagrant/ '
+                 '--junit-xml=/vagrant/results.xml'
                 ).format(test_suite=self.test_suite)]))
