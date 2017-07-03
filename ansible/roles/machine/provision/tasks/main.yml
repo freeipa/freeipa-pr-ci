@@ -1,4 +1,10 @@
 ---
+- name: create test config file
+  template:
+    src: ipa-test-config.yaml
+    dest: /vagrant/ipa-test-config.yaml
+  when: inventory_hostname == 'controller'
+
 - name: add PR build repository
   get_url:
     dest: /etc/yum.repos.d/

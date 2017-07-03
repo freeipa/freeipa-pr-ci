@@ -168,7 +168,6 @@ class RunTests(JobTask):
 
         # Prepare test config files
         try:
-            shutil.copy(constants.TEST_CONFIG_FILE, self.data_dir)
             create_file_from_template(
                 constants.ANSIBLE_VARS_TEMPLATE.format(
                     action_name=self.action_name),

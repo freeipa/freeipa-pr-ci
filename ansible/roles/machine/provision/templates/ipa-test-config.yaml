@@ -1,0 +1,32 @@
+ad_admin_name: Administrator
+ad_admin_password: Secret123456
+admin_name: admin
+admin_password: Secret.123
+debug: false
+dirman_dn: cn=Directory Manager
+dirman_password: Secret.123
+dns_forwarder: 10.34.78.1
+domains:
+- hosts:
+{% for host in groups['all'] %}
+{% if host.startswith('master') or host.startswith('replica') or host.startswith('client') %}
+    - external_hostname: {{ hostvars[host]['inventory_hostname'] }}.ipa.test
+      name: {{ hostvars[host]['inventory_hostname'] }}.ipa.test
+      ip: {{ hostvars[host]['ansible_default_ipv4']['address'] }}
+{% if host.startswith('master') %}
+      role: master
+{% endif %}
+{% if host.startswith('replica') %}
+      role: replica
+{% endif %}
+{% if host.startswith('client') %}
+      role: client
+{% endif %}
+{% endif %}
+{% endfor %}
+  name: ipa.test
+  type: IPA
+nis_domain: ipatest
+ntp_server: 1.pool.ntp.org
+root_ssh_key_filename: /root/.ssh/freeipa_pr_ci_insecure
+test_dir: ../../ipatests

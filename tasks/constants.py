@@ -19,7 +19,6 @@ ANSIBLE_VARS_TEMPLATE = '{action_name}.vars.yml'
 
 ANSIBLE_CFG_FILE = os.path.join(TEMPLATES_DIR, 'ansible.cfg')
 VAGRANTFILE_FILE = os.path.join(TOPOLOGIES_DIR, 'Vagrantfile.{action_name}')
-TEST_CONFIG_FILE = os.path.join(TEMPLATES_DIR, 'ipa-test-config.yaml')
 
 # Playbooks
 ANSIBLE_PLAYBOOK_DIR = os.path.join(BASE_DIR, 'ansible')
