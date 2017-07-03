@@ -1,7 +1,8 @@
 ---
-- name: check if nested virtualization is already enabled
+- name: check if nested virtualization is enabled
   command: cat /sys/module/kvm_intel/parameters/nested
   register: nested_virt_enabled
+  changed_when: false
 
 - name: enable nested virtualization in kvm config
   blockinfile:

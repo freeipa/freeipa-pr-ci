@@ -1,5 +1,10 @@
 ---
-- name: "install runner dependencies"
+- name: enable nfs
+  service:
+    name: nfs
+    enabled: true
+
+- name: install runner dependencies
   dnf:
     name: "{{ item }}"
     state: present
@@ -16,3 +21,14 @@
     - python-jinja2
     - createrepo
     - gzip
+  notify:
+    - restart_nfs
+
+- name: start&enable libvirt services
+  service:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  with_items:
+    - virtlogd
+    - libvirtd

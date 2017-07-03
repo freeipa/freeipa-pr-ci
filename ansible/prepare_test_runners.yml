@@ -2,4 +2,6 @@
 - hosts: runner
   name: prepare test runners
   roles:
-    - runner
+    - role: runner
+      deploy_ssh_key: true
+      enable_nested_virt: true
