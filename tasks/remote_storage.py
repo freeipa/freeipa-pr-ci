@@ -33,6 +33,7 @@ class RsyncTask(PopenTask):
         cmd = [
             'rsync',
             '-r',
+            '--chmod=0755',
             src,
             dest
         ]
