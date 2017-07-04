@@ -19,6 +19,10 @@
     - rsync
     - createrepo
     - gzip
+    - gcc
+    - python3-devel
+    - python3-pip
+    - redhat-rpm-config
   notify:
     - restart_nfs
 
