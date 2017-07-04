@@ -163,7 +163,7 @@ class PopenTask(FallibleTask):
                 raise exc
 
     def __str__(self):
-        if not isinstance(self.cmd, basestring):
+        if not isinstance(self.cmd, str):
             cmd = ' '.join(self.cmd)
         else:
             cmd = self.cmd
