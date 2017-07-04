@@ -136,7 +136,7 @@ class PopenTask(FallibleTask):
             stderr=subprocess.STDOUT)
 
         for line in iter(self.process.stdout.readline, b''):
-            logging.debug(line.rstrip('\n'))
+            logging.debug(line.decode('utf-8').rstrip('\n'))
 
         self.process.wait()
         self.returncode = self.process.returncode
