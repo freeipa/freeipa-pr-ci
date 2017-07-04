@@ -202,5 +202,5 @@ def create_file_from_template(template_path, dest, data):
     template = env.get_template(template_path)
     rendered_template = template.render(**data)
 
-    with open(dest, "wb") as fh:
+    with open(dest, "w") as fh:
         fh.write(rendered_template)
