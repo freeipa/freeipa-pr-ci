@@ -16,9 +16,7 @@
     - nfs-utils
     - git
     - libvirt
-    - python-github3
     - rsync
-    - python-jinja2
     - createrepo
     - gzip
   notify:

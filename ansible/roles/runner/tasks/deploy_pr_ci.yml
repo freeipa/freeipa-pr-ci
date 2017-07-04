@@ -5,3 +5,9 @@
     repo: https://github.com/tomaskrizek/freeipa-pr-ci
     version: scratch
     force: true
+
+- name: install python dependencies with pip
+  pip:
+    requirements: /root/freeipa-pr-ci/requirements.txt
+    executable: pip3
+    state: present
