@@ -161,6 +161,8 @@ class PopenTask(FallibleTask):
             if exc.errno != errno.ESRCH:
                 # ESRCH -> process doesn't exist (already ended)
                 raise exc
+        except psutil.NoSuchProcess:
+            pass  # probably ended already
 
     def __str__(self):
         if not isinstance(self.cmd, str):
