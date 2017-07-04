@@ -218,4 +218,5 @@ class RunTests(JobTask):
                 'ipa-run-tests {test_suite} '
                 '--verbose --logging-level=debug --logfile-dir=/vagrant/ '
                 '--junit-xml=/vagrant/results.xml'
-                ).format(test_suite=self.test_suite)]))
+                ).format(test_suite=self.test_suite)],
+                timeout=None))
