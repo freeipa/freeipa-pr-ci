@@ -9,7 +9,7 @@ import subprocess
 import threading
 import time
 
-import constants
+from . import constants
 
 
 LOG_FILE_HANDLER = None

@@ -1,9 +1,9 @@
 import os
 import pytest
 
-from ansible import AnsiblePlaybook
-from common import PopenTask, TimeoutException, TaskException
-from vagrant import VagrantBoxDownload
+from .ansible import AnsiblePlaybook
+from .common import PopenTask, TimeoutException, TaskException
+from .vagrant import VagrantBoxDownload
 
 
 def test_timeout():

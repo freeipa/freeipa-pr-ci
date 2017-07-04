@@ -1,6 +1,6 @@
 import os
 
-from common import PopenTask, FallibleTask, TaskException
+from .common import PopenTask, FallibleTask, TaskException
 
 
 class AnsibleFixKeysPermissions(FallibleTask):

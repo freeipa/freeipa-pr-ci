@@ -4,12 +4,12 @@ import shutil
 import urlparse
 import uuid
 
-from ansible import AnsiblePlaybook
-from common import (FallibleTask, TaskException, PopenTask,
+from .ansible import AnsiblePlaybook
+from .common import (FallibleTask, TaskException, PopenTask,
                     logging_init_file_handler, create_file_from_template)
-import constants
-from remote_storage import GzipLogFiles, FedoraPeopleUpload
-from vagrant import VagrantUp, VagrantProvision, VagrantCleanup
+from . import constants
+from .remote_storage import GzipLogFiles, FedoraPeopleUpload
+from .vagrant import VagrantUp, VagrantProvision, VagrantCleanup
 
 
 def with_vagrant(func):

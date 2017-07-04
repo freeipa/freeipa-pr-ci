@@ -2,7 +2,7 @@ import logging
 import os
 # from pyvagrantfile.Parser import VagrantParser
 
-from common import PopenTask, PopenException, FallibleTask, TaskException
+from .common import PopenTask, PopenException, FallibleTask, TaskException
 
 
 class VagrantTask(FallibleTask):
