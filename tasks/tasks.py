@@ -1,7 +1,7 @@
 import logging
 import os
 import shutil
-import urlparse
+import urllib
 import uuid
 
 from .ansible import AnsiblePlaybook
@@ -83,7 +83,7 @@ class JobTask(FallibleTask):
             logging.debug(exc)
             raise TaskException(self, "Failed to publish artifacts")
         else:
-            self.remote_url = urlparse.urljoin(
+            self.remote_url = urllib.parse.urljoin(
                 constants.FEDORAPEOPLE_JOBS_URL, self.uuid)
             logging.info('Job published at: {remote_url}'.format(
                 remote_url=self.remote_url))
@@ -159,7 +159,7 @@ class Build(JobTask):
             create_file_from_template(
                 constants.FREEIPA_PRCI_REPOFILE,
                 os.path.join(repo_path, constants.FREEIPA_PRCI_REPOFILE),
-                dict(job_url=urlparse.urljoin(base_url, self.uuid)))
+                dict(job_url=urllib.parse.urljoin(base_url, self.uuid)))
         except (OSError, IOError) as exc:
             msg = 'Failed to create repo file'
             logging.debug(exc)
@@ -186,7 +186,7 @@ class RunTests(JobTask):
                 constants.ANSIBLE_VARS_TEMPLATE.format(
                     action_name=self.action_name),
                 os.path.join(self.data_dir, 'vars.yml'),
-                dict(repofile_url=urlparse.urljoin(
+                dict(repofile_url=urllib.parse.urljoin(
                         self.build_url, '/rpms/freeipa-prci.repo')))
         except (OSError, IOError) as exc:
             msg = "Failed to prepare test config files"
