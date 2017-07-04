@@ -142,7 +142,7 @@ class Build(JobTask):
                     'git_refspec': self.git_refspec,
                     'git_version': self.git_version,
                     'git_repo': self.git_repo},
-                timeout=20*60))
+                timeout=None))
 
     def collect_build_artifacts(self):
         self.execute_subtask(
