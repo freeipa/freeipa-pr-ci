@@ -12,7 +12,7 @@ class AnsibleFixKeysPermissions(FallibleTask):
         try:
             for file_ in os.listdir(self.directory):
                 if not file_.endswith(".pub"):
-                    os.chmod(os.path.join(self.directory, file_), 0600)
+                    os.chmod(os.path.join(self.directory, file_), 0o600)
         except (IOError, OSError):
             raise TaskException(self, 'unable to fix key permissions')
 
