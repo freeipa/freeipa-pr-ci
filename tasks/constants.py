@@ -20,6 +20,7 @@ ANSIBLE_VARS_TEMPLATE = '{action_name}.vars.yml'
 ANSIBLE_CFG_FILE = os.path.join(TEMPLATES_DIR, 'ansible.cfg')
 VAGRANTFILE_FILE = os.path.join(TOPOLOGIES_DIR, 'Vagrantfile.{action_name}')
 
+POPEN_TERM_TIMEOUT = 10
 BUILD_TIMEOUT = 30*60
 RUN_TESTS_TIMEOUT = 90*60
 

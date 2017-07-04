@@ -4,8 +4,10 @@ import errno
 import jinja2
 import logging
 import os
+import psutil
 import subprocess
 import threading
+import time
 
 import constants
 
@@ -146,7 +148,15 @@ class PopenTask(FallibleTask):
         if self.process is None:
             return
         try:
-            self.process.terminate()
+            parent = psutil.Process(pid=self.process.pid)
+            procs = parent.children(recursive=True)
+            procs.append(parent)
+            for proc in procs:
+                proc.terminate()
+            gone, still_alive = psutil.wait_procs(procs,
+                timeout=constants.POPEN_TERM_TIMEOUT)
+            for proc in still_alive:
+                proc.kill()
         except OSError as exc:
             if exc.errno != errno.ESRCH:
                 # ESRCH -> process doesn't exist (already ended)
