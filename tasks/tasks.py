@@ -6,7 +6,7 @@ import uuid
 
 from .ansible import AnsiblePlaybook
 from .common import (FallibleTask, TaskException, PopenTask,
-                    logging_init_file_handler, create_file_from_template)
+                     logging_init_file_handler, create_file_from_template)
 from . import constants
 from .remote_storage import GzipLogFiles, FedoraPeopleUpload
 from .vagrant import VagrantUp, VagrantProvision, VagrantCleanup
@@ -87,7 +87,6 @@ class JobTask(FallibleTask):
                 constants.FEDORAPEOPLE_JOBS_URL, self.uuid)
             logging.info('Job published at: {remote_url}'.format(
                 remote_url=self.remote_url))
-
 
     def terminate(self):
         logging.critical(
@@ -214,9 +213,9 @@ class RunTests(JobTask):
 
     def run_tests(self):
         self.execute_subtask(
-            PopenTask(['vagrant', 'ssh', '-c',
-                ('IPATEST_YAML_CONFIG=/vagrant/ipa-test-config.yaml '
-                 'ipa-run-tests {test_suite} '
-                 '--verbose --logging-level=debug --logfile-dir=/vagrant/ '
-                 '--junit-xml=/vagrant/results.xml'
+            PopenTask(['vagrant', 'ssh', '-c', (
+                'IPATEST_YAML_CONFIG=/vagrant/ipa-test-config.yaml '
+                'ipa-run-tests {test_suite} '
+                '--verbose --logging-level=debug --logfile-dir=/vagrant/ '
+                '--junit-xml=/vagrant/results.xml'
                 ).format(test_suite=self.test_suite)]))

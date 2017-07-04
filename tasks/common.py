@@ -7,7 +7,6 @@ import os
 import psutil
 import subprocess
 import threading
-import time
 
 from . import constants
 
@@ -153,7 +152,8 @@ class PopenTask(FallibleTask):
             procs.append(parent)
             for proc in procs:
                 proc.terminate()
-            gone, still_alive = psutil.wait_procs(procs,
+            gone, still_alive = psutil.wait_procs(
+                procs,
                 timeout=constants.POPEN_TERM_TIMEOUT)
             for proc in still_alive:
                 proc.kill()

@@ -3,7 +3,7 @@ import re
 
 from .common import PopenTask, TaskException
 from .constants import (FEDORAPEOPLE_KEY_PATH, FEDORAPEOPLE_DIR, UUID_RE,
-                       JOBS_DIR)
+                        JOBS_DIR)
 
 
 class GzipLogFiles(PopenTask):
