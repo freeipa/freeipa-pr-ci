@@ -172,7 +172,7 @@ class RunTests(JobTask):
     def __init__(self, build_url, test_suite, publish_artifacts=True,
                  timeout=constants.RUN_TESTS_TIMEOUT, **kwargs):
         super(RunTests, self).__init__(timeout=timeout, **kwargs)
-        self.build_url = build_url
+        self.build_url = build_url + '/'
         self.test_suite = test_suite
         self.publish_artifacts = publish_artifacts
 
@@ -186,7 +186,7 @@ class RunTests(JobTask):
                     action_name=self.action_name),
                 os.path.join(self.data_dir, 'vars.yml'),
                 dict(repofile_url=urllib.parse.urljoin(
-                        self.build_url, '/rpms/freeipa-prci.repo')))
+                        self.build_url, 'rpms/freeipa-prci.repo')))
         except (OSError, IOError) as exc:
             msg = "Failed to prepare test config files"
             logging.debug(exc, exc_info=True)

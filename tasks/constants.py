@@ -9,7 +9,7 @@ JOBS_DIR = os.path.join(BASE_DIR, 'jobs')
 FEDORAPEOPLE_KEY_PATH = '/root/.ssh/freeipa_pr_ci'
 FEDORAPEOPLE_DIR = 'ipa-maint@fedorapeople.org:/srv/groups/freeipa/prci/{path}'
 FEDORAPEOPLE_BASE_URL = 'https://fedorapeople.org/groups/freeipa/prci/'
-FEDORAPEOPLE_JOBS_URL = urllib.parse.urljoin(FEDORAPEOPLE_BASE_URL, '/jobs/')
+FEDORAPEOPLE_JOBS_URL = urllib.parse.urljoin(FEDORAPEOPLE_BASE_URL, 'jobs/')
 
 UUID_RE = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
 
