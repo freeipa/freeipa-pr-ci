@@ -21,6 +21,10 @@ def parse_args():
         help='Disable stdout logging and only print job URL',
         action='store_true',
         default=False)
+    parser.add_argument('--no-destroy',
+        help='Keep VMs running',
+        action='store_true',
+        default=False)
 
     return parser.parse_args()
 
@@ -28,7 +32,8 @@ def parse_args():
 def main():
     args = parse_args()
     logging_init_stream_handler(noout=args.url_only)
-    job = RunTests(build_url=args.build_url, test_suite=args.test_suite)
+    job = RunTests(build_url=args.build_url, test_suite=args.test_suite,
+                   no_destroy=args.no_destroy)
     job()
     if args.url_only:
         print(job.remote_url)

@@ -25,19 +25,21 @@ def with_vagrant(func):
         else:
             func(self, *args, **kwargs)
         finally:
-            self.execute_subtask(
-                VagrantCleanup(raise_on_err=False))
+            if not self.no_destroy:
+                self.execute_subtask(
+                    VagrantCleanup(raise_on_err=False))
 
     return wrapper
 
 
 class JobTask(FallibleTask):
-    def __init__(self, **kwargs):
+    def __init__(self, no_destroy=False, **kwargs):
         super(JobTask, self).__init__(**kwargs)
         self.timeout = kwargs.get('timeout', None)
         self.uuid = str(uuid.uuid1())
         self.remote_url = ''
         self.returncode = 1
+        self.no_destroy = no_destroy
 
     @property
     def data_dir(self):
