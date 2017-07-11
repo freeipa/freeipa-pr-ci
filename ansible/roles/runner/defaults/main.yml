@@ -1,3 +1,4 @@
 ---
 deploy_ssh_key: false
 enable_nested_virt: false
+ssh_key_dir: /root/.ssh
