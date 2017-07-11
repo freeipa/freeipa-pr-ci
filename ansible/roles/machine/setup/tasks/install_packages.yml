@@ -32,14 +32,17 @@
     - python3-ipatests
     - python3-libipa_hbac
 
-- name: install ipa-vagrant-ci dependencies
+- name: install additional packages
   dnf:
-    name: PyYAML
+    name: "{{ item }}"
     state: latest
+  with_items:
+    - PyYAML  # ipa-vagrant-ci dependency
+    - vim
 
-- name: install vim
-  dnf:
-    name: vim
+- name: install pip dependencies
+  pip:
+    name: pytest-html
     state: latest
 
 - name: disable distro repositories
