@@ -41,3 +41,12 @@
   dnf:
     name: vim
     state: latest
+
+- name: disable distro repositories
+  yum_repository:
+    name: "{{ item }}"
+    enabled: false
+  with_items:
+    - fedora
+    - updates
+    - updates-testing
