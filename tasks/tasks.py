@@ -219,6 +219,6 @@ class RunTests(JobTask):
                 'IPATEST_YAML_CONFIG=/vagrant/ipa-test-config.yaml '
                 'ipa-run-tests {test_suite} '
                 '--verbose --logging-level=debug --logfile-dir=/vagrant/ '
-                '--junit-xml=/vagrant/results.xml'
+                '--html=/vagrant/report.html'
                 ).format(test_suite=self.test_suite)],
                 timeout=None))
