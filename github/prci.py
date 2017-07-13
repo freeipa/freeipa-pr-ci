@@ -11,6 +11,9 @@ from prci_github import TaskQueue, AbstractJob, TaskAlreadyTaken, JobResult
 from prci_github.adapter import GitHubAdapter
 
 
+NO_TASK_BACKOFF_TIME = 5
+
+
 class ExitHandler(object):
     done = False
     abort = False
@@ -125,9 +128,9 @@ if __name__ == '__main__':
         tq.create_tasks_for_pulls()
 
         try:
-            task = tq.next()
+            task = next(tq)
         except StopIteration:
-            time.sleep(30)
+            time.sleep(NO_TASK_BACKOFF_TIME)
             continue
 
         try:
