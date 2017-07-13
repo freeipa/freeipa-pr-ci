@@ -28,40 +28,39 @@
                                       || .target_url  |        | .run          |
                                       ||              |        | .collect_logs |
                                        |--------------|        |---------------|
-
 """
 import abc
 import collections
-import yaml
+import logging
 import time
+import yaml
+
+from .adapter import GitHubAdapter
 
 
 RACE_TIMEOUT = 10
 CREATE_TIMEOUT = 5
+RERUN_LABEL = 're-run'
 
 
-class NoTaskAvailable(Exception):
-    pass
+logger = logging.getLogger(__name__)
 
 
 class TaskAlreadyTaken(Exception):
     pass
 
 
-def get_pull_priority(p):
-    priority_prefix = 'priority:'
-    for label in p.issue().labels():
-        if label.name.startswith(priority_prefix):
-            return int(label.name[len(priority_prefix):])
-    else:
-        return 0
-
-
 class Status(object):
     @classmethod
     def create(cls, repo, pull, context, description, target_url, state):
-        sha = repo.commit(pull.head.sha).sha
-        repo.create_status(sha, state, target_url, description, context)
+        sha = repo.commit(pull.pull.head.sha).sha
+        s = repo.create_status(sha, state, target_url, description, context)
+
+        # invalidate cache for statuses on this commit
+        for k, adapter in repo.session.adapters.items():
+            if isinstance(adapter, GitHubAdapter):
+                adapter.cache.data.pop(s.url, None)
+                break
 
         last_e = RuntimeError()
         for _ in range(CREATE_TIMEOUT):
@@ -78,7 +77,7 @@ class Status(object):
         self.pull = pull
         self.context = context
 
-        for status in repo.commit(pull.head.sha).statuses():
+        for status in repo.commit(pull.pull.head.sha).statuses():
             if status.context == self.context:
                 break
         else:
@@ -131,7 +130,7 @@ class Statuses(collections.Mapping):
                 pass
 
         return ret
-        
+
     def items(self):
         ret = []
         for context in self.contexts:
@@ -143,53 +142,47 @@ class Statuses(collections.Mapping):
         return ret
 
 
-class PullQueue(object):
+class Labels(collections.MutableSet):
+    def __init__(self, pull):
+        self.pull = pull
 
-    def __init__(self, repo):
-        self.repo = repo
-
-    def __iter_pull_without_tasks(self):
-        for pull in self:
-            if len(list(self.repo.commit(pull.head.sha).statuses())) == 0:
-                yield pull
+    def __contains__(self, label):
+        return label in [l.name for l in self.pull.issue().labels()]
 
     def __iter__(self):
-        for pull in sorted(self.repo.pull_requests(), reverse=True,
-                            key=get_pull_priority):
-            yield pull
+        for label in self.pull.issue().labels():
+            yield label.name
+
+    def __len__(self):
+        return len([l for l in self.pull.issue().labels()])
+
+    def add(self, label):
+        self.pull.issue().add_labels(label)
+
+    def discard(self, label):
+        self.pull.issue().remove_label(label)
 
 
-class TaskQueue(collections.Iterator):
-    def __init__(self, repo, tasks_config_path, job_cls):
+class PullRequest(object):
+    def __init__(self, pull, repo):
+        self.pull = pull
         self.repo = repo
-        self.job_cls = job_cls
-        with open(tasks_config_path) as tc:
-            self.tasks_conf = yaml.load(tc)
 
-    def create_tasks_for_pulls(self):
-        for pull in PullQueue(self.repo):
-            if len(Statuses(self.repo, pull, self.tasks_conf.keys())):
-                continue
-            for task in self.tasks_conf:
-                Status.create(self.repo, pull, task, 'unassigned', '',
-                              'pending')
+    @property
+    def labels(self):
+        return Labels(self.pull)
+
+    def tasks(self, tasks_conf, job_cls):
+        return Tasks(self, self.repo, tasks_conf, job_cls)
+
+
+class PullRequests(collections.Iterator):
+    def __init__(self, repo):
+        self.repo = repo
+        self.pull_requests = self.repo.pull_requests()
 
     def next(self):
-        for pull in PullQueue(self.repo):
-            tasks = []
-            for status in Statuses(self.repo, pull, self.tasks_conf).values():
-                if (status.state != 'pending' or
-                    status.description != 'unassigned'):
-                        continue
-
-                task = Task(status, self.tasks_conf[status.context], self.job_cls)
-                if task.dependencies_done():
-                    tasks.append(task)
-
-            if tasks:
-                return max(tasks, key=lambda t: t.priority)
-
-        raise StopIteration()
+        return PullRequest(next(self.pull_requests), self.repo)
 
 
 class Task(object):
@@ -197,12 +190,13 @@ class Task(object):
         self.status = status
         self.repo = status.repo
         self.pull = status.pull
-        self.refspec = 'pull/{}/head'.format(self.pull.number)
+        self.refspec = 'pull/{}/head'.format(self.pull.pull.number)
         self.name = status.context
 
         self.priority = conf['priority']
         self.requires = conf['requires']
         self.job = job_cls(conf['job'], self.refspec)
+
 
     def dependencies_done(self):
         for dep in self.requires:
@@ -210,8 +204,15 @@ class Task(object):
                 return False
         return True
 
+    def can_run(self):
+        if (self.status.state == 'pending' and
+            self.status.description == 'unassigned'):
+                return self.dependencies_done()
+        return False
+
     def take(self, runner_id):
         desc = 'Taken by {}'.format(runner_id)
+        logger.debug('Attempting to take task')
         Status.create(self.repo, self.pull, self.name, desc, '', 'pending')
         time.sleep(RACE_TIMEOUT)
         status = Status(self.repo, self.pull, self.name)
@@ -236,8 +237,97 @@ class Task(object):
             state = result.state
             description = result.description
             url = result.url
-            
+
         Status.create(self.repo, self.pull, self.name, description, url, state)
+
+
+class Tasks(collections.Set, collections.Mapping):
+    def __init__(self, pull, repo, tasks_conf, job_cls):
+        self.pull = pull
+        self.repo = repo
+        self.tasks_conf = tasks_conf
+        self.job_cls = job_cls
+
+    def __len__(self):
+        return len(Statuses(self.repo, self.pull, self.tasks_conf.keys()))
+
+    def __iter__(self):
+        for task in self.tasks_conf:
+            try:
+                status = Status(self.repo, self.pull, task)
+            except ValueError:
+                # ignore missing
+                pass
+            else:
+                yield Task(status, self.tasks_conf[task], self.job_cls)
+
+    def __getitem__(self, context):
+        try:
+            status = Status(self.repo, self.pull, context)
+        except ValueError:
+            raise KeyError(context)
+        else:
+            return Task(status, self.tasks_conf[task], self.job_cls)
+
+    def __bool__(self):
+        return bool(len(self))
+
+    def create(self):
+        logger.debug("Creating tasks for PR {}".format(self.pull.pull.number))
+        for task in self.tasks_conf:
+            logger.debug("PR {}: {}".format(self.pull.pull.number, task))
+            Status.create(self.repo, self.pull, task, 'unassigned', '', 'pending')
+        logger.debug("Creating tasks for PR {} done.".format(self.pull.pull.number))
+
+
+class TaskQueue(collections.Iterator):
+    def __init__(self, repo, tasks_config_path, job_cls):
+        self.repo = repo
+        self.job_cls = job_cls
+        with open(tasks_config_path) as tc:
+            self.tasks_conf = yaml.load(tc)
+
+    def create_tasks_for_pulls(self):
+        """
+        Generate CI tasks represented by GitHub Statuses [1]
+
+        The tasks are generated when:
+        a. there's RERUN_LABEL on the PR
+        b. there're no tasks yet
+
+        [1] https://developer.github.com/v3/repos/statuses/
+        """
+        for pull in PullRequests(self.repo):
+            logger.debug("PR {}".format(pull.pull.number))
+            tasks = pull.tasks(self.tasks_conf, self.job_cls)
+            if not tasks:
+                logger.debug('Creating tasks for PR {}'.format(pull.pull.number))
+                tasks.create()
+            elif RERUN_LABEL in pull.labels:
+                logger.debug('Recreating tasks for PR {}'.format(pull.pull.number))
+                pull.labels.discard(RERUN_LABEL)
+                tasks.create()
+
+    def next(self):
+        """
+        Return next task for processing
+
+        From tasks that are available for execution the one with maximum
+        priority is returned.
+        """
+        tasks = []
+        for pull in PullRequests(self.repo):
+            for task in pull.tasks(self.tasks_conf, self.job_cls):
+                if task.can_run():
+                    tasks.append(task)
+
+        if tasks:
+            return max(
+                tasks,
+                key=lambda t: ('prioritize' in t.pull.labels, t.priority),
+            )
+        else:
+            raise StopIteration()
 
 
 class JobResult(object):
