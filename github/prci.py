@@ -1,6 +1,5 @@
 import argparse
 import github3
-from github3.null import NullObject
 import logging
 import signal
 import subprocess
