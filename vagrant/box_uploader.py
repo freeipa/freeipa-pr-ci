@@ -159,6 +159,12 @@ if __name__ == '__main__':
     except KeyError:
         provider = version.add_provider(box_provider)
 
-    provider.upload(box_filename)
+    try:
+        provider.upload(box_filename)
+    except Exception:
+        # for unknown reason there's BadStatusLine exception after
+        # successful upload, ignore
+        # TODO: investigate and fix properly/report to vagrant cloud
+        pass
 
     version.release()
