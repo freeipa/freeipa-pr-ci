@@ -3,7 +3,7 @@
   git: 
     dest: /root/freeipa-pr-ci
     repo: https://github.com/tomaskrizek/freeipa-pr-ci
-    version: scratch
+    version: master
     force: true
 
 - name: install python dependencies with pip
