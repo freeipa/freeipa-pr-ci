@@ -21,5 +21,6 @@
 
 - hosts: runner
   name: "package template box"
+  become_user: root
   roles:
     - box/package

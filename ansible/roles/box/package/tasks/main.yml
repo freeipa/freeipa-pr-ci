@@ -1,7 +1,5 @@
 ---
-- name: "remove any artifcats from previous packaging"
-  become_user: root
-  become: yes
+- name: remove any artifcats from previous packaging
   file:
     path: /tmp/image/_tmp_package
     state: absent
@@ -30,8 +28,14 @@
   tags:
     - package_box
 
-- name: "destroy template VM"
+- name: change ownership of box
+  become: true
+  file:
+    path: "/tmp/image/{{ template_box_name }}"
+    owner: "{{ ansible_effective_user_id }}"
+    group: "{{ ansible_effective_group_id }}"
+
+- name: destroy template VM
   shell: vagrant destroy
   args:
     chdir: /tmp/image
-
