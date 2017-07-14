@@ -18,11 +18,9 @@
   args:
     chdir: /tmp/image
 
-- name: "create vagrant box"
-  become_user: root
-  become: yes
-  # TODO replace hardcoded name with variable
-  shell: vagrant package --output ipa-master-f25.box
+- name: create vagrant box
+  become: true
+  shell: "vagrant package --output {{ template_box_name }}"
   args:
     chdir: /tmp/image
   tags:
