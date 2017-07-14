@@ -5,6 +5,5 @@ chmod 600 keys/vagrant
 chmod 600 keys/freeipa_pr_ci_insecure
 
 # Run playbook to create box
-ansible-playbook -v -K -i ansible/hosts/runner_localhost \
+ansible-playbook -v -K -i ansible/hosts/runner_localhost "$@" \
   ansible/create_template_box.yml
-
