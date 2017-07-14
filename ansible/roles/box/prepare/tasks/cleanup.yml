@@ -1,17 +1,16 @@
 ---
-- name: "check if template directory has Vagrantfile"
+- name: check if template directory has Vagrantfile
   stat:
     path: /tmp/image/Vagrantfile
   register: vagrantfile
 
-- name: "destroy vagrant image"
+- name: destroy vagrant image
   shell: vagrant destroy
   args:
     chdir: /tmp/image
   when: vagrantfile.stat.exists is defined and vagrantfile.stat.exists
  
-- name: "remove the template directory"
+- name: remove the template directory
   file:
     path: /tmp/image
     state: absent
-

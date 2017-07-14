@@ -1,5 +1,5 @@
 ---
-- name: "cleanup previous build_id file"
+- name: cleanup previous build_id file
   file:
     path: "/vagrant/build_id.json"
     state: absent

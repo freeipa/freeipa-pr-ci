@@ -1,21 +1,21 @@
 ---
-- name: "add autoreconf to spec file"
+- name: add autoreconf to spec file
   lineinfile:
     path: /root/freeipa/freeipa.spec.in
     insertafter: "^%setup"
     line: autoreconf -if
 
-- name: "change version in spec file"
+- name: change version in spec file
   lineinfile:
     path: /root/freeipa/freeipa.spec.in
     regexp: "^Version:"
     line: "Version:        {{ build_version }}"
 
-- name: "create directory for spec file"
+- name: create directory for spec file
   file:
     path: /root/rpmbuild/SPECS
     state: directory
 
-- name: "copy spec to rpmbuild"
+- name: copy spec to rpmbuild
   shell: cp /root/freeipa/freeipa.spec.in /root/rpmbuild/SPECS/freeipa.spec
 

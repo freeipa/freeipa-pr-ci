@@ -1,10 +1,10 @@
 ---
-- name: "remove git repository"
+- name: remove git repository
   file:
     path: /root/freeipa
     state: absent
 
-- name: "remove build folder"
+- name: remove build folder
   file:
     path: /root/rpmbuild
     state: absent

@@ -2,30 +2,30 @@
 - include: cleanup.yml
   tags: cleanup
 
-- name: "create folder for image"
+- name: create folder for image
   file:
     path: /tmp/image
     state: directory
     mode: 0755
 
-- name: "copy Vagrant template file"
+- name: copy Vagrant template file
   template:
     src: Vagrantfile.j2
     dest: /tmp/image/Vagrantfile
     mode: 0644
 
-- name: "bring the image online"
+- name: bring the image online
   shell: vagrant up
   args:
     chdir: /tmp/image
 
-- name: "get IP from vagrant ssh-config"
+- name: get IP from vagrant ssh-config
   shell: "vagrant ssh-config | grep HostName | sed 's/  HostName //'"
   args:
     chdir: /tmp/image
   register: command_output
 
-- name: "add image_box IP as a new host to ansible playbook"
+- name: add image_box IP as a new host to ansible playbook
   add_host:
     name: "{{ command_output.stdout }}"
     groups: "image_box"
@@ -33,6 +33,5 @@
     ansible_ssh_private_key_file: "keys/vagrant"
     ansible_ssh_common_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 
-- name: "wait for image to come online"
+- name: wait for image to come online
   local_action: wait_for host="{{ command_output.stdout }}" port=22 timeout=120
-

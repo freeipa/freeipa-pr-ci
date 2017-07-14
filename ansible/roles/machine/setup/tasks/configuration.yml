@@ -1,11 +1,11 @@
 ---
-- name: "set selinux mode"
+- name: set selinux mode
   selinux:
     state: "{{ selinux_mode }}"
     policy: targeted
 
-- name: "enable FreeIPA COPR repo"
+- name: enable FreeIPA COPR repo
   shell: "dnf copr enable -y {{ copr_repo }}"
 
-- name: "disable updates-testing repository"
+- name: disable updates-testing repository
   shell: dnf config-manager --set-disabled updates-testing

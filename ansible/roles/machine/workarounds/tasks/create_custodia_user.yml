@@ -4,7 +4,7 @@
 #
 # https://pagure.io/freeipa/issue/6931
 
-- name: "create custodia user"
+- name: create custodia user
   user:
     name: custodia
     state: present

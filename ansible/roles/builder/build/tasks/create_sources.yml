@@ -1,16 +1,16 @@
 ---
-- name: "link repo to temporary folder"
+- name: link repo to temporary folder
   file:
     src: /root/freeipa
     dest: "/tmp/freeipa-{{ build_version }}"
     state: link
 
-- name: "create directory for sources"
+- name: create directory for sources
   file:
     path: /root/rpmbuild/SOURCES
     state: directory
 
-- name: "pack the souces to tar.gz"
+- name: pack the souces to tar.gz
   archive:
     path: "/tmp/freeipa-{{ build_version }}"
     dest: "/root/rpmbuild/SOURCES/freeipa-{{ build_version }}.tar.gz"

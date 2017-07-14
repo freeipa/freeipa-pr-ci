@@ -1,10 +1,10 @@
 ---
-- name: "verify we're using 4.5 build system"
+- name: verify we're using 4.5 build system
   stat:
     path: /root/freeipa/VERSION.m4
   register: version_file
 
-- name: "check existence of VERSION.m4"
+- name: check existence of VERSION.m4
   fail:
     msg: "FreeIPA Build system < 4.5 is not supported yet."
   when: version_file.stat.exists == False

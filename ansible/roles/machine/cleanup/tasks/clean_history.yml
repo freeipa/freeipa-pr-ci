@@ -1,4 +1,4 @@
 ---
-- name: "clear bash history"
+- name: clear bash history
   shell: cat /dev/null > ~/.bash_history && history -c
 

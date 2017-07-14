@@ -8,12 +8,12 @@
 
 # Turn template VM off and on again. Created vagrant box may not boot if 
 # this step is omitted.
-- name: "shutdown template VM"
+- name: shutdown template VM
   shell: vagrant halt
   args:
     chdir: /tmp/image
 
-- name: "boot template VM"
+- name: boot template VM
   shell: vagrant up
   args:
     chdir: /tmp/image

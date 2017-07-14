@@ -1,12 +1,12 @@
 ---
-- name: "set default mock config"
+- name: set default mock config
   file:
     src: "/etc/mock/{{ build_chroot }}.cfg"
     dest: /etc/mock/default.cfg
     state: link
     force: yes
 
-- name: "enable copr repo for mock"
+- name: enable copr repo for mock
   blockinfile:
     block: |
       [freeipa_copr]
@@ -22,7 +22,7 @@
     dest: /etc/mock/default.cfg
     insertbefore: '^\[fedora\]'
 
-- name: "enable tmpfs to speed up mock"
+- name: enable tmpfs to speed up mock
   blockinfile:
     block: |
       config_opts['plugin_conf']['tmpfs_enable'] = True

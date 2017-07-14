@@ -1,5 +1,5 @@
 ---
-- name: "clone git repo and checkout refspec's head"
+- name: clone git repo and checkout refspec's head
   git:
     repo: "{{ git_repo }}"
     dest: /root/freeipa
@@ -8,7 +8,7 @@
     force: yes
   when: git_refspec is defined
 
-- name: "checkout git repo and checkout version"
+- name: checkout git repo and checkout version
   git:
     repo: "{{ git_repo }}"
     dest: /root/freeipa

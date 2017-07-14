@@ -5,7 +5,7 @@
     state: directory
     mode: 0700
 
-- name: "add freeipa_pr_ci private key"
+- name: add freeipa_pr_ci private key
   copy:
     src: ../keys/freeipa_pr_ci
     dest: "{{ ssh_key_dir }}/freeipa_pr_ci"

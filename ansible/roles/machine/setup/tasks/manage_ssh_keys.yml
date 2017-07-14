@@ -1,5 +1,5 @@
 ---
-- name: "set authorized keys for root"
+- name: set authorized keys for root
   authorized_key:
     user: root
     state: present
@@ -8,7 +8,7 @@
     - ../keys/freeipa_pr_ci.pub
     - ../keys/freeipa_pr_ci_insecure.pub
 
-- name: "set authorized keys for vagrant"
+- name: set authorized keys for vagrant
   authorized_key:
     user: vagrant
     state: present
@@ -18,7 +18,7 @@
     - ../keys/freeipa_pr_ci_insecure.pub
     - ../keys/vagrant.pub
 
-- name: "create /root/.ssh directory"
+- name: create /root/.ssh directory
   file:
     path: /root/.ssh
     state: directory
@@ -26,7 +26,7 @@
     owner: root
     group: root
 
-- name: "add freeipa_pr_ci_insecure private key"
+- name: add freeipa_pr_ci_insecure private key
   copy:
     src: ../keys/freeipa_pr_ci_insecure
     dest: /root/.ssh/freeipa_pr_ci_insecure

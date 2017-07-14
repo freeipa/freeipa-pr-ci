@@ -1,9 +1,9 @@
 ---
-- name: "gather list of ifcfg files"
+- name: gather list of ifcfg files
   raw: find /etc/sysconfig/network-scripts/ -type f -name "ifcfg-*"
   register: ifcfg_files
 
-- name: "remove HWADDR line from ifcfg files"
+- name: remove HWADDR line from ifcfg files
   lineinfile:
     dest: "{{ item }}"
     backup: yes
