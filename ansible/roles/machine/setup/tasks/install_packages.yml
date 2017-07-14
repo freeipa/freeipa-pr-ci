@@ -1,7 +1,7 @@
 ---
 - name: update distro packages
   dnf:
-    name: *
+    name: '*'
     state: latest
 
 - name: install freeipa rpms with dependencies
@@ -46,9 +46,7 @@
     state: latest
 
 - name: disable distro repositories
-  yum_repository:
-    name: "{{ item }}"
-    enabled: false
+  shell: "dnf config-manager --set-disabled {{ item }}"
   with_items:
     - fedora
     - updates

@@ -8,6 +8,4 @@
   shell: "dnf copr enable -y {{ copr_repo }}"
 
 - name: "disable updates-testing repository"
-  yum_repository:
-    name: updates-testing
-    enabled: false
+  shell: dnf config-manager --set-disabled updates-testing
