@@ -107,7 +107,7 @@ def create_parser():
 
 def update_code():
     cmd = ['git', 'pull', 'origin', 'master']
-    stdout = subprocess.check_output(cmd)
+    stdout = subprocess.check_output(cmd).decode('utf-8')
     if 'Already up-to-date' not in stdout:
         logger.info('Code change detected, reloading process.')
         os.execv(__file__, sys.argv)
