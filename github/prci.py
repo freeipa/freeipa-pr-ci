@@ -103,6 +103,14 @@ def create_parser():
     return parser
 
 
+def update_code():
+    cmd = ['git', 'pull', 'origin', 'master']
+    stdout = subprocess.check_output(cmd)
+    if 'Already up-to-date' not in stdout:
+        logger.info('Code change detected, reloading process.')
+        os.execv(__file__, sys.argv)
+
+
 if __name__ == '__main__':
     parser = create_parser()
     args = parser.parse_args()
@@ -125,6 +133,8 @@ if __name__ == '__main__':
     signal.signal(signal.SIGTERM, handler.abort)
 
     while not handler.done:
+        update_code()
+
         tq.create_tasks_for_pulls()
 
         try:
