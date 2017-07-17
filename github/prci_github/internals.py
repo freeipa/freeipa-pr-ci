@@ -181,7 +181,7 @@ class PullRequests(collections.Iterator):
         self.repo = repo
         self.pull_requests = self.repo.pull_requests()
 
-    def next(self):
+    def __next__(self):
         return PullRequest(next(self.pull_requests), self.repo)
 
 
@@ -308,7 +308,7 @@ class TaskQueue(collections.Iterator):
                 pull.labels.discard(RERUN_LABEL)
                 tasks.create()
 
-    def next(self):
+    def __next__(self):
         """
         Return next task for processing
 
