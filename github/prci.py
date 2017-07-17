@@ -91,11 +91,11 @@ def create_parser():
         help='Unique runner ID',
     )
     parser.add_argument(
-        '--credentials', type=file, required=True,
+        '--credentials', type=argparse.FileType('r'), required=True,
         help='YAML file containig at least user, token and repository',
     )
     parser.add_argument(
-        '--tasks', type=file, required=True,
+        '--tasks', type=argparse.FileType('r'), required=True,
         help='YAML file with definiton of tasks',
     )
     parser.add_argument(
