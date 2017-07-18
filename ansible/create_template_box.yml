@@ -1,6 +1,7 @@
 ---
 - hosts: runner
   name: prepare vagrant box
+  become_user: root
   roles:
     - box/prepare
 

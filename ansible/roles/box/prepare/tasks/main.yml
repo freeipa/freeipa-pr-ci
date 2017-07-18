@@ -15,6 +15,7 @@
     mode: 0644
 
 - name: bring the image online
+  become: true
   shell: vagrant up
   args:
     chdir: /tmp/image
