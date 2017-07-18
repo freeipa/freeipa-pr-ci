@@ -40,6 +40,7 @@ class JobTask(FallibleTask):
         self.remote_url = ''
         self.returncode = 1
         self.no_destroy = no_destroy
+        self.description = '<no description>'
 
     @property
     def data_dir(self):

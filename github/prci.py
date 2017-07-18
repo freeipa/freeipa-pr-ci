@@ -9,6 +9,7 @@ import sys
 import time
 import yaml
 
+from ..tasks import TimeoutException
 from prci_github import TaskQueue, AbstractJob, TaskAlreadyTaken, JobResult
 from prci_github.adapter import GitHubAdapter
 
@@ -77,6 +78,45 @@ class Job(AbstractJob):
         return JobResult(state, description, url)
 
 
+class JobDispatcher:
+    def __init__(self, job, build_target):
+        self.klass = getattr(
+            __import__('..tasks', fromlist=[self.job['class']]),
+            self.job['class'])
+        self.kwargs = self.job['args']
+        self.kwarg_lookup = {
+            'git_repo': build_target[0],
+            'git_refspec': build_target[1]}
+
+    def __call__(self, depends_results=None):
+        if depends_result is not None:
+            for task_name, result in depends_results.items():
+                self.kwarg_lookup['{}_description'.format(task_name)] = \
+                    result.description
+                self.kwarg_lookup['{}_url'.format(task_name)] = result.url
+
+        kwargs = {}
+        for key, value in self.kwargs.items():
+            if isinstance(value, str):
+                value = value.format(**self.kwarg_lookup)
+            kwargs[key] = value
+
+        job = self.klass(**kwargs)
+        try:
+            job()
+        except Exception as exc:
+            description = str(exc)
+            state = 'error'
+        else:
+            description = job.description
+            if job.returncode == 0:
+                state = 'success'
+            else:
+                state = 'failure'
+
+        return JobResult(state, description, job.remote_url)
+
+
 def create_parser():
     def log_level(l):
         try:
@@ -127,7 +167,7 @@ if __name__ == '__main__':
     gh.session.mount('https://api.github.com', GitHubAdapter())
 
     repo = gh.repository(creds['user'], creds['repo'])
-    tq = TaskQueue(repo, tasks_file.name, Job)
+    tq = TaskQueue(repo, tasks_file.name, JobDispatcher)
 
     handler = ExitHandler()
 

@@ -355,7 +355,7 @@ class AbstractJob(collections.Callable):
         self.target = build_target
 
     @abc.abstractmethod
-    def __call__(self, depends_results={}):
+    def __call__(self, depends_results=None):
         """
         @param depends_results - dict of task_name: JobResult
         @returns JobResult instance
