@@ -14,6 +14,7 @@
     chdir: /tmp/image
 
 - name: boot template VM
+  become: true
   shell: vagrant up
   args:
     chdir: /tmp/image
@@ -34,6 +35,7 @@
     group: "{{ ansible_effective_group_id }}"
 
 - name: destroy template VM
+  become: true
   shell: vagrant destroy
   args:
     chdir: /tmp/image

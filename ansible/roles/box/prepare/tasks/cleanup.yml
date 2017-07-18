@@ -5,12 +5,14 @@
   register: vagrantfile
 
 - name: destroy vagrant image
+  become: true
   shell: vagrant destroy
   args:
     chdir: /tmp/image
   when: vagrantfile.stat.exists is defined and vagrantfile.stat.exists
  
 - name: remove the template directory
+  become: true
   file:
     path: /tmp/image
     state: absent
