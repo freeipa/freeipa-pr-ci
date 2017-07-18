@@ -137,6 +137,11 @@ class Build(JobTask):
                 finally:
                     self.upload_artifacts()
 
+        if self.returncode == 0:
+            self.description = constants.BUILD_PASSED_DESCRIPTION
+        else:
+            self.description = constants.BUILD_FAILED_DESCRIPTION
+
     def build(self):
         self.execute_subtask(
             AnsiblePlaybook(
