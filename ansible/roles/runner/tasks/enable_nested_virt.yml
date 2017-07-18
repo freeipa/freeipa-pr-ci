@@ -10,25 +10,5 @@
     create: yes
     block: |
       options kvm-intel nested=1
+  notify: reboot
   when: nested_virt_enabled.stdout == "N"
-
-- name: restart machine to enable the nested virtualization
-  shell: 'sleep 2 && shutdown -r now "Ansible updates triggered"'
-  async: 1
-  poll: 0
-  ignore_errors: true
-  when: nested_virt_enabled.stdout == "N"
-
-- name: show inv hostname
-  debug:
-    msg: "connecting to {{inventory_hostname }}"
-  when: nested_virt_enabled.stdout == "N"
-
-- name: waiting for server to come back
-  local_action: wait_for
-    host="{{ inventory_hostname }}"
-    port=22
-    delay=10
-    timeout=120
-  when: nested_virt_enabled.stdout == "N"
-
