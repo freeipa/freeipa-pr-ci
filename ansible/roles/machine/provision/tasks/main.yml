@@ -20,6 +20,14 @@
     - freeipa-*
     - python*-ipatests
 
+- name: get all packages
+  shell: rpm -qa
+  register: packages
+
+- name: display installed packages
+  debug:
+    var: packages.stdout
+
 - name: create hosts file from template
   template:
     src: hosts
