@@ -30,6 +30,7 @@
                                        |--------------|        |---------------|
 """
 import abc
+import base64
 import collections
 import logging
 import time
@@ -172,8 +173,8 @@ class PullRequest(object):
     def labels(self):
         return Labels(self.pull)
 
-    def tasks(self, tasks_conf, job_cls):
-        return Tasks(self, self.repo, tasks_conf, job_cls)
+    def tasks(self, tasks_config_path, job_cls):
+        return Tasks(self, self.repo, tasks_config_path, job_cls)
 
 
 class PullRequests(collections.Iterator):
@@ -243,11 +244,22 @@ class Task(object):
 
 
 class Tasks(collections.Set, collections.Mapping):
-    def __init__(self, pull, repo, tasks_conf, job_cls):
+    def __init__(self, pull, repo, tasks_config_path, job_cls):
         self.pull = pull
         self.repo = repo
-        self.tasks_conf = tasks_conf
         self.job_cls = job_cls
+        self.tasks_conf = {}
+
+        tasks_file = repo.file_contents(tasks_config_path, pull.pull.head.sha)
+        if not tasks_file
+            logger.warning('Tasks file not present in PR {}'
+                           ''.format(pull.pull.number))
+        else:
+            try:
+                self.tasks_conf = yaml.load(base64.b64decode(tasks_file.content)
+            except (yaml.error.YAMLError, TypeError) as e:
+                logger.warning('Failed to decode tasks file '
+                               'in PR {}: {}'.format(pull.pull.number, e))
 
     def __len__(self):
         return len(Statuses(self.repo, self.pull, self.tasks_conf.keys()))
@@ -268,7 +280,7 @@ class Tasks(collections.Set, collections.Mapping):
         except ValueError:
             raise KeyError(context)
         else:
-            return Task(status, self.tasks_conf[task], self.job_cls)
+            return Task(status, self.tasks_conf[context], self.job_cls)
 
     def __bool__(self):
         return bool(len(self))
@@ -285,8 +297,7 @@ class TaskQueue(collections.Iterator):
     def __init__(self, repo, tasks_config_path, job_cls):
         self.repo = repo
         self.job_cls = job_cls
-        with open(tasks_config_path) as tc:
-            self.tasks_conf = yaml.load(tc)
+        self.tasks_config_path = tasks_config_path
 
     def create_tasks_for_pulls(self):
         """
@@ -300,7 +311,7 @@ class TaskQueue(collections.Iterator):
         """
         for pull in PullRequests(self.repo):
             logger.debug("PR {}".format(pull.pull.number))
-            tasks = pull.tasks(self.tasks_conf, self.job_cls)
+            tasks = pull.tasks(self.tasks_config_path, self.job_cls)
             if not tasks:
                 logger.debug('Creating tasks for PR {}'.format(pull.pull.number))
                 tasks.create()
@@ -318,7 +329,7 @@ class TaskQueue(collections.Iterator):
         """
         tasks = []
         for pull in PullRequests(self.repo):
-            for task in pull.tasks(self.tasks_conf, self.job_cls):
+            for task in pull.tasks(self.tasks_config_path, self.job_cls):
                 if task.can_run():
                     tasks.append(task)
 
