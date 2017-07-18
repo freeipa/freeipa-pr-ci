@@ -61,7 +61,7 @@ class J(AbstractJob):
             dep_results['{}_description'.format(task_name)] = result.description
             dep_results['{}_url'.format(task_name)] = result.url
 
-        cmd = self.cmd.format(
+        cmd = self.job.format(
             repo_url=self.target[0],
             pull_ref=self.target[1],
             **dep_results

@@ -343,15 +343,15 @@ class JobResult(object):
 
 class AbstractJob(collections.Callable):
     __metaclass__ = abc.ABCMeta
-    def __init__(self, cmd, build_target):
+    def __init__(self, job, build_target):
         """
-        @param cmd - job specific data from task definition
+        @param job - job specific data from task definition
         @param build_target - tuple of git repo url and refspec
                               git clone build_target[0]
                               git fetch origin build:build_target[1]
                               git checkout build
         """
-        self.cmd = cmd
+        self.job = job
         self.target = build_target
 
     @abc.abstractmethod

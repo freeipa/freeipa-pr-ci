@@ -60,7 +60,7 @@ class Job(AbstractJob):
             dep_results['{}_url'.format(task_name)] = result.url
 
 
-        cmd = self.cmd.format(target_refspec=self.target, **dep_results)
+        cmd = self.job.format(target_refspec=self.target, **dep_results)
 
         try:
             url = subprocess.check_output(cmd, shell=True)
