@@ -144,8 +144,8 @@ def create_parser():
         help='YAML file containig at least user, token and repository',
     )
     parser.add_argument(
-        '--tasks', type=argparse.FileType('r'), required=True,
-        help='YAML file with definiton of tasks',
+        '--tasks', type=str, required=True,
+        help='Path to YAML file with definiton of tasks, from repo root',
     )
     parser.add_argument(
         '--log-level', type=log_level,
@@ -188,7 +188,7 @@ if __name__ == '__main__':
     gh.session.mount('https://api.github.com', GitHubAdapter())
 
     repo = gh.repository(creds['user'], creds['repo'])
-    tq = TaskQueue(repo, tasks_file.name, JobDispatcher)
+    tq = TaskQueue(repo, tasks_file, JobDispatcher)
 
     handler = ExitHandler()
 
