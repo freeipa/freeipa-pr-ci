@@ -20,6 +20,7 @@ class GzipLogFiles(PopenTask):
             '-a ! -name "ipa-test-config.yaml" '
             '-a ! -name "vars.yml" '
             '-a ! -name "ansible.cfg" '
+            '-a ! -name "report.html" '
             '-exec gzip "{{}}" \;'
         ).format(directory=directory)
         self.shell = True
