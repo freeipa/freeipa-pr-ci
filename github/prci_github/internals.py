@@ -195,7 +195,8 @@ class Task(object):
 
         self.priority = conf['priority']
         self.requires = conf['requires']
-        self.job = job_cls(conf['job'], self.refspec)
+        self.job = job_cls(conf['job'], 
+                           (self.repo.clone_url, self.refspec))
 
 
     def dependencies_done(self):

@@ -3,13 +3,15 @@
 import argparse
 import github3
 import logging
+import os
 import signal
 import subprocess
 import sys
 import time
 import yaml
 
-from ..tasks import TimeoutException
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+from tasks import TimeoutException
 from prci_github import TaskQueue, AbstractJob, TaskAlreadyTaken, JobResult
 from prci_github.adapter import GitHubAdapter
 
@@ -78,10 +80,11 @@ class Job(AbstractJob):
         return JobResult(state, description, url)
 
 
-class JobDispatcher:
+class JobDispatcher(AbstractJob):
     def __init__(self, job, build_target):
+        super(JobDispatcher, self).__init__(job, build_target)
         self.klass = getattr(
-            __import__('..tasks', fromlist=[self.job['class']]),
+            __import__('tasks', fromlist=[self.job['class']]),
             self.job['class'])
         self.kwargs = self.job['args']
         self.kwarg_lookup = {
@@ -89,7 +92,7 @@ class JobDispatcher:
             'git_refspec': build_target[1]}
 
     def __call__(self, depends_results=None):
-        if depends_result is not None:
+        if depends_results is not None:
             for task_name, result in depends_results.items():
                 self.kwarg_lookup['{}_description'.format(task_name)] = \
                     result.description
@@ -105,7 +108,8 @@ class JobDispatcher:
         try:
             job()
         except Exception as exc:
-            description = str(exc)
+            description = '{type_}: {msg}'.format(type_=type(exc),
+                                                  msg=str(exc))
             state = 'error'
         else:
             description = job.description
