@@ -168,18 +168,18 @@ class Build(JobTask):
             raise TaskException(self, msg)
 
 
-class RunTests(JobTask):
-    action_name = 'run_tests'
+class RunPytest(JobTask):
+    action_name = 'run_pytest'
 
     def __init__(self, build_url, test_suite, publish_artifacts=True,
-                 timeout=constants.RUN_TESTS_TIMEOUT, **kwargs):
-        super(RunTests, self).__init__(timeout=timeout, **kwargs)
+                 timeout=constants.RUN_PYTEST_TIMEOUT, **kwargs):
+        super(RunPytest, self).__init__(timeout=timeout, **kwargs)
         self.build_url = build_url + '/'
         self.test_suite = test_suite
         self.publish_artifacts = publish_artifacts
 
     def _before(self):
-        super(RunTests, self)._before()
+        super(RunPytest, self)._before()
 
         # Prepare test config files
         try:
@@ -198,7 +198,7 @@ class RunTests(JobTask):
     @with_vagrant
     def _run(self):
         try:
-            self.run_tests()
+            self.run_pytest()
             logging.info('>>>>> TESTS PASSED <<<<<<')
             self.returncode = 0
         except TaskException as exc:
@@ -213,7 +213,7 @@ class RunTests(JobTask):
             if self.publish_artifacts:
                 self.upload_artifacts()
 
-    def run_tests(self):
+    def run_pytest(self):
         self.execute_subtask(
             PopenTask(['vagrant', 'ssh', '-c', (
                 'IPATEST_YAML_CONFIG=/vagrant/ipa-test-config.yaml '

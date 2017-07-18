@@ -22,7 +22,7 @@ VAGRANTFILE_FILE = os.path.join(TOPOLOGIES_DIR, 'Vagrantfile.{action_name}')
 
 POPEN_TERM_TIMEOUT = 10
 BUILD_TIMEOUT = 30*60
-RUN_TESTS_TIMEOUT = 90*60
+RUN_PYTEST_TIMEOUT = 90*60
 
 # Playbooks
 ANSIBLE_PLAYBOOK_DIR = os.path.join(BASE_DIR, 'ansible')

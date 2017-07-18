@@ -2,13 +2,13 @@
 import argparse
 import logging
 import sys
-from tasks import logging_init_stream_handler, RunTests
+from tasks import logging_init_stream_handler, RunPytest
 
 
 def parse_args():
     desc = 'Run FreeIPA pytests'
     parser = argparse.ArgumentParser(
-        prog='run-tests',
+        prog='run-pytest',
         description=desc)
 
     parser.add_argument('--build_url', '-b',
@@ -32,8 +32,8 @@ def parse_args():
 def main():
     args = parse_args()
     logging_init_stream_handler(noout=args.url_only)
-    job = RunTests(build_url=args.build_url, test_suite=args.test_suite,
-                   no_destroy=args.no_destroy)
+    job = RunPytest(build_url=args.build_url, test_suite=args.test_suite,
+                    no_destroy=args.no_destroy)
     job()
     if args.url_only:
         print(job.remote_url)
