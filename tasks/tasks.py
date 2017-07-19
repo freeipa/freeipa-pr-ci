@@ -33,8 +33,9 @@ def with_vagrant(func):
 
 
 class JobTask(FallibleTask):
-    def __init__(self, no_destroy=False, **kwargs):
+    def __init__(self, no_destroy=False, publish_artifacts=True, **kwargs):
         super(JobTask, self).__init__(**kwargs)
+        self.publish_artifacts = publish_artifacts
         self.timeout = kwargs.get('timeout', None)
         self.uuid = str(uuid.uuid1())
         self.remote_url = ''
@@ -108,13 +109,11 @@ class Build(JobTask):
     action_name = 'build'
 
     def __init__(self, git_refspec=None, git_version=None, git_repo=None,
-                 publish_artifacts=True, timeout=constants.BUILD_TIMEOUT,
-                 **kwargs):
+                 timeout=constants.BUILD_TIMEOUT, **kwargs):
         super(Build, self).__init__(timeout=timeout, **kwargs)
         self.git_refspec = git_refspec
         self.git_version = git_version
         self.git_repo = git_repo
-        self.publish_artifacts = publish_artifacts
 
     @with_vagrant
     def _run(self):
@@ -177,12 +176,11 @@ class Build(JobTask):
 class RunPytest(JobTask):
     action_name = 'run_pytest'
 
-    def __init__(self, build_url, test_suite, publish_artifacts=True,
+    def __init__(self, build_url, test_suite,
                  timeout=constants.RUN_PYTEST_TIMEOUT, **kwargs):
         super(RunPytest, self).__init__(timeout=timeout, **kwargs)
         self.build_url = build_url + '/'
         self.test_suite = test_suite
-        self.publish_artifacts = publish_artifacts
 
     def _before(self):
         super(RunPytest, self)._before()
