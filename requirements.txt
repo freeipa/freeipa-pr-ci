@@ -4,3 +4,4 @@ github3.py>=1.0.0a4
 PyYAML
 tqdm
 cachecontrol
+raven

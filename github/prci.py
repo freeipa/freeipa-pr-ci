@@ -4,6 +4,7 @@ import argparse
 import github3
 import logging
 import os
+import raven
 import signal
 import subprocess
 import sys
@@ -16,6 +17,7 @@ from prci_github import TaskQueue, AbstractJob, TaskAlreadyTaken, JobResult
 from prci_github.adapter import GitHubAdapter
 
 
+SENTRY_URL = 'https://d24d8d622cbb4e2ea447c9a64f19b81a:4db0ce47706f435bb3f8a02a0a1f2e22@sentry.io/193222'
 NO_TASK_BACKOFF_TIME = 5
 
 
@@ -111,6 +113,9 @@ class JobDispatcher(AbstractJob):
             description = '{type_}: {msg}'.format(type_=type(exc).__name__,
                                                   msg=str(exc))
             state = 'error'
+
+            sentry_report_exception({
+                'module': 'tasks'})
         else:
             description = job.description
             if job.returncode == 0:
@@ -157,6 +162,18 @@ def update_code():
         os.execv(__file__, sys.argv)
 
 
+def sentry_report_exception(context=None):
+    sentry = raven.Client(SENTRY_URL)
+
+    if context is not None:
+        with sentry.context:
+            sentry.context.merge(context)
+    try:
+        sentry.captureException()
+    finally:
+        sentry.context.clear()
+
+
 if __name__ == '__main__':
     parser = create_parser()
     args = parser.parse_args()
@@ -179,21 +196,25 @@ if __name__ == '__main__':
     signal.signal(signal.SIGTERM, handler.abort)
 
     while not handler.done:
-        update_code()
-
-        tq.create_tasks_for_pulls()
-
         try:
-            task = next(tq)
-        except StopIteration:
-            time.sleep(NO_TASK_BACKOFF_TIME)
-            continue
+            update_code()
 
-        try:
-            task.take(runner_id)
-        except TaskAlreadyTaken:
-            continue
+            tq.create_tasks_for_pulls()
 
-        handler.register_task(task)
-        task.execute()
-        handler.unregister_task()
+            try:
+                task = next(tq)
+            except StopIteration:
+                time.sleep(NO_TASK_BACKOFF_TIME)
+                continue
+
+            try:
+                task.take(runner_id)
+            except TaskAlreadyTaken:
+                continue
+
+            handler.register_task(task)
+            task.execute()
+            handler.unregister_task()
+        except Exception:
+            sentry_report_exception({
+                'module': 'github'})
