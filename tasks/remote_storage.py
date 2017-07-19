@@ -14,6 +14,7 @@ class GzipLogFiles(PopenTask):
             'find {directory} '
             '-type f '
             '! -path "*/.vagrant/*" '
+            '-a ! -path "*/assets/*" '
             '-a ! -path "*/rpms/*" '
             '-a ! -name "*.gz" '
             '-a ! -name "Vagrantfile" '
