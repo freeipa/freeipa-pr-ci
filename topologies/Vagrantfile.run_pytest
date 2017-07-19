@@ -11,7 +11,7 @@ Vagrant.configure(2) do |config|
         nfs_udp: false
 
     config.vm.box = "freeipa/ci-master-f25"
-    config.vm.box_version = "0.2.8"
+    config.vm.box_version = "0.2.9"
 
     config.vm.provider "libvirt" do |domain, override|
         # Defaults for masters and replica
