@@ -19,18 +19,14 @@
     - freeipa-server-common
     - freeipa-server-dns
     - freeipa-server-trust-ad
-    - libipa_hbac
-    - sssd-ipa
     - python2-ipaclient
     - python2-ipalib
     - python2-ipaserver
     - python2-ipatests
-    - python2-libipa_hbac
     - python3-ipaclient
     - python3-ipalib
     - python3-ipaserver
     - python3-ipatests
-    - python3-libipa_hbac
 
 - name: install additional packages
   dnf:
