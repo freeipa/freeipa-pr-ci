@@ -108,7 +108,7 @@ class JobDispatcher(AbstractJob):
         try:
             job()
         except Exception as exc:
-            description = '{type_}: {msg}'.format(type_=type(exc),
+            description = '{type_}: {msg}'.format(type_=type(exc).__name__,
                                                   msg=str(exc))
             state = 'error'
         else:
