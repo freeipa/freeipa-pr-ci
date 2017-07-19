@@ -79,6 +79,11 @@ class JobTask(FallibleTask):
             logging.debug(exc)
             raise TaskException(self, msg)
 
+    def _after(self):
+        self.compress_logs()
+        if self.publish_artifacts:
+            self.upload_artifacts()
+
     def upload_artifacts(self):
         try:
             self.execute_subtask(
@@ -126,15 +131,17 @@ class Build(JobTask):
             self.returncode = 1
         finally:
             self.collect_build_artifacts()
-            self.compress_logs()
-            if self.publish_artifacts:
-                try:
-                    self.create_yum_repo()
-                except TaskException:
-                    logging.error('Failed to create repo')
-                    self.returncode = 1
-                finally:
-                    self.upload_artifacts()
+
+    def _after(self):
+        self.compress_logs()
+        if self.publish_artifacts:
+            try:
+                self.create_yum_repo()
+            except TaskException:
+                logging.error('Failed to create repo')
+                self.returncode = 1
+            finally:
+                self.upload_artifacts()
 
         if self.returncode == 0:
             self.description = constants.BUILD_PASSED_DESCRIPTION
@@ -212,10 +219,6 @@ class RunPytest(JobTask):
             else:
                 logging.error('>>>>>> PYTEST ERROR ({code}) <<<<<<'.format(
                     code=self.returncode))
-        finally:
-            self.compress_logs()
-            if self.publish_artifacts:
-                self.upload_artifacts()
 
     def run_pytest(self):
         self.execute_subtask(

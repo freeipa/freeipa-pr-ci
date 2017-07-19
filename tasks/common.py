@@ -76,9 +76,11 @@ class Task(collections.Callable):
     def __target(self):
         self.exc = None
         try:
-            self._before()
-            self._run()
-            self._after()
+            try:
+                self._before()
+                self._run()
+            finally:
+                self._after()
         except TaskException as exc:
             self.exc = exc
 
