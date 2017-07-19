@@ -4,26 +4,26 @@
 
 - name: create folder for image
   file:
-    path: /tmp/image
+    path: "{{ template_box_dir }}"
     state: directory
     mode: 0755
 
 - name: copy Vagrant template file
   template:
     src: Vagrantfile.j2
-    dest: /tmp/image/Vagrantfile
+    dest: "{{ template_box_dir }}/Vagrantfile"
     mode: 0644
 
 - name: bring the image online
   become: true
   shell: vagrant up
   args:
-    chdir: /tmp/image
+    chdir: "{{ template_box_dir }}"
 
 - name: get IP from vagrant ssh-config
   shell: "vagrant ssh-config | grep HostName | sed 's/  HostName //'"
   args:
-    chdir: /tmp/image
+    chdir: "{{ template_box_dir }}"
   register: command_output
 
 - name: add image_box IP as a new host to ansible playbook

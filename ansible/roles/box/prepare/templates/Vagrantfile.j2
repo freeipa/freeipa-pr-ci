@@ -5,8 +5,8 @@ Vagrant.configure(2) do |config|
     config.ssh.insert_key = false
 
     config.vm.provider "libvirt" do |domain, override|
-        override.vm.box_url = "{{ template_box_url }}"
-        override.vm.box = "{{ template_box }}"
+        override.vm.box_url = "{{ base_box_url }}"
+        override.vm.box = "{{ base_box_name }}"
     end
 
     config.vm.define "template"  do |template|

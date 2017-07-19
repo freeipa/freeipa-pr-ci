@@ -1,7 +1,8 @@
 ---
 - name: remove any artifcats from previous packaging
+  become: true
   file:
-    path: /tmp/image/_tmp_package
+    path: "{{ template_box_dir }}/_tmp_package"
     state: absent
   tags:
     - package_box
@@ -11,26 +12,26 @@
 - name: shutdown template VM
   shell: vagrant halt
   args:
-    chdir: /tmp/image
+    chdir: "{{ template_box_dir }}"
 
 - name: boot template VM
   become: true
   shell: vagrant up
   args:
-    chdir: /tmp/image
+    chdir: "{{ template_box_dir }}"
 
 - name: create vagrant box
   become: true
-  shell: "vagrant package --output {{ template_box_name }}"
+  shell: "vagrant package --output {{ template_box_name }}.box"
   args:
-    chdir: /tmp/image
+    chdir: "{{ template_box_dir }}"
   tags:
     - package_box
 
 - name: change ownership of box
   become: true
   file:
-    path: "/tmp/image/{{ template_box_name }}"
+    path: "{{ template_box_dir }}/{{ template_box_name }}.box"
     owner: "{{ ansible_effective_user_id }}"
     group: "{{ ansible_effective_group_id }}"
 
@@ -38,4 +39,4 @@
   become: true
   shell: vagrant destroy
   args:
-    chdir: /tmp/image
+    chdir: "{{ template_box_dir }}"

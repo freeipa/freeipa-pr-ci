@@ -2,6 +2,8 @@
 - hosts: runner
   name: prepare vagrant box
   become_user: root
+  vars:
+    template_box_name: ci-master-f25
   roles:
     - box/prepare
 
@@ -23,5 +25,7 @@
 - hosts: runner
   name: package template box
   become_user: root
+  vars:
+    template_box_name: ci-master-f25
   roles:
     - box/package

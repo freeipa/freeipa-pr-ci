@@ -1,2 +1,2 @@
 ---
-template_box_name: ci-master-f25.box
+template_box_dir: "/tmp/{{ template_box_name }}"
