@@ -176,7 +176,7 @@ def sentry_report_exception(context=None):
         sentry.context.clear()
 
 
-if __name__ == '__main__':
+def main():
     parser = create_parser()
     args = parser.parse_args()
 
@@ -220,3 +220,7 @@ if __name__ == '__main__':
         except Exception:
             sentry_report_exception({
                 'module': 'github'})
+
+
+if __name__ == '__main__':
+    main()
