@@ -61,7 +61,7 @@ class JobTask(FallibleTask):
         except (OSError, IOError) as exc:
             msg = "Failed to create job directory"
             logging.critical(msg)
-            logging.debug(exc)
+            logging.debug(exc, exc_info=True)
             raise TaskException(self, msg)
 
         # Change working dir and initialize logging
@@ -82,7 +82,7 @@ class JobTask(FallibleTask):
         except (OSError, IOError) as exc:
             msg = "Failed to prepare job"
             logging.critical(msg)
-            logging.debug(exc)
+            logging.debug(exc, exc_info=True)
             raise TaskException(self, msg)
 
     def _after(self):
@@ -95,7 +95,7 @@ class JobTask(FallibleTask):
             self.execute_subtask(
                 FedoraPeopleUpload(uuid=self.uuid, timeout=5*60))
         except Exception as exc:
-            logging.debug(exc)
+            logging.debug(exc, exc_info=True)
             raise TaskException(self, "Failed to publish artifacts")
         else:
             self.remote_url = urllib.parse.urljoin(
@@ -181,7 +181,7 @@ class Build(JobTask):
                 dict(job_url=urllib.parse.urljoin(base_url, self.uuid)))
         except (OSError, IOError) as exc:
             msg = 'Failed to create repo file'
-            logging.debug(exc)
+            logging.debug(exc, exc_info=True)
             logging.error(msg)
             raise TaskException(self, msg)
 
