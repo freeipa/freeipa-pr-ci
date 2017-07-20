@@ -63,9 +63,10 @@ class Job(AbstractJob):
 
         dep_results = {}
         for task_name, result in depends_results.items():
-            dep_results['{}_description'.format(task_name)] = result.description
-            dep_results['{}_url'.format(task_name)] = result.url
-
+            desc_key = '{}_description'.format(task_name)
+            url_key = '{}_url'.format(task_name)
+            dep_results[desc_key] = result.description
+            dep_results[url_key] = result.url
 
         cmd = self.job.format(target_refspec=self.target, **dep_results)
 

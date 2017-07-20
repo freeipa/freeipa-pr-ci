@@ -161,7 +161,6 @@ class Task(object):
         self.job = job_cls(conf['job'],
                            (self.repo.clone_url, self.refspec))
 
-
     def dependencies_done(self):
         for dep in self.requires:
             if Status(self.repo, self.pull, dep).state != 'success':
@@ -217,7 +216,9 @@ class Tasks(collections.Set, collections.Mapping):
             logger.warning('Tasks file not present in PR %d', pull.pull.number)
         else:
             try:
-                self.tasks_conf = yaml.load(base64.b64decode(tasks_file.content))
+                self.tasks_conf = yaml.load(
+                                    base64.b64decode(tasks_file.content)
+                                  )
             except (yaml.error.YAMLError, TypeError) as err:
                 logger.warning('Failed to decode tasks file in PR %d: %s',
                                pull.pull.number, err)
@@ -258,7 +259,8 @@ class Tasks(collections.Set, collections.Mapping):
         logger.debug("Creating tasks for PR %d", self.pull.pull.number)
         for task in self.tasks_conf:
             logger.debug("PR %d: %s", self.pull.pull.number, task)
-            Status.create(self.repo, self.pull, task, 'unassigned', '', 'pending')
+            Status.create(self.repo, self.pull, task, 'unassigned', '',
+                          'pending')
         logger.debug("Creating tasks for PR %d done.", self.pull.pull.number)
 
 
@@ -324,6 +326,7 @@ class JobResult(object):
 
 class AbstractJob(collections.Callable):
     __metaclass__ = abc.ABCMeta
+
     def __init__(self, job, build_target):
         """
         @param job - job specific data from task definition
