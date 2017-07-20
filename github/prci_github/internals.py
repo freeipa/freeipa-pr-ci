@@ -7,8 +7,6 @@ import logging
 import time
 import yaml
 
-from .adapter import GitHubAdapter
-
 
 RACE_TIMEOUT = 10
 CREATE_TIMEOUT = 5
@@ -26,13 +24,7 @@ class Status(object):
     @classmethod
     def create(cls, repo, pull, context, description, target_url, state):
         sha = repo.commit(pull.pull.head.sha).sha
-        s = repo.create_status(sha, state, target_url, description, context)
-
-        # invalidate cache for statuses on this commit
-        for k, adapter in repo.session.adapters.items():
-            if isinstance(adapter, GitHubAdapter):
-                adapter.cache.data.pop(s.url, None)
-                break
+        repo.create_status(sha, state, target_url, description, context)
 
         last_e = RuntimeError()
         for _ in range(CREATE_TIMEOUT):
