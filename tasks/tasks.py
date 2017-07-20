@@ -33,8 +33,11 @@ def with_vagrant(func):
 
 
 class JobTask(FallibleTask):
-    def __init__(self, no_destroy=False, publish_artifacts=True, **kwargs):
+    def __init__(self, template, no_destroy=False, publish_artifacts=True,
+                 **kwargs):
         super(JobTask, self).__init__(**kwargs)
+        self.template_name = template['name']
+        self.template_version = template['version']
         self.publish_artifacts = publish_artifacts
         self.timeout = kwargs.get('timeout', None)
         self.uuid = str(uuid.uuid1())
@@ -70,9 +73,12 @@ class JobTask(FallibleTask):
         # Prepare files for vagrant
         try:
             shutil.copy(constants.ANSIBLE_CFG_FILE, self.data_dir)
-            shutil.copy(constants.VAGRANTFILE_FILE.format(
-                action_name=self.action_name),
-                os.path.join(self.data_dir, 'Vagrantfile'))
+            create_file_from_template(
+                constants.VAGRANTFILE_TEMPLATE.format(
+                    action_name=self.action_name),
+                os.path.join(self.data_dir, 'Vagrantfile'),
+                dict(vagrant_template_name=self.template_name,
+                     vagrant_template_version=self.template_version))
         except (OSError, IOError) as exc:
             msg = "Failed to prepare job"
             logging.critical(msg)
@@ -113,9 +119,9 @@ class JobTask(FallibleTask):
 class Build(JobTask):
     action_name = 'build'
 
-    def __init__(self, git_refspec=None, git_version=None, git_repo=None,
+    def __init__(self, template, git_refspec=None, git_version=None, git_repo=None,
                  timeout=constants.BUILD_TIMEOUT, **kwargs):
-        super(Build, self).__init__(timeout=timeout, **kwargs)
+        super(Build, self).__init__(template, timeout=timeout, **kwargs)
         self.git_refspec = git_refspec
         self.git_version = git_version
         self.git_repo = git_repo
@@ -183,9 +189,9 @@ class Build(JobTask):
 class RunPytest(JobTask):
     action_name = 'run_pytest'
 
-    def __init__(self, build_url, test_suite,
+    def __init__(self, template, build_url, test_suite,
                  timeout=constants.RUN_PYTEST_TIMEOUT, **kwargs):
-        super(RunPytest, self).__init__(timeout=timeout, **kwargs)
+        super(RunPytest, self).__init__(template, timeout=timeout, **kwargs)
         self.build_url = build_url + '/'
         self.test_suite = test_suite
 
