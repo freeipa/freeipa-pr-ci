@@ -44,7 +44,6 @@ class GitHubAdapter(CacheControlAdapter):
 
             if response.status_code == 403 and rl_remaining == 0:
                 rl_reset_ts = float(response.headers['X-RateLimit-Reset'])
-                now_ts = time.time()
 
                 rl_reset = datetime.datetime.utcfromtimestamp(rl_reset_ts)
                 now = datetime.datetime.utcfromtimestamp(time.time())
