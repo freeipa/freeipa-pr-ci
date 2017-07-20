@@ -218,8 +218,8 @@ class Tasks(collections.Set, collections.Mapping):
             try:
                 self.tasks_conf = yaml.load(
                                     base64.b64decode(tasks_file.content)
-                                  )
-            except (yaml.error.YAMLError, TypeError) as err:
+                                  )['jobs']
+            except (yaml.error.YAMLError, TypeError, KeyError) as err:
                 logger.warning('Failed to decode tasks file in PR %d: %s',
                                pull.pull.number, err)
 
