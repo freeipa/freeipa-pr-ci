@@ -43,13 +43,12 @@ class Status(object):
 
         for status in repo.commit(pull.pull.head.sha).statuses():
             if status.context == self.context:
+                self.description = status.description
+                self.target_url = status.target_url
+                self.state = status.state
                 break
         else:
             raise ValueError('No status with context {}'.format(context))
-
-        self.description = status.description
-        self.target_url = status.target_url
-        self.state = status.state
 
 
 class Statuses(collections.Mapping):
