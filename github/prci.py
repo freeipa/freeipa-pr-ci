@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import argparse
-import github3
 import logging
 import os
 import raven
@@ -10,6 +9,8 @@ import subprocess
 import sys
 import time
 import yaml
+
+import github3
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 from tasks import TimeoutException
