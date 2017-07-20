@@ -3,6 +3,7 @@
 import abc
 import base64
 import collections
+import datetime
 import logging
 import time
 import yaml
@@ -176,7 +177,8 @@ class Task(object):
         return False
 
     def take(self, runner_id):
-        desc = 'Taken by {}'.format(runner_id)
+        date = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M")
+        desc = 'Taken by {} on {}'.format(runner_id, date)
         logger.debug('Attempting to take task')
         Status.create(self.repo, self.pull, self.name, desc, '', 'pending')
         time.sleep(RACE_TIMEOUT)
