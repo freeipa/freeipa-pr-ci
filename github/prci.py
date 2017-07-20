@@ -13,7 +13,6 @@ import yaml
 import github3
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from tasks import TimeoutException
 from prci_github import TaskQueue, AbstractJob, TaskAlreadyTaken, JobResult
 from prci_github.adapter import GitHubAdapter
 
