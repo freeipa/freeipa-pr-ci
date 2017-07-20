@@ -5,7 +5,7 @@ import time
 from cachecontrol.adapter import CacheControlAdapter
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
 class GitHubAdapter(CacheControlAdapter):
@@ -29,8 +29,8 @@ class GitHubAdapter(CacheControlAdapter):
         # request.headers['cache-control'] = 'max-age=0'
         request.headers['cache-control'] = 'no-cache'
 
-        for t in range(self.tries):
-            logger.debug('%s: try %d', self.__class__.__name__, t)
+        for try_counter in range(self.tries):
+            logger.debug('%s: try %d', self.__class__.__name__, try_counter)
 
             response = super(GitHubAdapter, self).send(
                 request, *args, **kwargs)

@@ -13,7 +13,7 @@ CREATE_TIMEOUT = 5
 RERUN_LABEL = 're-run'
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
 class TaskAlreadyTaken(Exception):
@@ -26,15 +26,15 @@ class Status(object):
         sha = repo.commit(pull.pull.head.sha).sha
         repo.create_status(sha, state, target_url, description, context)
 
-        last_e = RuntimeError()
+        last_err = RuntimeError()
         for _ in range(CREATE_TIMEOUT):
             try:
                 return cls(repo, pull, context)
-            except Exception as e:
-                last_e = e
+            except Exception as err:
+                last_err = err
                 time.sleep(1)
         else:
-            raise last_e
+            raise last_err
 
     def __init__(self, repo, pull, context):
         self.repo = repo
@@ -65,16 +65,16 @@ class Statuses(collections.Mapping):
             raise KeyError(key)
 
     def __len__(self):
-        l = 0
+        length = 0
         for context in self.contexts:
             try:
                 Status(self.repo, self.pull, context)
             except ValueError:
                 pass
             else:
-                l += 1
+                length += 1
 
-        return l
+        return length
 
     def __iter__(self):
         for context in self.contexts:
@@ -194,10 +194,10 @@ class Task(object):
 
         try:
             result = self.job(depends_results)
-        except Exception as e:
+        except Exception as err:
             state = 'error'
-            description = getattr(e, 'description', str(e))
-            url = getattr(e, 'url', '')
+            description = getattr(err, 'description', str(err))
+            url = getattr(err, 'url', '')
         else:
             state = result.state
             description = result.description
@@ -219,9 +219,9 @@ class Tasks(collections.Set, collections.Mapping):
         else:
             try:
                 self.tasks_conf = yaml.load(base64.b64decode(tasks_file.content)
-            except (yaml.error.YAMLError, TypeError) as e:
+            except (yaml.error.YAMLError, TypeError) as err:
                 logger.warning('Failed to decode tasks file in PR %d: %s',
-                               pull.pull.number, e)
+                               pull.pull.number, err)
 
     def __len__(self):
         return len(Statuses(self.repo, self.pull, self.tasks_conf.keys()))

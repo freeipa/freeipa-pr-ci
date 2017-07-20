@@ -19,6 +19,7 @@ from prci_github.adapter import GitHubAdapter
 
 SENTRY_URL = 'https://d24d8d622cbb4e2ea447c9a64f19b81a:4db0ce47706f435bb3f8a02a0a1f2e22@sentry.io/193222'
 NO_TASK_BACKOFF_TIME = 5
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
 class ExitHandler(object):
@@ -69,8 +70,8 @@ class Job(AbstractJob):
 
         try:
             url = subprocess.check_output(cmd, shell=True)
-        except subprocess.CalledProcessError as e:
-            if e.returncode == 1:
+        except subprocess.CalledProcessError as err:
+            if err.returncode == 1:
                 state = 'error'
                 url = ''
             else:
@@ -127,12 +128,12 @@ class JobDispatcher(AbstractJob):
 
 
 def create_parser():
-    def log_level(l):
+    def log_level(level_name):
         try:
-            return getattr(logging, l)
+            return getattr(logging, level_name)
         except AttributeError:
             raise argparse.ArgumentTypeError(
-                '{} is not valid logging level'.format(l))
+                '{} is not valid logging level'.format(level_name))
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -184,11 +185,11 @@ if __name__ == '__main__':
 
     logging.basicConfig(level=args.log_level)
 
-    gh = github3.login(token=creds['token'])
-    gh.session.mount('https://api.github.com', GitHubAdapter())
+    github = github3.login(token=creds['token'])
+    github.session.mount('https://api.github.com', GitHubAdapter())
 
-    repo = gh.repository(creds['user'], creds['repo'])
-    tq = TaskQueue(repo, tasks_file, JobDispatcher)
+    repo = github.repository(creds['user'], creds['repo'])
+    task_queue = TaskQueue(repo, tasks_file, JobDispatcher)
 
     handler = ExitHandler()
 
@@ -199,10 +200,10 @@ if __name__ == '__main__':
         try:
             update_code()
 
-            tq.create_tasks_for_pulls()
+            task_queue.create_tasks_for_pulls()
 
             try:
-                task = next(tq)
+                task = next(task_queue)
             except StopIteration:
                 time.sleep(NO_TASK_BACKOFF_TIME)
                 continue
