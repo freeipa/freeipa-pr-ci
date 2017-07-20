@@ -30,12 +30,12 @@ class GitHubAdapter(CacheControlAdapter):
         request.headers['cache-control'] = 'no-cache'
 
         for t in range(self.tries):
-            logger.debug('{}: try {}'.format(self.__class__.__name__, t))
+            logger.debug('%s: try %d', self.__class__.__name__, t)
 
             response = super(GitHubAdapter, self).send(
                 request, *args, **kwargs)
 
-            logger.debug('Got response: {}'.format(response.status_code))
+            logger.debug('Got response: %d', response.status_code)
 
             try:
                 rl_remaining = int(response.headers['X-RateLimit-Remaining'])
@@ -55,8 +55,8 @@ class GitHubAdapter(CacheControlAdapter):
                 # don't want to wait
                 wait_time = max(0.0, (rl_reset - now).total_seconds())
 
-                logger.debug('Rate limit exhausted. Will wait {}s for the '
-                             'limit to reset.'.format(wait_time))
+                logger.debug('Rate limit exhausted. Will wait %ds for the '
+                             'limit to reset.', wait_time)
                 time.sleep(wait_time)
             else:
                 return response

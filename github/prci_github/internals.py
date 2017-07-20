@@ -214,15 +214,14 @@ class Tasks(collections.Set, collections.Mapping):
         self.tasks_conf = {}
 
         tasks_file = repo.file_contents(tasks_config_path, pull.pull.head.sha)
-        if not tasks_file
-            logger.warning('Tasks file not present in PR {}'
-                           ''.format(pull.pull.number))
+        if not tasks_file:
+            logger.warning('Tasks file not present in PR %d', pull.pull.number)
         else:
             try:
                 self.tasks_conf = yaml.load(base64.b64decode(tasks_file.content)
             except (yaml.error.YAMLError, TypeError) as e:
-                logger.warning('Failed to decode tasks file '
-                               'in PR {}: {}'.format(pull.pull.number, e))
+                logger.warning('Failed to decode tasks file in PR %d: %s',
+                               pull.pull.number, e)
 
     def __len__(self):
         return len(Statuses(self.repo, self.pull, self.tasks_conf.keys()))
@@ -249,11 +248,11 @@ class Tasks(collections.Set, collections.Mapping):
         return bool(len(self))
 
     def create(self):
-        logger.debug("Creating tasks for PR {}".format(self.pull.pull.number))
+        logger.debug("Creating tasks for PR %d", self.pull.pull.number)
         for task in self.tasks_conf:
-            logger.debug("PR {}: {}".format(self.pull.pull.number, task))
+            logger.debug("PR %d: %s", self.pull.pull.number, task)
             Status.create(self.repo, self.pull, task, 'unassigned', '', 'pending')
-        logger.debug("Creating tasks for PR {} done.".format(self.pull.pull.number))
+        logger.debug("Creating tasks for PR %d done.", self.pull.pull.number)
 
 
 class TaskQueue(collections.Iterator):
@@ -273,13 +272,13 @@ class TaskQueue(collections.Iterator):
         [1] https://developer.github.com/v3/repos/statuses/
         """
         for pull in PullRequests(self.repo):
-            logger.debug("PR {}".format(pull.pull.number))
+            logger.debug("PR %d", pull.pull.number)
             tasks = pull.tasks(self.tasks_config_path, self.job_cls)
             if not tasks:
-                logger.debug('Creating tasks for PR {}'.format(pull.pull.number))
+                logger.debug('Creating tasks for PR %d', pull.pull.number)
                 tasks.create()
             elif RERUN_LABEL in pull.labels:
-                logger.debug('Recreating tasks for PR {}'.format(pull.pull.number))
+                logger.debug('Recreating tasks for PR %d', pull.pull.number)
                 pull.labels.discard(RERUN_LABEL)
                 tasks.create()
 
