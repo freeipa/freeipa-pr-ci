@@ -81,7 +81,7 @@ class Task(collections.Callable):
                 self._run()
             finally:
                 self._after()
-        except TaskException as exc:
+        except Exception as exc:
             self.exc = exc
 
     def __call__(self):
@@ -109,11 +109,12 @@ class FallibleTask(Task):
     def __call__(self):
         try:
             super(FallibleTask, self).__call__()
-        except TaskException as exc:
+        except Exception as exc:
             if self.raise_on_err:
+                logging.debug(exc, exc_info=True)
                 raise exc
             else:
-                logging.warning(exc)
+                logging.warning(exc, exc_info=True)
 
 
 class PopenTask(FallibleTask):
