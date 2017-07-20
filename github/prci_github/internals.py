@@ -149,6 +149,8 @@ class PullRequests(collections.Iterator):
 
 
 class Task(object):
+    status_description = None
+
     def __init__(self, status, conf, job_cls):
         self.status = status
         self.repo = status.repo
@@ -183,6 +185,8 @@ class Task(object):
         if status.description != desc:
             raise TaskAlreadyTaken(status.description)
 
+        self.status_description = desc
+
     def execute(self):
         depends_results = {}
         for dep in self.requires:
@@ -200,6 +204,18 @@ class Task(object):
             state = result.state
             description = result.description
             url = result.url
+
+        # verify that no other runner has assigned the task
+        # this could happen due to race when taking the task
+        # we can not completelly avoid this situation
+        status = Status(self.repo, self.pull, self.name)
+        if status.description != self.status_description:
+            logger.info('Other runner is processing this task results will '
+                        'not be reported: %s', status.description)
+            raise RuntimeError(
+                "Task was processed by multiple runners:\n\t{}\n\t{}\n".format(
+                    status.description, self.status_description)
+            )
 
         Status.create(self.repo, self.pull, self.name, description, url, state)
 
