@@ -27,14 +27,14 @@ class ExitHandler(object):
     aborted = False
     task = None
 
-    def finish(self):
+    def finish(self, signum, frame):
         if self.done:
-            return self.abort()
+            return self.abort(signum, frame)
 
         logger.info("Waiting for current task to finish. This may take long.")
         self.done = True
 
-    def abort(self):
+    def abort(self, signum, frame):
         if self.aborted:
             return self.quit()
 
@@ -43,6 +43,7 @@ class ExitHandler(object):
             logger.info("Waiting for aborted task to clean up. This may take "
                         "few minutes.")
 
+        self.done = True
         self.aborted = True
 
     def quit(self):
