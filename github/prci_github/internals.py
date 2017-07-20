@@ -218,7 +218,7 @@ class Tasks(collections.Set, collections.Mapping):
             logger.warning('Tasks file not present in PR %d', pull.pull.number)
         else:
             try:
-                self.tasks_conf = yaml.load(base64.b64decode(tasks_file.content)
+                self.tasks_conf = yaml.load(base64.b64decode(tasks_file.content))
             except (yaml.error.YAMLError, TypeError) as err:
                 logger.warning('Failed to decode tasks file in PR %d: %s',
                                pull.pull.number, err)
