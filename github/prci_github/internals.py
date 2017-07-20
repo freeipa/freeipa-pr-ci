@@ -170,8 +170,8 @@ class Task(object):
 
     def can_run(self):
         if (self.status.state == 'pending' and
-            self.status.description == 'unassigned'):
-                return self.dependencies_done()
+                self.status.description == 'unassigned'):
+            return self.dependencies_done()
         return False
 
     def take(self, runner_id):
