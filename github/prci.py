@@ -217,10 +217,11 @@ def main():
 
             handler.register_task(task)
             task.execute()
-            handler.unregister_task()
         except Exception:
             sentry_report_exception({
                 'module': 'github'})
+        finally:
+            handler.unregister_task()
 
 
 if __name__ == '__main__':
