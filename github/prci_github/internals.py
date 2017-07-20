@@ -226,6 +226,14 @@ class Tasks(collections.Set, collections.Mapping):
     def __len__(self):
         return len(Statuses(self.repo, self.pull, self.tasks_conf.keys()))
 
+    def __contains__(self, context):
+        try:
+            self[context]
+        except KeyError:
+            return False
+        else:
+            return True
+
     def __iter__(self):
         for task in self.tasks_conf:
             try:
