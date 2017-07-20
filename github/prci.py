@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 class ExitHandler(object):
     done = False
-    abort = False
+    aborted = False
     task = None
 
     def finish(self):
@@ -35,14 +35,15 @@ class ExitHandler(object):
         self.done = True
 
     def abort(self):
-        if self.abort:
+        if self.aborted:
             return self.quit()
 
         if self.task:
-            task.abort()
-            logger.info("Waiting for aborted task to clean up. This may take few minutes.")
+            self.task.abort()
+            logger.info("Waiting for aborted task to clean up. This may take "
+                        "few minutes.")
 
-        self.abort = True
+        self.aborted = True
 
     def quit(self):
         logger.info("Quiting just now! No results will be reported.")
