@@ -1,4 +1,10 @@
 ---
+- name: enable_prci
+  service:
+    name: prci
+    enabled: true
+    state: started
+
 - name: restart_nfs
   service:
     name: nfs

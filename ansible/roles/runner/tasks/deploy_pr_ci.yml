@@ -18,5 +18,5 @@
     src: prci.service
     dest: /etc/systemd/system/prci.service
   notify:
-    - reboot
+    - enable_prci
   when: create_systemd_unit
