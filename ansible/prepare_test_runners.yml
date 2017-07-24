@@ -1,8 +1,19 @@
 ---
 - hosts: runner
   name: prepare test runners
+  vars_prompt:
+    - name: github_repo_user
+      prompt: Username of watched GitHub repo
+      private: false
+    - name: github_repo_name
+      prompt: Name of watched GitHub repo
+      private: false
+    - name: github_token
+      prompt: API token for GitHub
+      private: false
   roles:
     - role: runner
       deploy_ssh_key: true
+      deploy_github_credentials: true
       enable_nested_virt: true
       create_systemd_unit: true
