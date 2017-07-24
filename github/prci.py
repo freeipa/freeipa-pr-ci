@@ -18,7 +18,8 @@ from prci_github.adapter import GitHubAdapter
 
 
 SENTRY_URL = 'https://d24d8d622cbb4e2ea447c9a64f19b81a:4db0ce47706f435bb3f8a02a0a1f2e22@sentry.io/193222'
-NO_TASK_BACKOFF_TIME = 5
+NO_TASK_BACKOFF_TIME = 60
+ERROR_BACKOFF_TIME = 600
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
@@ -221,6 +222,7 @@ def main():
         except Exception:
             sentry_report_exception({
                 'module': 'github'})
+            time.sleep(ERROR_BACKOFF_TIME)
         finally:
             handler.unregister_task()
 
