@@ -7,7 +7,7 @@ Type=simple
 User=root
 Group=root
 WorkingDirectory=/root/freeipa-pr-ci
-ExecStart=/root/freeipa-pr-ci/github/prci.py --id "$(hostname -s)" --credentials /root/.config/freeipa-pr-ci/credentials.yaml --tasks /root/.config/freeipa-pr-ci/.freeipa-pr-ci.yaml
+ExecStart=/root/freeipa-pr-ci/github/prci.py --id "$(hostname -s)" --credentials /root/.config/freeipa-pr-ci/credentials.yaml --tasks .freeipa-pr-ci.yaml
 StandardOutput=syslog
 StandardError=syslog
 
