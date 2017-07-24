@@ -4,6 +4,12 @@
     name: nfs
     enabled: true
 
+# Workaround for bug in lab -- dnf makecache created metadata lock
+- name: "workaround: stop dnf-makecache.service"
+  service:
+    name: dnf-makecache.service
+    state: stopped
+
 - name: install runner dependencies
   dnf:
     name: "{{ item }}"
