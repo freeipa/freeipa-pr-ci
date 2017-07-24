@@ -2,7 +2,7 @@
 - name: clone FreeIPA PR CI repo
   git: 
     dest: /root/freeipa-pr-ci
-    repo: https://github.com/tomaskrizek/freeipa-pr-ci
+    repo: https://github.com/freeipa/freeipa-pr-ci
     version: master
     force: true
 
