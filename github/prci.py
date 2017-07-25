@@ -164,6 +164,11 @@ def create_parser():
         help='Path to YAML file with definiton of tasks, from repo root',
     )
     parser.add_argument(
+        '--whitelist', type=yaml_file, default=[],
+        help="Path to YAML file with list of users for who the tests are "
+             "run imediatelly and don't require manual approval."
+    )
+    parser.add_argument(
         '--log-level', type=log_level,
     )
 
@@ -197,6 +202,7 @@ def main():
     runner_id = args.id
     creds = args.credentials
     tasks_file = args.tasks
+    whitelist = args.whitelist
 
     logging.basicConfig(level=args.log_level)
 
@@ -204,7 +210,7 @@ def main():
     github.session.mount('https://api.github.com', GitHubAdapter())
 
     repo = github.repository(creds['user'], creds['repo'])
-    task_queue = TaskQueue(repo, tasks_file, JobDispatcher)
+    task_queue = TaskQueue(repo, tasks_file, JobDispatcher, whitelist)
 
     handler = ExitHandler()
 
