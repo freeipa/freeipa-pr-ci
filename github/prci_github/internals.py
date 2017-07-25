@@ -189,7 +189,7 @@ class Task(object):
 
         self.status_description = desc
 
-    def execute(self):
+    def execute(self, exc_handler=None):
         depends_results = {}
         for dep in self.requires:
             status = Status(self.repo, self.pull, dep)
@@ -198,10 +198,13 @@ class Task(object):
 
         try:
             result = self.job(depends_results)
-        except Exception as err:
+        except Exception as exc:
             state = 'error'
-            description = getattr(err, 'description', str(err))
+            description = getattr(err, 'description', '{type_}: {msg}'.format(
+                type_=type(exc).__name__, msg=str(exc))
             url = getattr(err, 'url', '')
+            if exc_handler is not None:
+                exc_handler()
         else:
             state = result.state
             description = result.description
