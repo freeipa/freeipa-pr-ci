@@ -1,6 +1,6 @@
 [Unit]
 Description=FreeIPA PR CI
-After=syslog.target
+After=syslog.target network-online.target
 
 [Service]
 Type=simple
