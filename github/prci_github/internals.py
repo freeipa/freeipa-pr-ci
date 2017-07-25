@@ -286,10 +286,11 @@ class Tasks(collections.Set, collections.Mapping):
 
 
 class TaskQueue(collections.Iterator):
-    def __init__(self, repo, tasks_config_path, job_cls):
+    def __init__(self, repo, tasks_config_path, job_cls, allowed_users=[]):
         self.repo = repo
         self.job_cls = job_cls
         self.tasks_config_path = tasks_config_path
+        self.allowed_users = allowed_users
 
     def create_tasks_for_pulls(self):
         """
@@ -304,7 +305,7 @@ class TaskQueue(collections.Iterator):
         for pull in PullRequests(self.repo):
             logger.debug("PR %d", pull.pull.number)
             tasks = pull.tasks(self.tasks_config_path, self.job_cls)
-            if not tasks:
+            if not tasks and pull.user.login in self.allowed_users:
                 logger.debug('Creating tasks for PR %d', pull.pull.number)
                 tasks.create()
             elif RERUN_LABEL in pull.labels:
