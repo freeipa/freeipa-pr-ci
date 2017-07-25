@@ -139,13 +139,24 @@ def create_parser():
             raise argparse.ArgumentTypeError(
                 '{} is not valid logging level'.format(level_name))
 
+    def yaml_file(path):
+        try:
+            with open(path) as f:
+                return yaml.load(f)
+        except IOError as exc:
+            raise argparse.ArgumentTypeError(
+                'Failed to open {}: {}'.format(path, exc))
+        except yaml.YAMLError as exc:
+            raise argparse.ArgumentTypeError(
+                'Failed to parse YAML from {}: {}'.format(path, exc))
+
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--id', type=str, required=True,
         help='Unique runner ID',
     )
     parser.add_argument(
-        '--credentials', type=argparse.FileType('r'), required=True,
+        '--credentials', type=yaml_file, required=True,
         help='YAML file containig at least user, token and repository',
     )
     parser.add_argument(
@@ -184,7 +195,7 @@ def main():
     args = parser.parse_args()
 
     runner_id = args.id
-    creds = yaml.load(args.credentials)
+    creds = args.credentials
     tasks_file = args.tasks
 
     logging.basicConfig(level=args.log_level)
