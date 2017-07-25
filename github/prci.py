@@ -134,7 +134,7 @@ class JobDispatcher(AbstractJob):
 def create_parser():
     def log_level(level_name):
         try:
-            return getattr(logging, level_name)
+            return getattr(logging, level_name.upper())
         except AttributeError:
             raise argparse.ArgumentTypeError(
                 '{} is not valid logging level'.format(level_name))
