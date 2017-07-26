@@ -177,7 +177,7 @@ class Task(object):
         return False
 
     def take(self, runner_id):
-        date = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M")
+        date = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
         desc = 'Taken by {} on {}'.format(runner_id, date)
         logger.debug('Attempting to take task')
         Status.create(self.repo, self.pull, self.name, desc, '', 'pending')
