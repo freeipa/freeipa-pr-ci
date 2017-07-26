@@ -20,20 +20,14 @@
     sed 's/)//'
   register: release
 
-- name: create timestamp
-  shell: "date -u +'%Y%m%d%H%M%S'"
-  register: timestamp
+- name: disable git snapshot
+  shell: |
+    sed 's/define(IPA_VERSION_IS_GIT_SNAPSHOT, .*/define(IPA_VERSION_IS_GIT_SNAPSHOT, no)/' -i /root/freeipa/VERSION.m4
 
-- name: get git revision
-  shell: "git rev-parse --short HEAD"
-  args:
-    chdir: /root/freeipa
-  register: revision
+- name: set pre_release version
+  shell: |
+    sed 's/^define(IPA_VERSION_PRE_RELEASE, .*/define(IPA_VERSION_PRE_RELEASE, test)/' -i /root/freeipa/VERSION.m4
 
 - name: create version
   set_fact:
-    build_version: "{{ major.stdout }}.{{ minor.stdout }}.{{ release.stdout }}.dev{{ timestamp.stdout }}+git{{ revision.stdout }}"
-
-- name: create build_id
-  set_fact:
-    build_id: "{{ timestamp.stdout }}+git{{ revision.stdout }}"
+    build_version: "{{ major.stdout }}.{{ minor.stdout }}.{{ release.stdout }}test"
