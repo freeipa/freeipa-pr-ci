@@ -10,7 +10,7 @@ FEDORAPEOPLE_DIR = 'ipa-maint@fedorapeople.org:/srv/groups/freeipa/prci/{path}'
 FEDORAPEOPLE_BASE_URL = 'https://fedorapeople.org/groups/freeipa/prci/'
 FEDORAPEOPLE_JOBS_URL = urllib.parse.urljoin(FEDORAPEOPLE_BASE_URL, 'jobs/')
 
-BUILD_PASSED_DESCRIPTION = "\(^-^)/"
+BUILD_PASSED_DESCRIPTION = "\(^_^)/"
 BUILD_FAILED_DESCRIPTION = "(✖╭╮✖)"
 
 UUID_RE = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
