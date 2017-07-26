@@ -305,7 +305,7 @@ class TaskQueue(collections.Iterator):
         for pull in PullRequests(self.repo):
             logger.debug("PR %d", pull.pull.number)
             tasks = pull.tasks(self.tasks_config_path, self.job_cls)
-            if not tasks and pull.user.login in self.allowed_users:
+            if not tasks and pull.pull.user.login in self.allowed_users:
                 logger.debug('Creating tasks for PR %d', pull.pull.number)
                 tasks.create()
             elif RERUN_LABEL in pull.labels:
