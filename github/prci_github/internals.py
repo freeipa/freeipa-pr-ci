@@ -200,9 +200,9 @@ class Task(object):
             result = self.job(depends_results)
         except Exception as exc:
             state = 'error'
-            description = getattr(err, 'description', '{type_}: {msg}'.format(
+            description = getattr(exc, 'description', '{type_}: {msg}'.format(
                 type_=type(exc).__name__, msg=str(exc)))
-            url = getattr(err, 'url', '')
+            url = getattr(exc, 'url', '')
             if exc_handler is not None:
                 exc_handler()
         else:
