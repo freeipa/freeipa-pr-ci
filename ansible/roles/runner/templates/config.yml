@@ -1,0 +1,27 @@
+repository:
+    owner: {{ github_repo_user }}
+    name: {{ github_repo_name }}
+credentials:
+    token: {{ github_token }}
+tasks_file: .freeipa-pr-ci.yaml
+whitelist_file: /root/freeipa-pr-ci/whitelist.yml
+logging:
+    version: 1
+    formatters:
+        basic:
+            format: '%(levelname)s:%(name)s:%(message)s'
+    handlers:
+        console:
+            class: logging.StreamHandler
+            level: DEBUG
+            formatter: basic
+    root:
+        level: WARNING
+        handlers: [console]
+    loggers:
+        __main__:
+            level: DEBUG
+        prci_github:
+            level: DEBUG
+        prci_github.adapter:
+            level: WARNING

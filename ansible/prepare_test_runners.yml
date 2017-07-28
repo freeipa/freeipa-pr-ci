@@ -14,6 +14,6 @@
   roles:
     - role: runner
       deploy_ssh_key: true
-      deploy_github_credentials: true
+      deploy_prci_configuration: true
       enable_nested_virt: true
       create_systemd_unit: true

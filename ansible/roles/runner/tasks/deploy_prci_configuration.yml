@@ -7,7 +7,7 @@
     group: root
     mode: 0700
 
-- name: copy github credentials file
+- name: copy prci.py configuration file
   template:
-    src: credentials.yaml
-    dest: /root/.config/freeipa-pr-ci/credentials.yaml
+    src: config.yml
+    dest: /root/.config/freeipa-pr-ci/config.yml
