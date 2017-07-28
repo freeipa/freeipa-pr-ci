@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import logging.config
 import os
 import raven
 import signal
@@ -132,13 +133,6 @@ class JobDispatcher(AbstractJob):
 
 
 def create_parser():
-    def log_level(level_name):
-        try:
-            return getattr(logging, level_name.upper())
-        except AttributeError:
-            raise argparse.ArgumentTypeError(
-                '{} is not valid logging level'.format(level_name))
-
     def yaml_file(path):
         try:
             with open(path) as f:
@@ -169,7 +163,8 @@ def create_parser():
              "run imediatelly and don't require manual approval."
     )
     parser.add_argument(
-        '--log-level', type=log_level,
+        '--logging', type=yaml_file, default={},
+        help='Path to YAML file with configuration for logging.',
     )
 
     return parser
@@ -204,7 +199,7 @@ def main():
     tasks_file = args.tasks
     whitelist = args.whitelist
 
-    logging.basicConfig(level=args.log_level)
+    logging.config.dictConfig(args.logging)
 
     github = github3.login(token=creds['token'])
     github.session.mount('https://api.github.com', GitHubAdapter())

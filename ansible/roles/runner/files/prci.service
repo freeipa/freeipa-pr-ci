@@ -7,7 +7,7 @@ Type=simple
 User=root
 Group=root
 WorkingDirectory=/root/freeipa-pr-ci
-ExecStart=/bin/bash -c '/root/freeipa-pr-ci/github/prci.py --id "$(hostname -s)" --credentials /root/.config/freeipa-pr-ci/credentials.yaml --tasks .freeipa-pr-ci.yaml --whitelist /root/freeipa-pr-ci/whitelist.yml'
+ExecStart=/bin/bash -c '/root/freeipa-pr-ci/github/prci.py --id "$(hostname -s)" --credentials /root/.config/freeipa-pr-ci/credentials.yaml --tasks .freeipa-pr-ci.yaml --whitelist /root/freeipa-pr-ci/whitelist.yml --logging /root/freeipa-pr-ci/github/logging_config.yml'
 StandardOutput=syslog
 StandardError=syslog
 
