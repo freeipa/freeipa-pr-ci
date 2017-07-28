@@ -133,38 +133,47 @@ class JobDispatcher(AbstractJob):
 
 
 def create_parser():
-    def yaml_file(path):
+    def config_file(path):
+        def load_yaml(yml_path):
+            try:
+                with open(yml_path) as yml_file:
+                    return yaml.load(yml_file)
+            except IOError as exc:
+                raise argparse.ArgumentTypeError(
+                    'Failed to open {}: {}'.format(yml_path, exc))
+            except yaml.YAMLError as exc:
+                raise argparse.ArgumentTypeError(
+                    'Failed to parse YAML from {}: {}'.format(yml_path, exc))
+
+        config = load_yaml(path)
         try:
-            with open(path) as f:
-                return yaml.load(f)
-        except IOError as exc:
+            config['credentials']
+            config['repository']
+            config['tasks_file']
+            config['logging']
+        except KeyError as exc:
             raise argparse.ArgumentTypeError(
-                'Failed to open {}: {}'.format(path, exc))
-        except yaml.YAMLError as exc:
-            raise argparse.ArgumentTypeError(
-                'Failed to parse YAML from {}: {}'.format(path, exc))
+                'Missing required section {} in configuration.', exc)
+
+        try:
+            whitelist_file = config.pop('whitelist_file')
+        except KeyError:
+            logger.warning('No whitelist file supplied. Manual approval will '
+                           'be needed for all PRs.')
+            config['whitelist'] = []
+        else:
+            config['whitelist'] = load_yaml(whitelist_file)
+
+        return config
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--id', type=str, required=True,
+        'ID', type=str,
         help='Unique runner ID',
     )
     parser.add_argument(
-        '--credentials', type=yaml_file, required=True,
-        help='YAML file containig at least user, token and repository',
-    )
-    parser.add_argument(
-        '--tasks', type=str, required=True,
-        help='Path to YAML file with definiton of tasks, from repo root',
-    )
-    parser.add_argument(
-        '--whitelist', type=yaml_file, default=[],
-        help="Path to YAML file with list of users for who the tests are "
-             "run imediatelly and don't require manual approval."
-    )
-    parser.add_argument(
-        '--logging', type=yaml_file, default={},
-        help='Path to YAML file with configuration for logging.',
+        '--config', type=config_file, required=True,
+        help='YAML file with complete configuration.',
     )
 
     return parser
@@ -194,21 +203,23 @@ def main():
     parser = create_parser()
     args = parser.parse_args()
 
-    runner_id = args.id
-    creds = args.credentials
-    tasks_file = args.tasks
-    whitelist = args.whitelist
+    runner_id = args.ID
+    config = args.config
 
-    logging.config.dictConfig(args.logging)
+    creds = config['credentials']
+    repo = config['repository']
+    tasks_file = config['tasks_file']
+    whitelist = config['whitelist']
+
+    logging.config.dictConfig(config['logging'])
 
     github = github3.login(token=creds['token'])
     github.session.mount('https://api.github.com', GitHubAdapter())
 
-    repo = github.repository(creds['user'], creds['repo'])
+    repo = github.repository(repo['owner'], repo['name'])
     task_queue = TaskQueue(repo, tasks_file, JobDispatcher, whitelist)
 
     handler = ExitHandler()
-
     signal.signal(signal.SIGINT, handler.finish)
     signal.signal(signal.SIGTERM, handler.abort)
 
