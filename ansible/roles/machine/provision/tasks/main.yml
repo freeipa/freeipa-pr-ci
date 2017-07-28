@@ -38,6 +38,10 @@
     src: resolv.conf
     dest: /etc/resolv.conf
 
+# - name: set hostname
+#   hostname:
+#     name: "{{ inventory_hostname }}.ipa.test"
+
+# workaround for https://github.com/ansible/ansible/issues/19814
 - name: set hostname
-  hostname:
-    name: "{{ inventory_hostname }}.ipa.test"
+  shell: "hostnamectl set-hostname {{ inventory_hostname }}.ipa.test"
