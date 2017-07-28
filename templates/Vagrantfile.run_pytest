@@ -27,10 +27,6 @@ Vagrant.configure(2) do |config|
         # VMs are thrown away in case of power outage
         domain.volume_cache = "unsafe"
 
-        # Allow remote connections to VNC server
-        domain.graphics_type = "vnc"
-        domain.graphics_ip = "0.0.0.0"  
-
         # Add connection to public network
         override.vm.network "public_network",
             dev: "virbr0",
