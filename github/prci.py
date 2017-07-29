@@ -4,6 +4,7 @@ import argparse
 import logging
 import logging.config
 import os
+import random
 import raven
 import signal
 import subprocess
@@ -21,6 +22,8 @@ from prci_github.adapter import GitHubAdapter
 SENTRY_URL = 'https://d24d8d622cbb4e2ea447c9a64f19b81a:4db0ce47706f435bb3f8a02a0a1f2e22@sentry.io/193222'
 NO_TASK_BACKOFF_TIME = 60
 ERROR_BACKOFF_TIME = 600
+REBOOT_DELAY = 3600 * 3
+REBOOT_TIME_FILE = '/root/next_reboot'
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
@@ -199,6 +202,30 @@ def sentry_report_exception(context=None):
         sentry.context.clear()
 
 
+def check_reboot():
+    def plan_reboot(delay=REBOOT_DELAY):
+        next_reboot = int(time.time()) + delay
+        with open(REBOOT_TIME_FILE, 'w') as f:
+            f.write(str(next_reboot))
+
+    def read_reboot_time():
+        try:
+            with open(REBOOT_TIME_FILE, 'r') as f:
+                return int(f.read())
+        except FileNotFoundError:
+            return None
+
+    reboot_time = read_reboot_time()
+    if reboot_time is None:
+        plan_reboot(delay=random.randint(1, REBOOT_DELAY))
+        return
+
+    if time.time() > reboot_time:
+        plan_reboot()
+        logging.info('Rebooting the machine')
+        subprocess.call('reboot', shell=True)
+
+
 def main():
     parser = create_parser()
     args = parser.parse_args()
@@ -248,6 +275,11 @@ def main():
             time.sleep(ERROR_BACKOFF_TIME)
         finally:
             handler.unregister_task()
+
+            try:
+                check_reboot()
+            except:
+                sentry_report_exception()
 
 
 if __name__ == '__main__':
