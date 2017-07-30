@@ -182,12 +182,19 @@ def create_parser():
     return parser
 
 
-def update_code():
+def update_runner(repo, creds):
     cmd = ['git', 'pull', 'origin', 'master']
     stdout = subprocess.check_output(cmd).decode('utf-8')
     if 'Already up-to-date' not in stdout:
-        logger.info('Code change detected, reloading process.')
-        os.execv(__file__, sys.argv)
+        logger.info('Code change detected, re-deploying runner')
+        subprocess.call([
+            'ansible-playbook',
+            '-i', 'ansible/hosts/runner_localhost',
+            '-e', 'github_repo_user={}'.format(repo['owner']),
+            '-e', 'github_repo_name={}'.format(repo['name']),
+            '-e', 'github_token={}'.format(creds['token']),
+            '-e', 'deploy_ssh_key=false',
+            'ansible/prepare_test_runners.yml'])
 
 
 def sentry_report_exception(context=None):
@@ -202,7 +209,7 @@ def sentry_report_exception(context=None):
         sentry.context.clear()
 
 
-def check_reboot():
+def check_reboot(repo, creds):
     def plan_reboot(delay=REBOOT_DELAY):
         next_reboot = int(time.time()) + delay
         with open(REBOOT_TIME_FILE, 'w') as f:
@@ -221,6 +228,10 @@ def check_reboot():
         return
 
     if time.time() > reboot_time:
+        try:
+            update_runner(repo, creds)
+        except:
+            sentry_report_exception()
         plan_reboot()
         logging.info('Rebooting the machine')
         subprocess.call('reboot', shell=True)
@@ -252,8 +263,6 @@ def main():
 
     while not handler.done:
         try:
-            update_code()
-
             task_queue.create_tasks_for_pulls()
 
             try:
@@ -277,7 +286,7 @@ def main():
             handler.unregister_task()
 
             try:
-                check_reboot()
+                check_reboot(repo, creds)
             except:
                 sentry_report_exception()
 
