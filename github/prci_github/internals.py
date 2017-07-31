@@ -5,6 +5,7 @@ import base64
 import collections
 import datetime
 import logging
+import requests
 import time
 import yaml
 
@@ -232,17 +233,34 @@ class Tasks(collections.Set, collections.Mapping):
         self.job_cls = job_cls
         self.tasks_conf = {}
 
-        tasks_file = repo.file_contents(tasks_config_path, pull.pull.head.sha)
-        if not tasks_file:
-            logger.warning('Tasks file not present in PR %d', pull.pull.number)
-        else:
+        # TODO: Use API once most of the PRs have tasks file
+        # tasks_file = repo.file_contents(tasks_config_path, pull.pull.head.sha)
+        # if not tasks_file:
+        #     logger.warning('Tasks file not present in PR %d', pull.pull.number)
+        # else:
+        #     try:
+        #         self.tasks_conf = yaml.load(
+        #                             base64.b64decode(tasks_file.content)
+        #                           )['jobs']
+        #     except (yaml.error.YAMLError, TypeError, KeyError) as err:
+        #         logger.warning('Failed to decode tasks file in PR %d: %s',
+        #                        pull.pull.number, err)
+        tasks_file_url = (
+            "https://raw.githubusercontent.com/{repo.owner.login}/{repo.name}/"
+            "{pull.pull.head.sha}/{tasks_path}".format(repo=repo, pull=pull,
+                                                  tasks_path=tasks_config_path)
+        )
+        logger.debug("Retrieving tasks file %s", tasks_file_url)
+
+        response = requests.get(tasks_file_url)
+        if response.status_code == 200:
             try:
-                self.tasks_conf = yaml.load(
-                                    base64.b64decode(tasks_file.content)
-                                  )['jobs']
+                self.tasks_conf = yaml.load(response.content)['jobs']
             except (yaml.error.YAMLError, TypeError, KeyError) as err:
                 logger.warning('Failed to decode tasks file in PR %d: %s',
                                pull.pull.number, err)
+        else:
+            logger.warning('Tasks file not present in PR %d', pull.pull.number)
 
     def __len__(self):
         return len(Statuses(self.repo, self.pull, self.tasks_conf.keys()))
