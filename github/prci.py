@@ -20,7 +20,7 @@ from prci_github.adapter import GitHubAdapter
 
 
 SENTRY_URL = 'https://d24d8d622cbb4e2ea447c9a64f19b81a:4db0ce47706f435bb3f8a02a0a1f2e22@sentry.io/193222'
-NO_TASK_BACKOFF_TIME = 60
+NO_TASK_BACKOFF_TIME = 300
 ERROR_BACKOFF_TIME = 600
 REBOOT_DELAY = 3600 * 3
 REBOOT_TIME_FILE = '/root/next_reboot'
