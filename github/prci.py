@@ -13,6 +13,7 @@ import time
 import yaml
 
 import github3
+import redis
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 from prci_github import TaskQueue, AbstractJob, TaskAlreadyTaken, JobResult
@@ -252,7 +253,8 @@ def main():
     logging.config.dictConfig(config['logging'])
 
     github = github3.login(token=creds['token'])
-    github.session.mount('https://api.github.com', GitHubAdapter())
+    github.session.mount('https://api.github.com',
+                         GitHubAdapter(cache=redis.Redis()))
 
     repo = github.repository(repo['owner'], repo['name'])
     task_queue = TaskQueue(repo, tasks_file, JobDispatcher, whitelist)
