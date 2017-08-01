@@ -1,4 +1,7 @@
 ---
+- name: systemd_daemon_reload
+  shell: systemctl daemon-reload
+
 - name: enable_prci
   service:
     name: prci
