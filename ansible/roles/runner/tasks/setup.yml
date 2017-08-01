@@ -35,6 +35,8 @@
     - python3-devel
     - python3-pip
     - redhat-rpm-config
+    - redis
+    - python3-redis
   notify:
     - restart_nfs
 
@@ -46,3 +48,9 @@
   with_items:
     - virtlogd
     - libvirtd
+
+- name: start&enable redis service
+  service:
+    name: redis
+    enabled: true
+    state: started
