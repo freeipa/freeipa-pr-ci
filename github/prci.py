@@ -102,6 +102,9 @@ class JobDispatcher(AbstractJob):
             'git_repo': build_target[0],
             'git_refspec': build_target[1]}
 
+    def abort(self):
+        self.job.terminate()
+
     def __call__(self, depends_results=None):
         if depends_results is not None:
             for task_name, result in depends_results.items():
