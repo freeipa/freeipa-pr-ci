@@ -4,4 +4,8 @@ deploy_prci_configuration: false
 enable_nested_virt: false
 create_systemd_unit: false
 ssh_key_dir: /root/.ssh
-freeipa_pr_ci_repo: https://github.com/freeipa/freeipa-pr-ci
+monitored_repo_owner: freeipa
+monitored_repo_name: freeipa
+pr_ci_repo_owner: freeipa
+pr_ci_repo: "https://github.com/{{ pr_ci_repo_owner }}/freeipa-pr-ci"
+pr_ci_repo_branch: master

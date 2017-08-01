@@ -2,8 +2,8 @@
 - name: clone FreeIPA PR CI repo
   git: 
     dest: /root/freeipa-pr-ci
-    repo: "{{ freeipa_pr_ci_repo }}"
-    version: master
+    repo: "{{ pr_ci_repo }}"
+    version: "{{ pr_ci_repo_branch }}"
     force: true
 
 - name: install python dependencies with pip

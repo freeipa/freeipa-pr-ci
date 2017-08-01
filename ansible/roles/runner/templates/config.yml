@@ -1,6 +1,6 @@
 repository:
-    owner: {{ github_repo_user }}
-    name: {{ github_repo_name }}
+    owner: {{ monitored_repo_owner }}
+    name: {{ monitored_repo_name }}
 credentials:
     token: {{ github_token }}
 tasks_file: .freeipa-pr-ci.yaml

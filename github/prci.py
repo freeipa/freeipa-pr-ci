@@ -184,15 +184,13 @@ def create_parser():
 
 
 def update_runner(repo, creds):
-    cmd = ['git', 'pull', 'origin', 'master']
+    cmd = ['git', 'pull']
     stdout = subprocess.check_output(cmd).decode('utf-8')
     if 'Already up-to-date' not in stdout:
         logger.info('Code change detected, re-deploying runner')
         subprocess.call([
             'ansible-playbook',
             '-i', 'ansible/hosts/runner_localhost',
-            '-e', 'github_repo_user={}'.format(repo['owner']),
-            '-e', 'github_repo_name={}'.format(repo['name']),
             '-e', 'github_token={}'.format(creds['token']),
             '-e', 'deploy_ssh_key=false',
             'ansible/prepare_test_runners.yml'])

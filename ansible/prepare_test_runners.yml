@@ -1,13 +1,7 @@
 ---
 - hosts: runner
-  name: prepare test runners
+  name: prepare production test runners
   vars_prompt:
-    - name: github_repo_user
-      prompt: Username of watched GitHub repo
-      private: false
-    - name: github_repo_name
-      prompt: Name of watched GitHub repo
-      private: false
     - name: github_token
       prompt: API token for GitHub
       private: false
