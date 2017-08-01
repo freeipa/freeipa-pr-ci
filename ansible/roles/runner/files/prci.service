@@ -1,6 +1,6 @@
 [Unit]
 Description=FreeIPA PR CI
-After=syslog.target network-online.target
+After=syslog.target network-online.target libvirtd.service
 
 [Service]
 Type=simple
