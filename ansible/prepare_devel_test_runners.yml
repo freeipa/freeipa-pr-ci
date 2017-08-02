@@ -8,10 +8,10 @@
     - name: github_token
       prompt: API token for GitHub
       private: false
-    - name: prci_repo_owner
+    - name: pr_ci_repo_owner
       prompt: Owner of PR CI repo to test
       private: false
-    - name: prci_repo_branch
+    - name: pr_ci_repo_branch
       prompt: Branch of PR CI repo to test
       private: false
   roles:
