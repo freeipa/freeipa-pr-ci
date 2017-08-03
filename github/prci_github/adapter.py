@@ -57,5 +57,6 @@ class GitHubAdapter(CacheControlAdapter):
                 logger.debug('Rate limit exhausted. Will wait %ds for the '
                              'limit to reset.', wait_time)
                 time.sleep(wait_time)
-            else:
-                return response
+                continue
+
+        return response
