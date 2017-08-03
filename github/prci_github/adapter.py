@@ -1,9 +1,12 @@
 import datetime
 import logging
+import requests
 import time
 
 from cachecontrol.adapter import CacheControlAdapter
 
+
+RETRY_TIME = 1
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
@@ -32,8 +35,19 @@ class GitHubAdapter(CacheControlAdapter):
         for try_counter in range(self.tries):
             logger.debug('%s: try %d', self.__class__.__name__, try_counter)
 
-            response = super(GitHubAdapter, self).send(
-                request, *args, **kwargs)
+            try:
+                response = super(GitHubAdapter, self).send(
+                    request, *args, **kwargs)
+            except requests.exceptions.ConnectionError as exc:
+                logger.debug('Failed to send request: %s.', exc)
+                if try_counter < (self.tries - 1):
+                    logger.debug('This might be caused by temporary network '
+                                 'or service issue. Will retry in %ds',
+                                 RETRY_TIME)
+                    time.sleep(RETRY_TIME)
+                    continue
+                else:
+                    raise
 
             logger.debug('Got response: %d', response.status_code)
 
