@@ -74,3 +74,13 @@ class GitHubAdapter(CacheControlAdapter):
                 continue
 
         return response
+
+    def build_response(self, request, response, *args, **kwargs):
+        resp = super(GitHubAdapter, self).build_response(
+            request, response, *args, **kwargs)
+
+        if not resp.from_cache:
+            logger.debug('%s\t%s consumed GitHub API request.',
+                         request.method, request.url)
+
+        return resp
