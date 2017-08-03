@@ -1,5 +1,6 @@
 ---
 - hosts: runner
+  remote_user: root
   name: prepare production test runners
   vars_prompt:
     - name: github_token

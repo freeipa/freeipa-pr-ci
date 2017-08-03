@@ -1,5 +1,6 @@
 ---
 - hosts: runner_devel
+  remote_user: root
   name: prepare development test runners
   vars_prompt:
     - name: monitored_repo_owner
