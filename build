@@ -18,6 +18,13 @@ def parse_args():
     group.add_argument('--version',
         help='Git version (tag, commit) to build')
 
+    parser.add_argument('--template-name',
+        help='name of vargant template box',
+        required=True)
+    parser.add_argument('--template-version',
+        help='version of vargant template box',
+        required=True)
+
     parser.add_argument('--url-only', '-u',
         help='Disable stdout logging and only print job URL',
         action='store_true',
@@ -47,7 +54,9 @@ def main():
     if args.version:
         git_version = args.version
     logging_init_stream_handler(noout=args.url_only)
-    job = Build(git_refspec=git_refspec, git_version=git_version,
+    template = {'name': args.template_name,
+                'version': args.template_version}
+    job = Build(template, git_refspec=git_refspec, git_version=git_version,
                 git_repo=git_repo, no_destroy=args.no_destroy,
                 timeout=args.timeout)
     job()
