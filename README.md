@@ -18,7 +18,7 @@ contributors, you can check out this [video](https://vimeo.com/228077191).
 
 2. Place `freeipa_pr_ci` private key in `keys/`
 
-   This is only necessary if you want to publish logs to fedorapople. To omit 
+   This is only necessary if you want to publish logs to fedorapople. To omit
    this step, specify `--skip-tags fedorapeople`.
 
 3. Generate GitHub API token with permission 'Full control of private repositories'.
@@ -46,14 +46,24 @@ testing and development purposes.
 
 Set up the key as above and generate a GitHub token for your repository.
 
-1. Create ansible inventory `ansible/hosts/runners`
+1. You need to configure the ssh connection to connect as root. There is
+   some ways to do this, one of them is to configure your .ssh/config in
+   someway like this:
+
+   ```
+   Host vmrunner
+       User root
+       HostName 2.3.4.5  # runner vm ip
+   ```
+
+2. Create ansible inventory `ansible/hosts/runners`
 
    ```
    [runner_devel]
-   2.3.4.5
+   vmrunner  # runner vm hostname
    ```
 
-2. Run the `prepare_devel_test_runners.yml` playbook, specify which repository
+3. Run the `prepare_devel_test_runners.yml` playbook, specify which repository
    should be monitored and which code repository and branch should be used to
    deploy the runner
 
