@@ -9,27 +9,7 @@ from .common import (FallibleTask, TaskException, PopenTask,
                      logging_init_file_handler, create_file_from_template)
 from . import constants
 from .remote_storage import GzipLogFiles, FedoraPeopleUpload
-from .vagrant import VagrantUp, VagrantProvision, VagrantCleanup
-
-
-def with_vagrant(func):
-    def wrapper(self, *args, **kwargs):
-        try:
-            self.execute_subtask(
-                VagrantUp(timeout=None))
-            self.execute_subtask(
-                VagrantProvision(timeout=None))
-        except TaskException as exc:
-            logging.critical('vagrant or provisioning failed')
-            raise exc
-        else:
-            func(self, *args, **kwargs)
-        finally:
-            if not self.no_destroy:
-                self.execute_subtask(
-                    VagrantCleanup(raise_on_err=False))
-
-    return wrapper
+from .vagrant import with_vagrant
 
 
 class JobTask(FallibleTask):

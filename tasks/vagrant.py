@@ -5,6 +5,39 @@ import os
 from .common import PopenTask, PopenException, FallibleTask, TaskException
 
 
+def with_vagrant(func):
+    def wrapper(self, *args, **kwargs):
+        try:
+            __setup_provision(self)
+        except TaskException as exc:
+            logging.critical('vagrant or provisioning failed')
+            raise exc
+        else:
+            func(self, *args, **kwargs)
+        finally:
+            if not self.no_destroy:
+                self.execute_subtask(
+                    VagrantCleanup(raise_on_err=False))
+
+    return wrapper
+
+
+def __setup_provision(task):
+    """
+    This tries to execute the provision twice due to
+    problems described in issue #20
+    """
+    try:
+        task.execute_subtask(VagrantUp(timeout=None))
+        task.execute_subtask(VagrantProvision(timeout=None))
+    except Exception as exc:
+        logging.debug(exc, exc_info=True)
+        logging.info("Failed to provision/up VM. Trying it again")
+        task.execute_subtask(VagrantCleanup(raise_on_err=False))
+        task.execute_subtask(VagrantUp(timeout=None))
+        task.execute_subtask(VagrantProvision(timeout=None))
+
+
 class VagrantTask(FallibleTask):
     def __init__(self, **kwargs):
         super(VagrantTask, self).__init__(**kwargs)
