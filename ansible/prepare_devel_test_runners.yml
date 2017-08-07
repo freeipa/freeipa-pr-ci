@@ -21,6 +21,7 @@
       deploy_prci_configuration: true
       enable_nested_virt: true
       create_systemd_unit: true
+      no_task_backoff_time: 30
   post_tasks:
     - name: restart prci to pick up code changes
       service:
