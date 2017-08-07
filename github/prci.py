@@ -21,7 +21,6 @@ from prci_github.adapter import GitHubAdapter
 
 
 SENTRY_URL = 'https://d24d8d622cbb4e2ea447c9a64f19b81a:4db0ce47706f435bb3f8a02a0a1f2e22@sentry.io/193222'
-NO_TASK_BACKOFF_TIME = 300
 ERROR_BACKOFF_TIME = 600
 REBOOT_DELAY = 3600 * 3
 REBOOT_TIME_FILE = '/root/next_reboot'
@@ -247,6 +246,7 @@ def main():
     repo = config['repository']
     tasks_file = config['tasks_file']
     whitelist = config['whitelist']
+    no_task_backoff_time = config['no_task_backoff_time']
 
     logging.config.dictConfig(config['logging'])
 
@@ -268,7 +268,7 @@ def main():
             try:
                 task = next(task_queue)
             except StopIteration:
-                time.sleep(NO_TASK_BACKOFF_TIME)
+                time.sleep(no_task_backoff_time)
                 continue
 
             try:
