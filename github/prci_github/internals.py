@@ -10,6 +10,7 @@ import time
 import yaml
 
 
+GITHUB_DESCRIPTION_LIMIT = 139
 RACE_TIMEOUT = 10
 CREATE_TIMEOUT = 5
 RERUN_LABEL = 're-run'
@@ -360,7 +361,7 @@ class JobResult(object):
         if state not in self.valid_states:
             raise ValueError('invalid state: {}'.format(state))
         self.state = state
-        self.description = description
+        self.description = description[:GITHUB_DESCRIPTION_LIMIT]
         self.url = url
 
 
