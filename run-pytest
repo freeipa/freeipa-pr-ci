@@ -25,6 +25,9 @@ def parse_args():
         help='Keep VMs running',
         action='store_true',
         default=False)
+    parser.add_argument('--timeout',
+        help='Time in seconds, after which the task will be aborted',
+        default=None)
 
     return parser.parse_args()
 
@@ -33,7 +36,7 @@ def main():
     args = parse_args()
     logging_init_stream_handler(noout=args.url_only)
     job = RunPytest(build_url=args.build_url, test_suite=args.test_suite,
-                    no_destroy=args.no_destroy)
+                    no_destroy=args.no_destroy, timeout=args.timeout)
     job()
     if args.url_only:
         print(job.remote_url)
