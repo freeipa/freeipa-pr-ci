@@ -15,6 +15,11 @@
     - name: pr_ci_repo_branch
       prompt: Branch of PR CI repo to test
       private: false
+  pre_tasks:
+    - name: check we're not deploying against FreeIPA repo
+      debug:
+        var: monitored_repo_owner
+      failed_when: monitored_repo_owner == "freeipa"
   roles:
     - role: runner
       deploy_ssh_key: true
