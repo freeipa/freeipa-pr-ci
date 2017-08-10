@@ -23,11 +23,14 @@ def parse_args():
         action='store_true',
         default=False)
     parser.add_argument('--repo', '-r',
-        help='URL to git repository to use (FreeIPA upstream is default)')
+        help='URL to git repository to use (FreeIPA github is default)')
     parser.add_argument('--no-destroy',
         help='Keep VMs running',
         action='store_true',
         default=False)
+    parser.add_argument('--timeout',
+        help='Time in seconds, after which the task will be aborted',
+        default=None)
 
     return parser.parse_args()
 
@@ -45,7 +48,8 @@ def main():
         git_version = args.version
     logging_init_stream_handler(noout=args.url_only)
     job = Build(git_refspec=git_refspec, git_version=git_version,
-                git_repo=git_repo, no_destroy=args.no_destroy)
+                git_repo=git_repo, no_destroy=args.no_destroy,
+                timeout=args.timeout)
     job()
     if args.url_only:
         print(job.remote_url)
