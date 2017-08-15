@@ -1,14 +1,22 @@
 ---
-- hosts: runner
+- hosts: localhost
   name: prepare vagrant box
   become_user: root
+  vars:
+    # Fedora 25
+    # base_box_name: f25
+    # base_box_url: https://download.fedoraproject.org/pub/fedora/linux/releases/25/CloudImages/x86_64/images/Fedora-Cloud-Base-Vagrant-25-1.3.x86_64.vagrant-libvirt.box
+
+    # Fedora 26
+    base_box_name: f26
+    base_box_url: https://download.fedoraproject.org/pub/fedora/linux/releases/26/CloudImages/x86_64/images/Fedora-Cloud-Base-Vagrant-26-1.5.x86_64.vagrant-libvirt.box
   vars_prompt:
     - name: git_branch
       prompt: "git branch (e.g. master)"
       private: false
   pre_tasks:
     - set_fact:
-        template_box_name: "ci-{{ git_branch }}-f25"
+        template_box_name: "ci-{{ git_branch }}-{{ base_box_name }}"
   roles:
     - box/prepare
 
@@ -23,6 +31,12 @@
 
 - hosts: image_box
   name: modify vagrant box template
+  vars:
+    # Fedora 25
+    # build_chroot: fedora-25-x86_64
+
+    # Fedora 26
+    build_chroot: fedora-26-x86_64
   vars_prompt:
     - name: git_branch
       prompt: "git branch (e.g. master)"
@@ -35,7 +49,7 @@
       git_version: "{{ git_branch }}"
     - role: machine
 
-- hosts: runner
+- hosts: localhost
   name: package template box
   become_user: root
   roles:
