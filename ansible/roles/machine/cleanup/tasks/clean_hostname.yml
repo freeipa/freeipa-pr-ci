@@ -8,5 +8,5 @@
     regexp: "HOSTNAME"
     state: absent
 
-- name: regenerate initrd to remove hardcoded hostname
-  command: /usr/bin/dracut --regenerate-all --force
+# - name: regenerate initrd to remove hardcoded hostname
+#   command: /usr/bin/dracut --regenerate-all --force
