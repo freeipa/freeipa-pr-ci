@@ -10,15 +10,24 @@
     dest: /etc/yum.repos.d/
     url: "{{ repofile_url }}"
 
-# This works as long as the version to be tested is newer than what's
-# available in the distro repositories
 - name: install freeipa packages
-  dnf:
-    name: "{{ item }}"
-    state: latest
-  with_items:
-    - freeipa-*
-    - python*-ipatests
+  block:
+    - dnf:
+        name: "{{ item }}"
+        state: latest
+      with_items:
+        - freeipa-*
+        - python*-ipatests
+  rescue:
+    # Distro repos are turned off in default template
+    # If a new package from fedora/updates is required, this will fix it
+    - dnf:
+        name: "{{ item }}"
+        state: latest
+        enablerepo: fedora,updates
+      with_items:
+        - freeipa-*
+        - python*-ipatests
 
 - name: get all packages
   shell: rpm -qa
