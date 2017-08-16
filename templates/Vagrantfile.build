@@ -23,12 +23,6 @@ Vagrant.configure(2) do |config|
 
         # Recommended for remote NFS storage
         domain.volume_cache = "none"
-
-        # Add connection to public network
-        override.vm.network "public_network",
-            dev: "virbr0",
-            mode: "bridge",
-            type: "bridge"
     end
 
     config.vm.define "builder"  do |builder|
