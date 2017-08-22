@@ -11,6 +11,9 @@
     name: dnf-makecache.service
     state: stopped
 
+- name: "enable tkrizek/freeipa-pr-ci COPR"
+  shell: dnf copr enable -y tkrizek/freeipa-pr-ci
+
 - name: install runner dependencies
   dnf:
     name: "{{ item }}"
@@ -31,9 +34,9 @@
     - python3-pip
     - redhat-rpm-config
     - redis
+    - python3-CacheControl
     - python3-redis
     - python3-parse
-    - python3-CacheControl
     - python3-dateutil
     - python3-psutil
     - python3-PyYAML
