@@ -8,9 +8,9 @@
 
 - name: install python dependencies with pip
   pip:
-    requirements: /root/freeipa-pr-ci/requirements.txt
     executable: pip3
     state: present
+    name: github3.py>=1.0.0a4
 
 - name: create systemd unit for prci
   copy:
