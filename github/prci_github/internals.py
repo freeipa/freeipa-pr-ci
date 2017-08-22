@@ -194,6 +194,9 @@ class Task(object):
 
         self.status_description = desc
 
+    def abort(self):
+        self.job.terminate()
+
     def execute(self, exc_handler=None):
         depends_results = {}
         for dep in self.requires:
@@ -431,6 +434,13 @@ class AbstractJob(collections.Callable):
         """
         self.job = job
         self.target = build_target
+
+    @abc.abstractmethod
+    def terminate(self):
+        """
+        Clean up and finish ASAP.
+        """
+        pass
 
     @abc.abstractmethod
     def __call__(self, depends_results=None):
