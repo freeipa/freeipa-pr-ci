@@ -32,6 +32,15 @@
     - redhat-rpm-config
     - redis
     - python3-redis
+    - python3-parse
+    - python3-CacheControl
+    - python3-dateutil
+    - python3-psutil
+    - python3-PyYAML
+    - python3-raven
+    - python3-tqdm
+    - python3-pytz
+    - python3-jinja2
   notify:
     - restart_nfs
 
