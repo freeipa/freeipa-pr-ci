@@ -73,7 +73,7 @@ class GitHubAdapter(CacheControlAdapter):
                 time.sleep(wait_time)
                 continue
 
-        return response
+            return response
 
     def build_response(self, request, response, *args, **kwargs):
         resp = super(GitHubAdapter, self).build_response(
