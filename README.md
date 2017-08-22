@@ -12,7 +12,7 @@ contributors, you can check out this [video](https://vimeo.com/228077191).
 1. Create ansible inventory `ansible/hosts/runners`
 
    ```
-   [runner]
+   [runners]
    1.2.3.4
    ```
 
@@ -44,12 +44,10 @@ The development runner can be deployed to monitor any FreeIPA fork while
 executing any FreeIPA PR CI fork (any owner and branch). This is useful for
 testing and development purposes.
 
-Set up the key as above and generate a GitHub token for your repository.
-
 1. Create ansible inventory `ansible/hosts/runners`
 
    ```
-   [runner_devel]
+   [runners_devel]
    2.3.4.5
    ```
 
