@@ -27,6 +27,8 @@ contributors, you can check out this [video](https://vimeo.com/228077191).
   configuration including hostname and networking should persist after reboot.
 - **Minimum specs**: 4 vCPUs, 8 GB RAM, 30 GB disk.
 - **Operating system**: currently, only Fedora is supported.
+- **Partitioning**: `/var/lib/libvirt/images` and `/root/.vagrant.d/` have to
+  be on the *same* partition.
 
 #### Other
 
