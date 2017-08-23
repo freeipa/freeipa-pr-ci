@@ -20,3 +20,8 @@
     - systemd_daemon_reload
     - enable_prci
   when: create_systemd_unit
+
+- name: ensure prci is started
+  service:
+    name: prci
+    state: started
