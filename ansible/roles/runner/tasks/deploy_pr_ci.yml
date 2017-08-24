@@ -29,12 +29,13 @@
   copy:
     src: prci.service
     dest: /etc/systemd/system/prci.service
-  notify:
-    - systemd_daemon_reload
-    - enable_prci
   when: create_systemd_unit
 
-- name: ensure prci is started
+- name: systemd daemon reload
+  shell: systemctl daemon-reload
+
+- name: enable prci
   service:
     name: prci
+    enabled: true
     state: started
