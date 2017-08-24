@@ -28,7 +28,6 @@
   roles:
     - role: runner
       deploy_ssh_key: true
-      deploy_prci_configuration: true
       enable_nested_virt: true
       create_systemd_unit: true
       no_task_backoff_time: 30

@@ -12,6 +12,19 @@
     state: present
     name: github3.py>=1.0.0a4
 
+- name: create config directory if it dosn't exist
+  file:
+    path: /root/.config/freeipa-pr-ci
+    state: directory
+    owner: root
+    group: root
+    mode: 0700
+
+- name: copy prci.py configuration file
+  template:
+    src: config.yml
+    dest: /root/.config/freeipa-pr-ci/config.yml
+
 - name: create systemd unit for prci
   copy:
     src: prci.service

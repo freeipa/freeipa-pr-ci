@@ -1,6 +1,5 @@
 ---
 deploy_ssh_key: false
-deploy_prci_configuration: false
 enable_nested_virt: false
 create_systemd_unit: false
 ssh_key_dir: /root/.ssh
