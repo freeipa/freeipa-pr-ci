@@ -36,6 +36,7 @@ contributors, you can check out this [video](https://vimeo.com/228077191).
 - GitHub token with *Full control of private repositories* (Settings ->
   Personal access tokens)
 - `freeipa_pr_ci` private key placed in `keys/`
+- private keys in `keys/` have permissions set to 0600
 
 ### Runner deployment
 
