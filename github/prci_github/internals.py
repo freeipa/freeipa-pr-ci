@@ -13,6 +13,7 @@ import time
 import yaml
 
 import cachecontrol
+import psutil
 import redis
 
 
@@ -28,6 +29,10 @@ logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
 class TaskAlreadyTaken(Exception):
+    pass
+
+
+class InsufficientResources(Exception):
     pass
 
 
@@ -171,6 +176,7 @@ class Task(object):
 
         self.priority = conf['priority']
         self.requires = conf['requires']
+        self.resources = conf.get('resources', {})
         self.job = job_cls(conf['job'],
                            (self.repo.clone_url, self.refspec))
 
@@ -361,7 +367,7 @@ class Tasks(collections.Set, collections.Mapping):
                      self.pull.pull.number)
 
 
-class TaskQueue(collections.Iterator):
+class TaskQueue(object):
     def __init__(self, repo, tasks_config_path, job_cls, runner_id,
                  allowed_users=[]):
         self.repo = repo
@@ -369,6 +375,26 @@ class TaskQueue(collections.Iterator):
         self.tasks_config_path = tasks_config_path
         self.allowed_users = allowed_users
         self.runner_id = runner_id
+        self.total_cpus = psutil.cpu_count()
+        self.total_memory = psutil.virtual_memory()['total']
+        self.running_tasks = {}
+        self.done = False
+
+    @propery
+    def used_cpus(self):
+        return sum([t['cpu'] for t in self.running_tasks.values()])
+
+    @propery
+    def used_memory(self):
+        return sum([t['memory'] for t in self.running_tasks.values()])
+
+    @propery
+    def available_cpus(self):
+        return self.total_cpus - self.used_cpus
+
+    @property
+    def available_memory(self):
+        return self.total_memory - self.used_memory
 
     def create_tasks_for_pulls(self):
         """
@@ -435,12 +461,36 @@ class TaskQueue(collections.Iterator):
             Status.create(task.repo, task.pull, task.name,
                           'unassigned', '', 'pending')
 
-    def __next__(self):
-        """
-        Return next task for processing
+    def allocate_resorces(self, task):
+        # if task don't specify resource requirements behave like it needs
+        # whole runner to avoid overloading the runner
+        task_cpu = task.resources.get('cpu', self.total_cpus)
+        task_mem = taks.resources.get('memory', self.total_memory)
 
-        From tasks that are available for execution the one with maximum
-        priority is returned.
+        if task_cpu < self.available_cpus and task_mem < self.available_memory:
+            task_key = (task.pull.pull.head.sha, task.name,)
+            self.running_tasks[task_key] = {'cpu': task_cpu,
+                                            'memory': task_mem}
+        else:
+            raise InsufficientResources():
+
+    def free_resources(self, task):
+        task_key = (task.pull.pull.head.sha, task.name,)
+
+        try:
+            del(self.running_tasks[task_key])
+        except KeyError:
+            logger.warning(
+                "Ignoring free_resources for task %s on PR %d. There's no "
+                "allocation for this task.", task.name, task.pull.pull.number
+            )
+
+    def take_tasks(self):
+        """
+        Return list of tasks for processing
+
+        From tasks that are available for execution those with maximum priority
+        and ready for execution are returned.
 
         The priority is tuple (boolean, int, int)
         First member True if PR has 'prioritize' label, False otherwise
@@ -463,6 +513,7 @@ class TaskQueue(collections.Iterator):
                 if task.can_run():
                     tasks.append(task)
 
+        taken_tasks = []
         for task in sorted(
             tasks,
             reverse=True,
@@ -470,13 +521,24 @@ class TaskQueue(collections.Iterator):
                            tasks_done_per_pr[t.pull.pull.number]),
         ):
             try:
+                self.allocate_resources(task)
                 task.take(self.runner_id)
+            except InsufficientResources:
+                task_cpus = task.resources.get('cpu', self.total_cpus)
+                task_mem = task.resources.get('memory', self.total_memory)
+                logger.debug(
+                    'Task %s on PR %d skipped due to resource requirements: '
+                    '%d CPUs and %f GB RAM.', task.name, task.pull.pull.number,
+                    task_cpus, task_mem
+                )
+                continue
             except TaskAlreadyTaken:
+                self.free_resources(task)
                 continue
             else:
-                return task
+                taken_tasks.append(task)
         else:
-            raise StopIteration()
+            return taken_tasks
 
 
 class JobResult(object):
