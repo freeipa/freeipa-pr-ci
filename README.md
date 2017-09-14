@@ -100,10 +100,26 @@ testing and development purposes.
 
 ## Creating vagrant template box
 
-1. Make sure correct variables for Fedora version are selected in
+
+1. Make sure you've configured `~/.config/atlas_box_uploader.yaml` to enable
+   box upload to vagrantcloud.
+
+   ```yaml
+   url: https://vagrantcloud.com
+   username: freeipa
+   token: $TOKEN
+   ```
+
+2. If you're creating a brand new box that has no previous versions, go to
+   vagrantcloud.com and create the box manually. Follow the
+   convention of `freeipa/ci-$BRANCH_NAME-fXX`. You also need to create a first
+   version of the box, e.g. `0.1.0` (it doesn't need to be released or
+   uploaded).
+
+3. Make sure correct variables for Fedora version are selected in
    `ansible/create_box_template.yml`.
 
-2. Run `create-box-template`
+4. Run `create-box-template`
 
    This will create a vagrant box in `/tmp/$box_name/`. It will also be
-   published on vagrantcloud if you have credentials set up. (**TODO**)
+   published on vagrantcloud.
