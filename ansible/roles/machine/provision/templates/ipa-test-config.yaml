@@ -5,7 +5,7 @@ admin_password: Secret.123
 debug: false
 dirman_dn: cn=Directory Manager
 dirman_password: Secret.123
-dns_forwarder: 10.34.78.1
+dns_forwarder: {{ dns_server.stdout }}
 domains:
 - hosts:
 {% for host in groups['all'] %}

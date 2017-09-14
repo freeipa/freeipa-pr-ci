@@ -1,8 +1,13 @@
 ---
-- name: create test config file
-  template:
-    src: ipa-test-config.yaml
-    dest: /vagrant/ipa-test-config.yaml
+- block:
+    - name: get DNS server from resolv.conf
+      shell: awk '$1 == "nameserver" {print $2; exit}' /etc/resolv.conf
+      register: dns_server
+
+    - name: create test config file
+      template:
+        src: ipa-test-config.yaml
+        dest: /vagrant/ipa-test-config.yaml
   when: inventory_hostname == 'controller'
 
 - name: add PR build repository
