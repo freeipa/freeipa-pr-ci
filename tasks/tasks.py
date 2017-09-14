@@ -1,6 +1,7 @@
 import logging
 import os
 import shutil
+import socket
 import urllib
 import uuid
 
@@ -35,6 +36,16 @@ class JobTask(FallibleTask):
         self.execute_subtask(
             GzipLogFiles(self.data_dir, raise_on_err=False))
 
+    def write_hostname_to_file(self):
+        try:
+            hostname = socket.gethostname()
+            hostname = hostname.split('.')[0]  # make sure we don't leak fqdn
+            with open('hostname', 'w') as hostname_f:
+                hostname_f.write(hostname)
+        except Exception as exc:
+            logging.warning("Failed to write hostname to file")
+            logging.debug(exc, exc_info=True)
+
     def _before(self):
         # Create job dir
         try:
@@ -50,6 +61,9 @@ class JobTask(FallibleTask):
         logging_init_file_handler()
 
         logging.info("Initializing job {uuid}".format(uuid=self.uuid))
+
+        # Create a hostname file for debugging purposes
+        self.write_hostname_to_file()
 
         # Prepare files for vagrant
         try:
