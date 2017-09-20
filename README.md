@@ -7,6 +7,14 @@ Scripts that are used by the PR CI testing infrastructure.
 If you're looking for an overview of what the system looks like for
 contributors, you can check out this [video](https://vimeo.com/228077191).
 
+Slides from the video are also available in
+[contributors_guide_slides.pdf](doc/contributors_guide_slides.pdf).
+
+Update 2017-09-20: It is no longer necessary to open a PR against multiple
+branches if code for different branches is the same. Backporting will be
+handled by our tooling.
+([Details](https://github.com/freeipa/freeipa-tools/pull/58))
+
 ## Setting up runner
 
 ### Prerequisites
@@ -123,3 +131,8 @@ testing and development purposes.
 
    This will create a vagrant box in `/tmp/$box_name/`. It will also be
    published on vagrantcloud.
+
+## Developer Documentation
+
+You can find the latest developer documentation in
+[doc/README.md](doc/README.md).
