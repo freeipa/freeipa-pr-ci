@@ -349,6 +349,17 @@ class Tasks(collections.Set, collections.Mapping):
                           'pending')
         logger.debug("Creating tasks for PR %d done.", self.pull.pull.number)
 
+    def create_missing(self):
+        logger.debug("Creating missing tasks for PR %d", self.pull.pull.number)
+        for task in self.tasks_conf:
+            try:
+                self[task]
+            except KeyError:
+                Status.create(self.repo, self.pull, task, 'unassigned', '',
+                              'pending')
+        logger.debug("Creating missing tasks for PR %d done.",
+                     self.pull.pull.number)
+
 
 class TaskQueue(collections.Iterator):
     def __init__(self, repo, tasks_config_path, job_cls, runner_id,
@@ -363,23 +374,38 @@ class TaskQueue(collections.Iterator):
         """
         Generate CI tasks represented by GitHub Statuses [1]
 
-        The tasks are generated when:
-        a. there's RERUN_LABEL on the PR
-        b. there're no tasks yet
+        The tasks are generated when there're no task yet and PR author is on
+        whitelist or RERUN_LABEL is present. When there's RERUN_LABEL only
+        failed tasks (error or failure state) are regenerated.
+        There's also check for stale tasks based on time when task was taken
+        and task timeout and if stale task is detected it's regenerated as
+        well.
 
         [1] https://developer.github.com/v3/repos/statuses/
         """
         for pull in PullRequests(self.repo):
             logger.debug("PR %d", pull.pull.number)
             tasks = pull.tasks(self.tasks_config_path, self.job_cls)
-            if not tasks and pull.pull.user.login in self.allowed_users:
+            if not tasks and (pull.pull.user.login in self.allowed_users or
+                              RERUN_LABEL in pull.labels):
                 logger.debug('Creating tasks for PR %d', pull.pull.number)
-                tasks.create()
-            elif RERUN_LABEL in pull.labels:
-                logger.debug('Recreating tasks for PR %d', pull.pull.number)
                 pull.labels.discard(RERUN_LABEL)
                 tasks.create()
             else:
+                if RERUN_LABEL in pull.labels:
+                    pull.labels.discard(RERUN_LABEL)
+                    # check for failed tasks and recreate them
+                    for task in tasks:
+                        if task.status.state in ('error', 'failure'):
+                            logger.debug('Recreating task %s for PR %d',
+                                         task.name, pull.pull.number)
+                            Status.create(task.repo, task.pull, task.name,
+                                          'unassigned', '', 'pending')
+                    # create missing tasks. The most likely reason task is
+                    # missing is that new task was added in master branch.
+                    # Other reason is that someone removed that task manually.
+                    tasks.create_missing()
+
                 # check for stale tasks and recreate them
                 now = datetime.datetime.now(pytz.UTC)
                 for task in tasks:
