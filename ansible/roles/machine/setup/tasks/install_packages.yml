@@ -36,6 +36,7 @@
     - PyYAML  # ipa-vagrant-ci dependency
     - vim
     - NetworkManager
+    - python3-paramiko
 
 - name: install pip dependencies
   pip:
