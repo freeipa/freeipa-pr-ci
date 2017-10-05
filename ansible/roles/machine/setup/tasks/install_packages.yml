@@ -36,12 +36,16 @@
     - PyYAML  # ipa-vagrant-ci dependency
     - vim
     - NetworkManager
-    - python3-paramiko
 
-- name: install pip dependencies
+- name: install py3 pip dependencies
   pip:
-    name: pytest-html
-    state: latest
+    executable: pip3
+    name: "{{ python_packages_to_install | join(' ') }}"
+
+- name: install py2 pip dependencies
+  pip:
+    executable: pip
+    name: "{{ python_packages_to_install | join(' ') }}"
 
 - name: disable distro repositories
   shell: "dnf config-manager --set-disabled {{ item }}"
