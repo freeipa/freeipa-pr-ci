@@ -32,7 +32,7 @@ contributors, you can check out this [video](https://vimeo.com/228077191).
 
 #### Other
 
-- `ansible >= 2.2` on the control machine
+- `ansible >= 2.3` on the control machine
 - GitHub token with *Full control of private repositories* (Settings ->
   Personal access tokens)
 - `freeipa_pr_ci` private key placed in `keys/`
