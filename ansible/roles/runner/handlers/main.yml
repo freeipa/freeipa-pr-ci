@@ -10,11 +10,8 @@
   poll: 0
   ignore_errors: true
   notify:
-    - wait for machine
+    - reboot_message
 
-- name: wait for machine
-  local_action: wait_for
-    host="{{ inventory_hostname }}"
-    port=22
-    delay=10
-    timeout=120
+- name: reboot_message
+  debug:
+    msg: "System {{ inventory_hostname }} is rebooting."
