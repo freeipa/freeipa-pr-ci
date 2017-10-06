@@ -1,4 +1,20 @@
 #!/usr/bin/python3
+"""PR CI Test Control Tool
+
+Usage:
+  prci_test_control.py list <pr_number>
+  prci_test_control.py rerun --all <pr_number>
+  prci_test_control.py rerun --task <task> <pr_number>
+  prci_test_control.py rerun --state (error | failure | pending | success) <pr_number>
+  prci_test_control.py (-h | --help)
+  prci_test_control.py --version
+
+Options:
+  -h --help     Show this screen.
+  --version     Show version.
+
+"""
+
 """
 $ # configuration file
 $ cat ~/.config/prci_test_control.yaml
@@ -11,7 +27,7 @@ owner: freeipa
 repo: freeipa
 """
 
-import argparse
+from docopt import docopt
 from xtermcolor import colorize
 import github3
 import os
@@ -23,24 +39,6 @@ state2color = {
     'pending': 0xdbab09,
     'success': 0x28a745,
 }
-
-
-def create_parser():
-    parser = argparse.ArgumentParser(description='PR CI test control tool')
-    commands = parser.add_subparsers(dest='cmd')
-    
-    list_cmd = commands.add_parser('list')
-    list_cmd.add_argument('PR_NUM', type=int)
-    
-    rerun_cmd = commands.add_parser('rerun')
-    rerun_cmd.add_argument('PR_NUM', type=int)
-
-    rerun_opts = rerun_cmd.add_mutually_exclusive_group(required=True)
-    rerun_opts.add_argument('--task')
-    rerun_opts.add_argument('--all', action='store_true')
-    rerun_opts.add_argument('--state', choices=['error', 'failure', 'pending', 'success'])
-
-    return parser
 
 
 class TestControl(object):
@@ -70,15 +68,31 @@ class TestControl(object):
             raise ValueError('wrong repository')
 
     def __call__(self, args):
-        try:
-            func = getattr(self, 'cmd_{}'.format(args.cmd))
-        except AttributeError as exc:
-            raise ValueError("unknown command {}".format(args.cmd))
 
-        return func(args)
+        if args['list'] and args['<pr_number>']:
+            return self.cmd_list(args['<pr_number>'])
 
-    def cmd_list(self, args):
-        pull = self.repo.pull_request(args.PR_NUM)
+        if args['rerun'] and args['<pr_number>']:
+
+            params = {'all': False, 'task': None, 'state': None}
+
+            if args['--all']:
+                params['all'] = True
+
+            if args['--task'] and args['<task>']:
+                params['task'] = args['<task>']
+
+            if args['--state']:
+                params['state'] = ''
+                params['state'] += 'error' if args['error'] else ''
+                params['state'] += 'failure' if args['failure'] else ''
+                params['state'] += 'pending' if args['pending'] else ''
+                params['state'] += 'success' if args['success'] else ''
+
+            return self.cmd_rerun(args['<pr_number>'], params)
+
+    def cmd_list(self, pr_num):
+        pull = self.repo.pull_request(pr_num)
 
         contexts = set()
         for status in self.repo.commit(pull.head.sha).statuses():
@@ -88,31 +102,31 @@ class TestControl(object):
             contexts.add(status.context)
             print(
                 colorize(
-                    "{:<8}".format(status.state), 
+                    "{:<8}".format(status.state),
                     rgb=state2color[status.state]
                 ) +
                 "{s.context:<30.30} {s.description:<50.50} {s.target_url}"
                 "".format(s=status)
             )
 
-    def cmd_rerun(self, args):
-        pull = self.repo.pull_request(args.PR_NUM)
+    def cmd_rerun(self, pr_num, params):
+        pull = self.repo.pull_request(pr_num)
 
         contexts = {}
         for status in self.repo.commit(pull.head.sha).statuses():
             if status.context not in contexts:
                 contexts[status.context] = status.state
 
-        if args.task:
-            if args.task not in contexts:
-                raise ValueError('unknown test {}'.format(args.task))
+        if params['task']:
+            if params['task'] not in contexts:
+                raise ValueError('unknown test {}'.format(params['task']))
 
-            recreate = [args.task]
+            recreate = [params['task']]
 
-        elif args.all:
+        elif params['all']:
             recreate = contexts.keys()
-        elif args.state:
-            recreate = [c for c in contexts if contexts[c] == args.state]
+        elif params['state']:
+            recreate = [c for c in contexts if contexts[c] == params['state']]
 
         for context in recreate:
             self.repo.create_status(
@@ -124,8 +138,8 @@ class TestControl(object):
 
 
 if __name__ == '__main__':
-    parser = create_parser()
-    args = parser.parse_args()
+
+    args = docopt(__doc__, version='0.0.1')
 
     try:
         tc = TestControl(
@@ -138,5 +152,4 @@ if __name__ == '__main__':
         tc(args)
     except ValueError as exc:
         print(exc)
-        parser.print_help()
         exit(2)
