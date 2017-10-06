@@ -22,6 +22,7 @@
           <cpu_count op="&lt;=" value="16"/>
           <memory op="&gt;=" value="8000"/>
           <memory op="&lt;" value="35000"/>
+          <key_value key="HVM" value="1" op="="/>
           <disk>
             <size op="&lt;" units="GB" value="1000"/>
             <size op="&gt;" units="GB" value="60"/>
