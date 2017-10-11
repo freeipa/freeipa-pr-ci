@@ -52,6 +52,13 @@ class Task(collections.Callable):
         self.exc = None
 
     def execute_subtask(self, task):
+        """
+        Make sure to use this function to execute all children tasks.
+
+        This is needed to make sure the timeout works properly. If you run
+        the task directly and the timeout mechanic is triggered, it won't be
+        able to kill the child process and the timeout won't work properly.
+        """
         self.tasks.append(task)
         task()
 
