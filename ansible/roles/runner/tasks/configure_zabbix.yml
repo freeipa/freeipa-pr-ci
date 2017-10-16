@@ -1,0 +1,25 @@
+---
+- name: Install zabbix-agent
+  dnf:
+    name: zabbix-agent
+
+- name: 'zabbix-agent: change zabbix command'
+  lineinfile:
+    path: /etc/zabbix_agentd.conf
+    regexp: 'UserParameter='
+    state: present
+    line: 'UserParameter={{ zabbix_command }}'
+
+- name: 'zabbix-agent: change zabbix server ip'
+  lineinfile:
+    path: /etc/zabbix_agentd.conf
+    regexp: 'Server='
+    state: present
+    line: 'Server={{ zabbix_server_ip }}'
+
+- name: 'zabbix-agent: change zabbix-agent hostname'
+  lineinfile:
+    path: /etc/zabbix_agentd.conf
+    regexp: 'Hostname='
+    state: present
+    line: "Hostname={{ ansible_hostname }}"
