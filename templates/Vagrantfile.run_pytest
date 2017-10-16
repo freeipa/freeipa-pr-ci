@@ -47,6 +47,12 @@ Vagrant.configure(2) do |config|
 
 
     config.vm.define "master"  do |master|
+        # FIXME: This is strictly a temporary change for debugging purposes
+        # https://pagure.io/freeipa/issue/7165
+        # Added by mreznik's request
+        master.vm.provider "libvirt" do |domain,override|
+            domain.cpus = 2
+        end
     end
 
 
