@@ -29,6 +29,11 @@ class JobTask(FallibleTask):
         self.link_image = link_image
 
     @property
+    def vagrantfile(self):
+        return constants.VAGRANTFILE_TEMPLATE.format(
+            vagrantfile_name=self.action_name)
+
+    @property
     def data_dir(self):
         return os.path.join(constants.JOBS_DIR, self.uuid)
 
@@ -69,8 +74,7 @@ class JobTask(FallibleTask):
         try:
             shutil.copy(constants.ANSIBLE_CFG_FILE, self.data_dir)
             create_file_from_template(
-                constants.VAGRANTFILE_TEMPLATE.format(
-                    action_name=self.action_name),
+                self.vagrantfile,
                 os.path.join(self.data_dir, 'Vagrantfile'),
                 dict(vagrant_template_name=self.template_name,
                      vagrant_template_version=self.template_version))
@@ -115,7 +119,8 @@ class Build(JobTask):
     action_name = 'build'
 
     def __init__(self, template, git_refspec=None, git_version=None, git_repo=None,
-                 timeout=constants.BUILD_TIMEOUT, **kwargs):
+                 timeout=constants.BUILD_TIMEOUT,
+                 topology=None, **kwargs):
         super(Build, self).__init__(template, timeout=timeout, **kwargs)
         self.git_refspec = git_refspec
         self.git_version = git_version
@@ -185,10 +190,21 @@ class RunPytest(JobTask):
     action_name = 'run_pytest'
 
     def __init__(self, template, build_url, test_suite,
-                 timeout=constants.RUN_PYTEST_TIMEOUT, **kwargs):
+                 timeout=constants.RUN_PYTEST_TIMEOUT,
+                 topology=None, **kwargs):
         super(RunPytest, self).__init__(template, timeout=timeout, **kwargs)
         self.build_url = build_url + '/'
         self.test_suite = test_suite
+
+        if not topology:
+            topology = {'name': constants.DEFAULT_TOPOLOGY}
+
+        self.topology_name = topology.get('name')
+
+    @property
+    def vagrantfile(self):
+        return constants.VAGRANTFILE_TEMPLATE.format(
+            vagrantfile_name=self.topology_name)
 
     def _before(self):
         super(RunPytest, self)._before()
@@ -199,8 +215,8 @@ class RunPytest(JobTask):
                 constants.ANSIBLE_VARS_TEMPLATE.format(
                     action_name=self.action_name),
                 os.path.join(self.data_dir, 'vars.yml'),
-                dict(repofile_url=urllib.parse.urljoin(
-                        self.build_url, 'rpms/freeipa-prci.repo')))
+                dict(repofile_url=urllib.parse.urljoin(self.build_url,
+                     'rpms/freeipa-prci.repo')))
         except (OSError, IOError) as exc:
             msg = "Failed to prepare test config files"
             logging.debug(exc, exc_info=True)

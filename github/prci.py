@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import multiprocessing
 import logging.config
 import os
 import random
@@ -11,7 +12,7 @@ import subprocess
 import sys
 import time
 import yaml
-
+import copy
 import github3
 import redis
 
@@ -26,7 +27,7 @@ REBOOT_DELAY = 3600 * 3
 REBOOT_TIME_FILE = '/root/next_reboot'
 REBOOT_CHECK_INTERVAL = 300
 TASK_MIN_CPU = 2
-TASK_MIN_MEM = 4*2**30
+TASK_MIN_MEM = 900  # in MiB
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
@@ -189,29 +190,31 @@ def read_reboot_time():
     try:
         with open(REBOOT_TIME_FILE, 'r') as f:
             return int(f.read())
-    except FileNotFoundError:
+    except IOError:
         return None
 
 
-def reboot():
+def reboot(repo, creds):
     try:
         update_runner(repo, creds)
-    except:
+    except Exception:
         sentry_report_exception()
+
     plan_reboot()
     logging.info('Rebooting the machine')
     subprocess.call('reboot', shell=True)
 
 
-class Executive(object):
+class Scheduler(object):
+
     def __init__(self, task_queue, reboot_check_interval,
                  no_task_backoff_time):
         self.task_queue = task_queue
         self.reboot_check_interval = reboot_check_interval
-        self.no_task_backoff_time
+        self.no_task_backoff_time = no_task_backoff_time
 
         self.done = False
-        self.abort = False
+        self.should_abort = False
         self.reboot = False
         self.processes = set()
 
@@ -227,12 +230,12 @@ class Executive(object):
         self.reboot = False
 
     def abort(self):
-        if self.abort:
+        if self.should_abort:
             sys.exit('Forced quit. There may be stale files and processes '
                      'left behind.')
         logging.debug('Abort. Waiting for clean up.')
         self.done = True
-        self.abort = True
+        self.should_abort = True
         self.reboot = False
 
     def check_reboot(self, *args, **kwargs):
@@ -250,7 +253,7 @@ class Executive(object):
 
     def run(self):
         def join(wait=False):
-            for p in self.processes.copy():
+            for p in copy.copy(self.processes):
                 if wait or not p.is_alive():
                     p.join()
                     self.processes.remove(p)
@@ -265,7 +268,7 @@ class Executive(object):
             join()
 
             avail_cpu = self.task_queue.available_cpus
-            avail_mem = self.task_queue.available_mem
+            avail_mem = self.task_queue.available_memory
 
             if avail_cpu < TASK_MIN_CPU or avail_mem < TASK_MIN_MEM:
                 time.sleep(10)
@@ -279,7 +282,7 @@ class Executive(object):
             for task in tasks:
                 p = multiprocessing.Process(target=execute_task, args=(task,))
                 p.start()
-                p.processes.add(p)
+                self.processes.add(p)
 
         join(wait=True)
 
@@ -307,16 +310,19 @@ def main():
     task_queue = TaskQueue(repo, tasks_file, JobDispatcher, runner_id,
                            whitelist)
 
-    exe = Excutive(task_queue, REBOOT_CHECK_INTERVAL, no_task_backoff_time) 
+    task_queue.create_tasks_for_pulls()
+
+    scheduler = Scheduler(task_queue, REBOOT_CHECK_INTERVAL,
+                          no_task_backoff_time)
     try:
-        exe.run()
+        scheduler.run()
     except Exception:
         sentry_report_exception({'module': 'github'})
-        time.sleep(ERROR_BACKOFF_TIME)
+        raise
 
-    if exe.reboot:
+    if scheduler.reboot:
         try:
-            reboot()
+            reboot(repo, creds)
         except:
             sentry_report_exception()
 

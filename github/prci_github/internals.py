@@ -176,7 +176,7 @@ class Task(object):
 
         self.priority = conf['priority']
         self.requires = conf['requires']
-        self.resources = conf.get('resources', {})
+        self.resources = conf['job']['args'].get('topology', {})
         self.job = job_cls(conf['job'],
                            (self.repo.clone_url, self.refspec))
 
@@ -376,19 +376,19 @@ class TaskQueue(object):
         self.allowed_users = allowed_users
         self.runner_id = runner_id
         self.total_cpus = psutil.cpu_count()
-        self.total_memory = psutil.virtual_memory()['total']
+        self.total_memory = psutil.virtual_memory().total / float(2 ** 20)
         self.running_tasks = {}
         self.done = False
 
-    @propery
+    @property
     def used_cpus(self):
         return sum([t['cpu'] for t in self.running_tasks.values()])
 
-    @propery
+    @property
     def used_memory(self):
         return sum([t['memory'] for t in self.running_tasks.values()])
 
-    @propery
+    @property
     def available_cpus(self):
         return self.total_cpus - self.used_cpus
 
@@ -400,12 +400,10 @@ class TaskQueue(object):
         """
         Generate CI tasks represented by GitHub Statuses [1]
 
-        The tasks are generated when there're no task created and PR author is
-        on whitelist or RERUN_LABEL is present. When there's RERUN_LABEL only
-        failed tasks (error or failure state) are regenerated.
-        There's also check for stale tasks based on time when task was taken
-        and task timeout and if stale task is detected it's regenerated as
-        well.
+        The tasks are generated when:
+        a. there's "re-run" label on the PR
+        b. there're no tasks yet
+        c. the tasks are stale (execution exceeds timeout without error)
 
         [1] https://developer.github.com/v3/repos/statuses/
         """
@@ -461,18 +459,18 @@ class TaskQueue(object):
             Status.create(task.repo, task.pull, task.name,
                           'unassigned', '', 'pending')
 
-    def allocate_resorces(self, task):
+    def allocate_resources(self, task):
         # if task don't specify resource requirements behave like it needs
         # whole runner to avoid overloading the runner
         task_cpu = task.resources.get('cpu', self.total_cpus)
-        task_mem = taks.resources.get('memory', self.total_memory)
+        task_mem = task.resources.get('memory', self.total_memory)
 
-        if task_cpu < self.available_cpus and task_mem < self.available_memory:
+        if task_cpu <= self.available_cpus and task_mem <= self.available_memory:
             task_key = (task.pull.pull.head.sha, task.name,)
             self.running_tasks[task_key] = {'cpu': task_cpu,
                                             'memory': task_mem}
         else:
-            raise InsufficientResources():
+            raise InsufficientResources()
 
     def free_resources(self, task):
         task_key = (task.pull.pull.head.sha, task.name,)
@@ -528,7 +526,7 @@ class TaskQueue(object):
                 task_mem = task.resources.get('memory', self.total_memory)
                 logger.debug(
                     'Task %s on PR %d skipped due to resource requirements: '
-                    '%d CPUs and %f GB RAM.', task.name, task.pull.pull.number,
+                    '%d CPUs and %f MiB RAM.', task.name, task.pull.pull.number,
                     task_cpus, task_mem
                 )
                 continue
