@@ -102,7 +102,7 @@ testing and development purposes.
 
    ```
    ansible-playbook \
-     -i ansible/hosts/runners
+     -i ansible/hosts/runners \
      ansible/prepare_devel_test_runners.yml
    ```
 
