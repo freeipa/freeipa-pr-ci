@@ -374,8 +374,8 @@ class TaskQueue(collections.Iterator):
         """
         Generate CI tasks represented by GitHub Statuses [1]
 
-        The tasks are generated when there're no task yet and PR author is on
-        whitelist or RERUN_LABEL is present. When there's RERUN_LABEL only
+        The tasks are generated when there're no task created and PR author is
+        on whitelist or RERUN_LABEL is present. When there's RERUN_LABEL only
         failed tasks (error or failure state) are regenerated.
         There's also check for stale tasks based on time when task was taken
         and task timeout and if stale task is detected it's regenerated as
@@ -386,50 +386,54 @@ class TaskQueue(collections.Iterator):
         for pull in PullRequests(self.repo):
             logger.debug("PR %d", pull.pull.number)
             tasks = pull.tasks(self.tasks_config_path, self.job_cls)
+
             if not tasks and (pull.pull.user.login in self.allowed_users or
                               RERUN_LABEL in pull.labels):
                 logger.debug('Creating tasks for PR %d', pull.pull.number)
                 pull.labels.discard(RERUN_LABEL)
                 tasks.create()
-            else:
-                if RERUN_LABEL in pull.labels:
-                    pull.labels.discard(RERUN_LABEL)
-                    # check for failed tasks and recreate them
-                    for task in tasks:
-                        if task.status.state in ('error', 'failure'):
-                            logger.debug('Recreating task %s for PR %d',
-                                         task.name, pull.pull.number)
-                            Status.create(task.repo, task.pull, task.name,
-                                          'unassigned', '', 'pending')
-                    # create missing tasks. The most likely reason task is
-                    # missing is that new task was added in master branch.
-                    # Other reason is that someone removed that task manually.
-                    tasks.create_missing()
+                continue
 
-                # check for stale tasks and recreate them
-                now = datetime.datetime.now(pytz.UTC)
+            if RERUN_LABEL in pull.labels:
+                pull.labels.discard(RERUN_LABEL)
+                # check for failed tasks and recreate them
                 for task in tasks:
-                    timeout = datetime.timedelta(seconds=task.job.timeout)
-                    if not timeout:
-                        continue
+                    if task.status.state in ('error', 'failure'):
+                        logger.debug('Recreating task %s for PR %d',
+                                     task.name, pull.pull.number)
+                        Status.create(task.repo, task.pull, task.name,
+                                      'unassigned', '', 'pending')
+                # The most likely reason to create missing tasks is
+                # missing is that new task was added in master branch.
+                # Other reason is that someone removed that task manually.
+                tasks.create_missing()
 
-                    res = parse.parse(TASK_TAKEN_FMT, task.status.description)
-                    if not res:
-                        continue
+            self._rerun_stalled_tasks(tasks)
 
-                    taken_on = dateutil.parser.parse(res['date'])
-                    extra = datetime.timedelta(seconds=STALE_TASK_EXTRA_TIME)
-                    deadline = taken_on + timeout + extra
-                    if deadline > now:
-                        continue
+    def _rerun_stalled_tasks(self, tasks):
+        now = datetime.datetime.now(pytz.UTC)
+        for task in tasks:
+            timeout = datetime.timedelta(seconds=task.job.timeout)
+            if not timeout:
+                continue
 
-                    taken_by = res['runner_id']
-                    logger.debug("Task %s on PR %d is stale, recreating. Was "
-                                 "taken on %s by %s timeout %ds.", task.name,
-                                 task.pull.pull.number, taken_on, taken_by,
-                                 timeout)
-                    Status.create(task.repo, task.pull, task.name,
-                                  'unassigned', '', 'pending')
+            res = parse.parse(TASK_TAKEN_FMT, task.status.description)
+            if not res:
+                continue
+
+            taken_on = dateutil.parser.parse(res['date'])
+            extra = datetime.timedelta(seconds=STALE_TASK_EXTRA_TIME)
+            deadline = taken_on + timeout + extra
+            if deadline > now:
+                continue
+
+            taken_by = res['runner_id']
+            logger.debug("Task %s on PR %d is stale, recreating. Was "
+                         "taken on %s by %s timeout %ds.", task.name,
+                         task.pull.pull.number, taken_on, taken_by,
+                         timeout)
+            Status.create(task.repo, task.pull, task.name,
+                          'unassigned', '', 'pending')
 
     def __next__(self):
         """
