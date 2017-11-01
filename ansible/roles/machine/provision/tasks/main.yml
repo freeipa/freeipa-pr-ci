@@ -34,13 +34,13 @@
         - freeipa-*
         - python*-ipatests
 
-- name: get all packages
-  shell: rpm -qa
-  register: packages
+- name: create directory to save installed packages logs
+  file:
+    path: /vagrant/installed_packages/
+    state: directory
 
-- name: display installed packages
-  debug:
-    var: packages.stdout
+- name: get all packages
+  shell: rpm -qa > /vagrant/installed_packages/installed_packages_{{inventory_hostname}}.log
 
 - name: create hosts file from template
   template:
