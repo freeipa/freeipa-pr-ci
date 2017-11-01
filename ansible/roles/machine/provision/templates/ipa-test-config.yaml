@@ -29,4 +29,4 @@ domains:
 nis_domain: ipatest
 ntp_server: 1.pool.ntp.org
 root_ssh_key_filename: /root/.ssh/freeipa_pr_ci_insecure
-test_dir: ../../ipatests
+test_dir: /ipatests
