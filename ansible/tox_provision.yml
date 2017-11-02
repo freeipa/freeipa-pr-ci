@@ -1,0 +1,17 @@
+---
+- hosts: all
+  name: 'Tox tests provisioning'
+  tasks:
+
+    - name: 'clone freeipa'
+      git:
+        repo: "{{ git_repo }}"
+        dest: /root/freeipa
+        version: "{{ git_version | default('master') }}"
+        force: yes
+
+    - name: 'enable repositories'
+      shell: dnf builddep -y --enablerepo=fedora,updates --spec freeipa/freeipa.spec.in
+
+    - name: 'clean git'
+      shell: cd freeipa; git clean -dfx

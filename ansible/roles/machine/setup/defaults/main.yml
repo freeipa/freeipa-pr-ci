@@ -4,5 +4,6 @@ copr_repo: "@freeipa/freeipa-master"
 python_packages_to_install:
   - pytest-html
   - paramiko==2.2.1
+  - tox
 # It's necessary to use paramiko v2.2.1 due to issues
 # with gssapi (github.com/paramiko/paramiko/issues/1069)
