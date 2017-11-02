@@ -510,6 +510,13 @@ class TaskQueue(object):
                     tasks_done_per_pr[pull.pull.number] += 1
                 if task.can_run():
                     tasks.append(task)
+                    logger.debug(
+                        'TaskQueue: added PR#%d/%s (%d CPUs, %d MiB RAM)',
+                        task.pull.pull.number,
+                        task.name,
+                        task.resources.get('cpu', self.total_cpus),
+                        task.resources.get('memory', self.total_memory)
+                    )
 
         taken_tasks = []
         for task in sorted(
@@ -525,9 +532,14 @@ class TaskQueue(object):
                 task_cpus = task.resources.get('cpu', self.total_cpus)
                 task_mem = task.resources.get('memory', self.total_memory)
                 logger.debug(
-                    'Task %s on PR %d skipped due to resource requirements: '
-                    '%d CPUs and %f MiB RAM.', task.name, task.pull.pull.number,
-                    task_cpus, task_mem
+                    'TaskQueue: PR#%d/%s skipped, insufficient resources: '
+                    '%d CPUs, %f MiB RAM (required %d CPUs, %f MiB RAM)',
+                    task.pull.pull.number,
+                    task.name,
+                    self.available_cpus,
+                    self.available_memory,
+                    task_cpus,
+                    task_mem
                 )
                 continue
             except TaskAlreadyTaken:

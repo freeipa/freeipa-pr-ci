@@ -271,6 +271,9 @@ class Scheduler(object):
             avail_mem = self.task_queue.available_memory
 
             if avail_cpu < TASK_MIN_CPU or avail_mem < TASK_MIN_MEM:
+                logging.debug(
+                    "Not enough resources, waiting for tasks to finish (%d"
+                    "CPUs, %f MiB RAM)" % (avail_cpu, avail_mem))
                 time.sleep(10)
                 continue
 
