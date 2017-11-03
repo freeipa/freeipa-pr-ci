@@ -56,7 +56,7 @@ Vagrant.configure(2) do |config|
     end
 
 
-    config.vm.define "replica1"  do |replica1|
+    config.vm.define "replica0"  do |replica0|
     end
 
 end
