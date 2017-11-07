@@ -46,7 +46,30 @@ handled by our tooling.
 - `freeipa_pr_ci` private key placed in `keys/`
 - private keys in `keys/` have permissions set to 0600
 
-### Runner deployment
+### Development runner deployment
+
+The development runner can be deployed to monitor any FreeIPA fork while
+executing any FreeIPA PR CI fork (any owner and branch). This is useful for
+testing and development purposes.
+
+1. Create ansible inventory `ansible/hosts/runners`
+
+   ```
+   [runners_devel]
+   2.3.4.5
+   ```
+
+2. Run the `prepare_devel_test_runners.yml` playbook, specify which repository
+   should be monitored and which code repository and branch should be used to
+   deploy the runner
+
+   ```
+   ansible-playbook \
+     -i ansible/hosts/runners \
+     ansible/prepare_devel_test_runners.yml
+   ```
+
+### "Production" Runner deployment
 
 1. Create ansible inventory `ansible/hosts/runners`
 
@@ -69,42 +92,21 @@ In the unfortunate event the update didn't execute successfully, the service
 will enter a failed state. Re-running the above `ansible-playbook` command
 from the up-to-date code should fix such issues.
 
-#### Monitoring runner activity
+### Side notes about deployment
 
-```bash
-systemctl status prci
-journalctl -fu prci
-```
-
-### Note on runner deployment automation
+#### Runner deployment automation
 
 By default, ansible will prompt for API token and other variables. To fully
 automate the deployment, you can pass the variables as arguments to the
 `ansible-playbook` command with `-e key=value`. To find the variable names,
 check the ansible playbooks.
 
-### Setting up development runner
+#### Monitoring runner activity
 
-The development runner can be deployed to monitor any FreeIPA fork while
-executing any FreeIPA PR CI fork (any owner and branch). This is useful for
-testing and development purposes.
-
-1. Create ansible inventory `ansible/hosts/runners`
-
-   ```
-   [runners_devel]
-   2.3.4.5
-   ```
-
-2. Run the `prepare_devel_test_runners.yml` playbook, specify which repository
-   should be monitored and which code repository and branch should be used to
-   deploy the runner
-
-   ```
-   ansible-playbook \
-     -i ansible/hosts/runners \
-     ansible/prepare_devel_test_runners.yml
-   ```
+```bash
+systemctl status prci
+journalctl -fu prci
+```
 
 ## Creating vagrant template box
 
