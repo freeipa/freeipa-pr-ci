@@ -108,6 +108,22 @@ systemctl status prci
 journalctl -fu prci
 ```
 
+## User Guide
+
+### Re-running tasks
+
+You can use the `re-run` label to:
+
+* re-run failing tasks: once the label is added, the tasks with status error
+  or failure will be mark as unassigned, and later they will be run.
+
+* New tasks were added to config file in the target branch:
+  If the config file was changed in the target branch, the `re-run` label will
+  create the missing tasks and will run them.
+
+*Important*: If you are running it against your fork, you'll need to create
+the label.
+
 ## Creating vagrant template box
 
 
