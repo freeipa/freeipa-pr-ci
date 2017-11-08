@@ -131,6 +131,17 @@ implemented the following basic jobs (see [tasks/tasks.py](../tasks/tasks.py)):
 
 See section [Template](#template) for details about the template.
 
+#### Re-running tasks
+
+After PR#83, it's possible to re-run only the failed tasks. To do that, the
+user just need to add the `RERUN_LABEL` label to the PR. In the next iteration,
+the code will check if the PR has tasks in status `error` or `failure`, and if
+it has the `RERUN_LABEL` label. If true, the tasks will have their status
+changed to `unassigned`.
+
+You can also re-run a PR in order to get new tasks that were added in the
+config file to the target branch.
+
 ### C. Reporting results
 
 ![phase-C](images/phase-C.svg)
