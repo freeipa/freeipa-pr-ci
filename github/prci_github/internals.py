@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
+import traceback
 import abc
-import base64
 import collections
 import datetime
 import dateutil.parser
@@ -12,9 +12,13 @@ import requests
 import time
 import yaml
 
+import multiprocessing
 import cachecontrol
 import psutil
 import redis
+import OpenSSL
+
+from tasks.common import retry
 
 
 GITHUB_DESCRIPTION_LIMIT = 139
@@ -178,7 +182,8 @@ class Task(object):
         self.requires = conf['requires']
         self.resources = conf['job']['args'].get('topology', {})
         self.job = job_cls(conf['job'],
-                           (self.repo.clone_url, self.refspec))
+                           (self.repo.clone_url, self.refspec),
+                           self.name)
 
     def dependencies_done(self):
         for dep in self.requires:
@@ -211,14 +216,23 @@ class Task(object):
 
     def execute(self, exc_handler=None):
         depends_results = {}
-        for dep in self.requires:
-            status = Status(self.repo, self.pull, dep)
-            depends_results[dep] = JobResult(
-                status.state, status.description, status.target_url)
+
+        # sometimes, when running runners in parallel, it may happen
+        # that we get an exception from OpenSLL.
+        @retry(OpenSSL.SSL.Error)
+        def __update_status(self):
+            for dep in self.requires:
+                status = Status(self.repo, self.pull, dep)
+                depends_results[dep] = JobResult(
+                    status.state, status.description, status.target_url)
+
+        __update_status(self)
 
         try:
             result = self.job(depends_results)
         except Exception as exc:
+            logging.error(traceback.print_exc())
+
             state = 'error'
             description = getattr(exc, 'description', '{type_}: {msg}'.format(
                 type_=type(exc).__name__, msg=str(exc)))
@@ -377,7 +391,7 @@ class TaskQueue(object):
         self.runner_id = runner_id
         self.total_cpus = psutil.cpu_count()
         self.total_memory = psutil.virtual_memory().total / float(2 ** 20)
-        self.running_tasks = {}
+        self.running_tasks = multiprocessing.Manager().dict()
         self.done = False
 
     @property
@@ -503,20 +517,18 @@ class TaskQueue(object):
         tasks = []
         for pull in PullRequests(self.repo):
             tasks_done_per_pr[pull.pull.number] = 0
-            for task in pull.tasks(self.tasks_config_path, self.job_cls):
+
+            pr_tasks = pull.tasks(self.tasks_config_path, self.job_cls)
+            logging.debug('Tasks in the PR: %s', [t.name for t in pr_tasks])
+            logging.debug('Tasks done PR: %s', tasks_done_per_pr)
+
+            for task in pr_tasks:
                 if (task.status.state != 'pending' or
                         task.status.description != 'unassigned'):
                     # the tasks is assigned or done (with whatever result)
                     tasks_done_per_pr[pull.pull.number] += 1
                 if task.can_run():
                     tasks.append(task)
-                    logger.debug(
-                        'TaskQueue: added PR#%d/%s (%d CPUs, %d MiB RAM)',
-                        task.pull.pull.number,
-                        task.name,
-                        task.resources.get('cpu', self.total_cpus),
-                        task.resources.get('memory', self.total_memory)
-                    )
 
         taken_tasks = []
         for task in sorted(
@@ -527,6 +539,13 @@ class TaskQueue(object):
         ):
             try:
                 self.allocate_resources(task)
+                logger.debug(
+                    'TaskQueue: added PR#%d/%s (%d CPUs, %d MiB RAM)',
+                    task.pull.pull.number,
+                    task.name,
+                    task.resources.get('cpu', self.total_cpus),
+                    task.resources.get('memory', self.total_memory)
+                )
                 task.take(self.runner_id)
             except InsufficientResources:
                 task_cpus = task.resources.get('cpu', self.total_cpus)

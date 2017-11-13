@@ -3,11 +3,11 @@ import collections
 import errno
 import jinja2
 import logging
+import traceback
 import os
 import psutil
 import subprocess
 import threading
-
 from . import constants
 
 
@@ -41,7 +41,6 @@ class PopenException(TaskException):
         super(PopenException, self).__init__(task)
         self.msg = 'exited with error code {error}'.format(
             error=self.task.returncode)
-
 
 class Task(collections.Callable):
     __metaclass__ = abc.ABCMeta
@@ -125,7 +124,7 @@ class FallibleTask(Task):
 
 
 class PopenTask(FallibleTask):
-    def __init__(self, cmd, shell=False, env=None, **kwargs):
+    def __init__(self, cmd, shell=False, env=None, logger=logging, **kwargs):
         super(PopenTask, self).__init__(**kwargs)
         self.cmd = cmd
         self.shell = shell
@@ -136,6 +135,9 @@ class PopenTask(FallibleTask):
             self.env = os.environ.copy()
             self.env.update(env)
 
+        logging.debug("Log to be used: %s", logger)
+        self.logger = logger
+
     def _run(self):
         self.process = subprocess.Popen(
             self.cmd,
@@ -145,7 +147,7 @@ class PopenTask(FallibleTask):
             stderr=subprocess.STDOUT)
 
         for line in iter(self.process.stdout.readline, b''):
-            logging.debug(line.decode('utf-8').rstrip('\n'))
+            self.logger.debug(line.decode('utf-8').rstrip('\n'))
 
         self.process.wait()
         self.returncode = self.process.returncode
@@ -188,7 +190,7 @@ def logging_init_stream_handler(noout=False):
     ch = logging.StreamHandler()
     ch.setLevel(logging.DEBUG)
     if noout:
-        ch.setLevel(logging.CRITICAL+1)
+        ch.setLevel(logging.CRITICAL + 1)
     formatter = logging.Formatter(LOG_FORMAT)
     ch.setFormatter(formatter)
     logger.addHandler(ch)
@@ -206,6 +208,26 @@ def logging_init_file_handler():
     LOG_FILE_HANDLER = fh
 
 
+def config_log_for_task(task_name, uuid):
+    """
+    task_name: name of the task in .freeipa-pr-ci.yaml
+    eg: fedora-26/caless
+    """
+    task_name = task_name.split('/')[1]
+    log_file = os.path.join(os.path.join(constants.JOBS_DIR, uuid),
+                            task_name)
+    logging.debug('Output is being redirect to log: {}.log'.format(log_file))
+    logger = logging.getLogger(task_name)
+    logger.handlers = []
+    logger.propagate = False
+    fh = logging.FileHandler('{}.log'.format(log_file), mode='w')
+    fh.setLevel(logging.DEBUG)
+    fh.setFormatter(logging.Formatter(LOG_FORMAT))
+    logger.addHandler(fh)
+
+    return logger
+
+
 def create_file_from_template(template_path, dest, data):
     env = jinja2.Environment(
         loader=jinja2.FileSystemLoader(constants.TEMPLATES_DIR))
@@ -214,3 +236,22 @@ def create_file_from_template(template_path, dest, data):
 
     with open(dest, "w") as fh:
         fh.write(rendered_template)
+
+
+def retry(exception_type):
+    """
+    Retry the decorated function if an exception from
+    exception_type type is raised.
+    """
+    def dec(func):
+        def inner(*args, **kwargs):
+            try:
+                func(*args, **kwargs)
+            except exception_type:
+                logging.debug(traceback.print_exc())
+                logging.warning('Trying again the function: %s', func.__name__)
+                func(*args, **kwargs)
+        return inner
+    return dec
+
+

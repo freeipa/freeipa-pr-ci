@@ -12,8 +12,8 @@ import subprocess
 import sys
 import time
 import yaml
-import copy
 import github3
+import traceback
 import redis
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
@@ -48,6 +48,7 @@ class Job(AbstractJob):
         try:
             url = subprocess.check_output(cmd, shell=True)
         except subprocess.CalledProcessError as err:
+            logging.error(traceback.print_exc())
             if err.returncode == 1:
                 state = 'error'
                 url = ''
@@ -61,7 +62,7 @@ class Job(AbstractJob):
 
 
 class JobDispatcher(AbstractJob):
-    def __init__(self, job, build_target):
+    def __init__(self, job, build_target, task_name):
         super(JobDispatcher, self).__init__(job, build_target)
         self.klass = getattr(
             __import__('tasks', fromlist=[self.job['class']]),
@@ -70,6 +71,7 @@ class JobDispatcher(AbstractJob):
         self.kwarg_lookup = {
             'git_repo': build_target[0],
             'git_refspec': build_target[1]}
+        self.task_name = task_name
 
     @property
     def timeout(self):
@@ -88,16 +90,17 @@ class JobDispatcher(AbstractJob):
                 value = value.format(**self.kwarg_lookup)
             kwargs[key] = value
 
+        kwargs['task_name'] = self.task_name
         job = self.klass(**kwargs)
         try:
             job()
         except Exception as exc:
+            logging.error(traceback.print_exc())
             description = '{type_}: {msg}'.format(type_=type(exc).__name__,
                                                   msg=str(exc))
             state = 'error'
 
-            sentry_report_exception({
-                'module': 'tasks'})
+            sentry_report_exception({'module': 'tasks'})
         else:
             description = job.description
             if job.returncode == 0:
@@ -216,7 +219,7 @@ class Scheduler(object):
         self.done = False
         self.should_abort = False
         self.reboot = False
-        self.processes = set()
+        self.processes = []
 
         signal.signal(signal.SIGINT, self.terminate)
         signal.signal(signal.SIGALRM, self.check_reboot)
@@ -252,17 +255,22 @@ class Scheduler(object):
             self.reboot = True
 
     def run(self):
-        def join(wait=False):
-            for p in copy.copy(self.processes):
-                if wait or not p.is_alive():
+        def join():
+            for p in self.processes:
+                if not p.is_alive():
                     p.join()
+                    logging.info('Calling join() for process')
                     self.processes.remove(p)
 
         def execute_task(task):
             try:
                 task.execute()
-            except Exception:
+            except Exception as e:
+                logging.error(e)
                 sentry_report_exception({'module': 'github'})
+            finally:
+                self.task_queue.free_resources(task)
+                logging.info('Task {} released resources'.format(task.name))
 
         while not self.done:
             join()
@@ -278,6 +286,8 @@ class Scheduler(object):
                 continue
 
             tasks = self.task_queue.take_tasks()
+            logging.info('Current tasks {}'.format(
+                self.task_queue.running_tasks))
             if not tasks:
                 time.sleep(self.no_task_backoff_time)
                 continue
@@ -285,9 +295,9 @@ class Scheduler(object):
             for task in tasks:
                 p = multiprocessing.Process(target=execute_task, args=(task,))
                 p.start()
-                self.processes.add(p)
+                self.processes.append(p)
 
-        join(wait=True)
+        join()
 
 
 def main():
@@ -317,6 +327,7 @@ def main():
 
     scheduler = Scheduler(task_queue, REBOOT_CHECK_INTERVAL,
                           no_task_backoff_time)
+
     try:
         scheduler.run()
     except Exception:

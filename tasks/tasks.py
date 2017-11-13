@@ -7,7 +7,8 @@ import uuid
 
 from .ansible import AnsiblePlaybook
 from .common import (FallibleTask, TaskException, PopenTask,
-                     logging_init_file_handler, create_file_from_template)
+                     logging_init_file_handler, create_file_from_template,
+                     config_log_for_task)
 from . import constants
 from .remote_storage import GzipLogFiles, FedoraPeopleUpload
 from .vagrant import with_vagrant
@@ -15,18 +16,23 @@ from .vagrant import with_vagrant
 
 class JobTask(FallibleTask):
     def __init__(self, template, no_destroy=False, publish_artifacts=True,
-                 link_image=True, **kwargs):
+                 link_image=True, task_name=None, **kwargs):
         super(JobTask, self).__init__(**kwargs)
         self.template_name = template['name']
         self.template_version = template['version']
         self.publish_artifacts = publish_artifacts
         self.timeout = kwargs.get('timeout', None)
-        self.uuid = str(uuid.uuid1())
+        self.__uuid = str(uuid.uuid1())
         self.remote_url = ''
         self.returncode = 1
         self.no_destroy = no_destroy
         self.description = '<no description>'
         self.link_image = link_image
+        self.task_name = task_name
+
+    @property
+    def uuid(self):
+        return self.__uuid
 
     @property
     def vagrantfile(self):
@@ -55,6 +61,12 @@ class JobTask(FallibleTask):
         # Create job dir
         try:
             os.makedirs(self.data_dir)
+            if self.task_name:
+                self.test_logger = config_log_for_task(self.task_name,
+                                                       self.uuid)
+            else:
+                self.test_logger = logging
+
         except (OSError, IOError) as exc:
             msg = "Failed to create job directory"
             logging.critical(msg)
@@ -162,7 +174,8 @@ class Build(JobTask):
                     'git_refspec': self.git_refspec,
                     'git_version': self.git_version,
                     'git_repo': self.git_repo},
-                timeout=None))
+                timeout=None,
+                logger=self.test_logger))
 
     def collect_build_artifacts(self):
         self.execute_subtask(
@@ -245,4 +258,5 @@ class RunPytest(JobTask):
                 '--verbose --logging-level=debug --logfile-dir=/vagrant/ '
                 '--html=/vagrant/report.html'
                 ).format(test_suite=self.test_suite)],
-                timeout=None))
+                timeout=None,
+                logger=self.test_logger))
