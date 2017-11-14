@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
+import traceback
 import abc
-import base64
 import collections
 import datetime
 import dateutil.parser
@@ -12,8 +12,13 @@ import requests
 import time
 import yaml
 
+import multiprocessing
 import cachecontrol
+import psutil
 import redis
+import OpenSSL
+
+from tasks.common import retry
 
 
 GITHUB_DESCRIPTION_LIMIT = 139
@@ -28,6 +33,10 @@ logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
 class TaskAlreadyTaken(Exception):
+    pass
+
+
+class InsufficientResources(Exception):
     pass
 
 
@@ -171,8 +180,10 @@ class Task(object):
 
         self.priority = conf['priority']
         self.requires = conf['requires']
+        self.resources = conf['job']['args'].get('topology', {})
         self.job = job_cls(conf['job'],
-                           (self.repo.clone_url, self.refspec))
+                           (self.repo.clone_url, self.refspec),
+                           self.name)
 
     def dependencies_done(self):
         for dep in self.requires:
@@ -205,14 +216,23 @@ class Task(object):
 
     def execute(self, exc_handler=None):
         depends_results = {}
-        for dep in self.requires:
-            status = Status(self.repo, self.pull, dep)
-            depends_results[dep] = JobResult(
-                status.state, status.description, status.target_url)
+
+        # sometimes, when running runners in parallel, it may happen
+        # that we get an exception from OpenSLL.
+        @retry(OpenSSL.SSL.Error)
+        def __update_status(self):
+            for dep in self.requires:
+                status = Status(self.repo, self.pull, dep)
+                depends_results[dep] = JobResult(
+                    status.state, status.description, status.target_url)
+
+        __update_status(self)
 
         try:
             result = self.job(depends_results)
         except Exception as exc:
+            logging.error(traceback.print_exc())
+
             state = 'error'
             description = getattr(exc, 'description', '{type_}: {msg}'.format(
                 type_=type(exc).__name__, msg=str(exc)))
@@ -361,7 +381,7 @@ class Tasks(collections.Set, collections.Mapping):
                      self.pull.pull.number)
 
 
-class TaskQueue(collections.Iterator):
+class TaskQueue(object):
     def __init__(self, repo, tasks_config_path, job_cls, runner_id,
                  allowed_users=[]):
         self.repo = repo
@@ -369,17 +389,35 @@ class TaskQueue(collections.Iterator):
         self.tasks_config_path = tasks_config_path
         self.allowed_users = allowed_users
         self.runner_id = runner_id
+        self.total_cpus = psutil.cpu_count()
+        self.total_memory = psutil.virtual_memory().total / float(2 ** 20)
+        self.running_tasks = multiprocessing.Manager().dict()
+        self.done = False
+
+    @property
+    def used_cpus(self):
+        return sum([t['cpu'] for t in self.running_tasks.values()])
+
+    @property
+    def used_memory(self):
+        return sum([t['memory'] for t in self.running_tasks.values()])
+
+    @property
+    def available_cpus(self):
+        return self.total_cpus - self.used_cpus
+
+    @property
+    def available_memory(self):
+        return self.total_memory - self.used_memory
 
     def create_tasks_for_pulls(self):
         """
         Generate CI tasks represented by GitHub Statuses [1]
 
-        The tasks are generated when there're no task created and PR author is
-        on whitelist or RERUN_LABEL is present. When there's RERUN_LABEL only
-        failed tasks (error or failure state) are regenerated.
-        There's also check for stale tasks based on time when task was taken
-        and task timeout and if stale task is detected it's regenerated as
-        well.
+        The tasks are generated when:
+        a. there's "re-run" label on the PR
+        b. there're no tasks yet
+        c. the tasks are stale (execution exceeds timeout without error)
 
         [1] https://developer.github.com/v3/repos/statuses/
         """
@@ -435,12 +473,36 @@ class TaskQueue(collections.Iterator):
             Status.create(task.repo, task.pull, task.name,
                           'unassigned', '', 'pending')
 
-    def __next__(self):
-        """
-        Return next task for processing
+    def allocate_resources(self, task):
+        # if task don't specify resource requirements behave like it needs
+        # whole runner to avoid overloading the runner
+        task_cpu = task.resources.get('cpu', self.total_cpus)
+        task_mem = task.resources.get('memory', self.total_memory)
 
-        From tasks that are available for execution the one with maximum
-        priority is returned.
+        if task_cpu <= self.available_cpus and task_mem <= self.available_memory:
+            task_key = (task.pull.pull.head.sha, task.name,)
+            self.running_tasks[task_key] = {'cpu': task_cpu,
+                                            'memory': task_mem}
+        else:
+            raise InsufficientResources()
+
+    def free_resources(self, task):
+        task_key = (task.pull.pull.head.sha, task.name,)
+
+        try:
+            del(self.running_tasks[task_key])
+        except KeyError:
+            logger.warning(
+                "Ignoring free_resources for task %s on PR %d. There's no "
+                "allocation for this task.", task.name, task.pull.pull.number
+            )
+
+    def take_tasks(self):
+        """
+        Return list of tasks for processing
+
+        From tasks that are available for execution those with maximum priority
+        and ready for execution are returned.
 
         The priority is tuple (boolean, int, int)
         First member True if PR has 'prioritize' label, False otherwise
@@ -455,7 +517,12 @@ class TaskQueue(collections.Iterator):
         tasks = []
         for pull in PullRequests(self.repo):
             tasks_done_per_pr[pull.pull.number] = 0
-            for task in pull.tasks(self.tasks_config_path, self.job_cls):
+
+            pr_tasks = pull.tasks(self.tasks_config_path, self.job_cls)
+            logging.debug('Tasks in the PR: %s', [t.name for t in pr_tasks])
+            logging.debug('Tasks done PR: %s', tasks_done_per_pr)
+
+            for task in pr_tasks:
                 if (task.status.state != 'pending' or
                         task.status.description != 'unassigned'):
                     # the tasks is assigned or done (with whatever result)
@@ -463,6 +530,7 @@ class TaskQueue(collections.Iterator):
                 if task.can_run():
                     tasks.append(task)
 
+        taken_tasks = []
         for task in sorted(
             tasks,
             reverse=True,
@@ -470,13 +538,36 @@ class TaskQueue(collections.Iterator):
                            tasks_done_per_pr[t.pull.pull.number]),
         ):
             try:
+                self.allocate_resources(task)
+                logger.debug(
+                    'TaskQueue: added PR#%d/%s (%d CPUs, %d MiB RAM)',
+                    task.pull.pull.number,
+                    task.name,
+                    task.resources.get('cpu', self.total_cpus),
+                    task.resources.get('memory', self.total_memory)
+                )
                 task.take(self.runner_id)
+            except InsufficientResources:
+                task_cpus = task.resources.get('cpu', self.total_cpus)
+                task_mem = task.resources.get('memory', self.total_memory)
+                logger.debug(
+                    'TaskQueue: PR#%d/%s skipped, insufficient resources: '
+                    '%d CPUs, %f MiB RAM (required %d CPUs, %f MiB RAM)',
+                    task.pull.pull.number,
+                    task.name,
+                    self.available_cpus,
+                    self.available_memory,
+                    task_cpus,
+                    task_mem
+                )
+                continue
             except TaskAlreadyTaken:
+                self.free_resources(task)
                 continue
             else:
-                return task
+                taken_tasks.append(task)
         else:
-            raise StopIteration()
+            return taken_tasks
 
 
 class JobResult(object):

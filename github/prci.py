@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import multiprocessing
 import logging.config
 import os
 import random
@@ -11,8 +12,8 @@ import subprocess
 import sys
 import time
 import yaml
-
 import github3
+import traceback
 import redis
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
@@ -24,42 +25,10 @@ SENTRY_URL = 'https://d24d8d622cbb4e2ea447c9a64f19b81a:4db0ce47706f435bb3f8a02a0
 ERROR_BACKOFF_TIME = 600
 REBOOT_DELAY = 3600 * 3
 REBOOT_TIME_FILE = '/root/next_reboot'
+REBOOT_CHECK_INTERVAL = 300
+TASK_MIN_CPU = 2
+TASK_MIN_MEM = 900  # in MiB
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
-
-
-class ExitHandler(object):
-    done = False
-    aborted = False
-    task = None
-
-    def finish(self, signum, frame):
-        if self.done:
-            return self.abort(signum, frame)
-
-        logger.info("Waiting for current task to finish. This may take long.")
-        self.done = True
-
-    def abort(self, signum, frame):
-        if self.aborted:
-            return self.quit()
-
-        if self.task:
-            self.task.abort()
-            logger.info("Waiting for aborted task to clean up. This may take "
-                        "few minutes.")
-
-        self.done = True
-        self.aborted = True
-
-    def quit(self):
-        logger.info("Quiting just now! No results will be reported.")
-        sys.exit()
-
-    def register_task(self, task):
-        self.task = task
-
-    def unregister_task(self):
-        self.task = None
 
 
 class Job(AbstractJob):
@@ -79,6 +48,7 @@ class Job(AbstractJob):
         try:
             url = subprocess.check_output(cmd, shell=True)
         except subprocess.CalledProcessError as err:
+            logging.error(traceback.print_exc())
             if err.returncode == 1:
                 state = 'error'
                 url = ''
@@ -92,7 +62,7 @@ class Job(AbstractJob):
 
 
 class JobDispatcher(AbstractJob):
-    def __init__(self, job, build_target):
+    def __init__(self, job, build_target, task_name):
         super(JobDispatcher, self).__init__(job, build_target)
         self.klass = getattr(
             __import__('tasks', fromlist=[self.job['class']]),
@@ -101,6 +71,7 @@ class JobDispatcher(AbstractJob):
         self.kwarg_lookup = {
             'git_repo': build_target[0],
             'git_refspec': build_target[1]}
+        self.task_name = task_name
 
     @property
     def timeout(self):
@@ -119,16 +90,17 @@ class JobDispatcher(AbstractJob):
                 value = value.format(**self.kwarg_lookup)
             kwargs[key] = value
 
+        kwargs['task_name'] = self.task_name
         job = self.klass(**kwargs)
         try:
             job()
         except Exception as exc:
+            logging.error(traceback.print_exc())
             description = '{type_}: {msg}'.format(type_=type(exc).__name__,
                                                   msg=str(exc))
             state = 'error'
 
-            sentry_report_exception({
-                'module': 'tasks'})
+            sentry_report_exception({'module': 'tasks'})
         else:
             description = job.description
             if job.returncode == 0:
@@ -211,32 +183,121 @@ def sentry_report_exception(context=None):
         sentry.context.clear()
 
 
-def check_reboot(repo, creds):
-    def plan_reboot(delay=REBOOT_DELAY):
-        next_reboot = int(time.time()) + delay
-        with open(REBOOT_TIME_FILE, 'w') as f:
-            f.write(str(next_reboot))
+def plan_reboot(delay=REBOOT_DELAY):
+    next_reboot = int(time.time()) + delay
+    with open(REBOOT_TIME_FILE, 'w') as f:
+        f.write(str(next_reboot))
 
-    def read_reboot_time():
-        try:
-            with open(REBOOT_TIME_FILE, 'r') as f:
-                return int(f.read())
-        except FileNotFoundError:
-            return None
 
-    reboot_time = read_reboot_time()
-    if reboot_time is None:
-        plan_reboot(delay=random.randint(1, REBOOT_DELAY))
-        return
+def read_reboot_time():
+    try:
+        with open(REBOOT_TIME_FILE, 'r') as f:
+            return int(f.read())
+    except IOError:
+        return None
 
-    if time.time() > reboot_time:
-        try:
-            update_runner(repo, creds)
-        except:
-            sentry_report_exception()
-        plan_reboot()
-        logging.info('Rebooting the machine')
-        subprocess.call('reboot', shell=True)
+
+def reboot(repo, creds):
+    try:
+        update_runner(repo, creds)
+    except Exception:
+        sentry_report_exception()
+
+    plan_reboot()
+    logging.info('Rebooting the machine')
+    subprocess.call('reboot', shell=True)
+
+
+class Scheduler(object):
+
+    def __init__(self, task_queue, reboot_check_interval,
+                 no_task_backoff_time):
+        self.task_queue = task_queue
+        self.reboot_check_interval = reboot_check_interval
+        self.no_task_backoff_time = no_task_backoff_time
+
+        self.done = False
+        self.should_abort = False
+        self.reboot = False
+        self.processes = []
+
+        signal.signal(signal.SIGINT, self.terminate)
+        signal.signal(signal.SIGALRM, self.check_reboot)
+        signal.alarm(self.reboot_check_interval)
+
+    def terminate(self, *args, **kwargs):
+        if self.done:
+            return self.abort()
+        logging.info('Terminate. Waiting for tasks to finish.')
+        self.done = True
+        self.reboot = False
+
+    def abort(self):
+        if self.should_abort:
+            sys.exit('Forced quit. There may be stale files and processes '
+                     'left behind.')
+        logging.debug('Abort. Waiting for clean up.')
+        self.done = True
+        self.should_abort = True
+        self.reboot = False
+
+    def check_reboot(self, *args, **kwargs):
+        if self.done:
+            return
+
+        reboot_time = read_reboot_time()
+        if reboot_time is None:
+            plan_reboot(delay=random.randint(1, REBOOT_DELAY))
+            return
+
+        if time.time() > reboot_time:
+            self.done = True
+            self.reboot = True
+
+    def run(self):
+        def join():
+            for p in self.processes:
+                if not p.is_alive():
+                    p.join()
+                    logging.info('Calling join() for process')
+                    self.processes.remove(p)
+
+        def execute_task(task):
+            try:
+                task.execute()
+            except Exception as e:
+                logging.error(e)
+                sentry_report_exception({'module': 'github'})
+            finally:
+                self.task_queue.free_resources(task)
+                logging.info('Task {} released resources'.format(task.name))
+
+        while not self.done:
+            join()
+
+            avail_cpu = self.task_queue.available_cpus
+            avail_mem = self.task_queue.available_memory
+
+            if avail_cpu < TASK_MIN_CPU or avail_mem < TASK_MIN_MEM:
+                logging.debug(
+                    "Not enough resources, waiting for tasks to finish (%d"
+                    "CPUs, %f MiB RAM)" % (avail_cpu, avail_mem))
+                time.sleep(10)
+                continue
+
+            tasks = self.task_queue.take_tasks()
+            logging.info('Current tasks {}'.format(
+                self.task_queue.running_tasks))
+            if not tasks:
+                time.sleep(self.no_task_backoff_time)
+                continue
+
+            for task in tasks:
+                p = multiprocessing.Process(target=execute_task, args=(task,))
+                p.start()
+                self.processes.append(p)
+
+        join()
 
 
 def main():
@@ -262,33 +323,22 @@ def main():
     task_queue = TaskQueue(repo, tasks_file, JobDispatcher, runner_id,
                            whitelist)
 
-    handler = ExitHandler()
-    signal.signal(signal.SIGINT, handler.finish)
-    signal.signal(signal.SIGTERM, handler.abort)
+    task_queue.create_tasks_for_pulls()
 
-    while not handler.done:
+    scheduler = Scheduler(task_queue, REBOOT_CHECK_INTERVAL,
+                          no_task_backoff_time)
+
+    try:
+        scheduler.run()
+    except Exception:
+        sentry_report_exception({'module': 'github'})
+        raise
+
+    if scheduler.reboot:
         try:
-            task_queue.create_tasks_for_pulls()
-
-            try:
-                task = next(task_queue)
-            except StopIteration:
-                time.sleep(no_task_backoff_time)
-                continue
-
-            handler.register_task(task)
-            task.execute()
-        except Exception:
-            sentry_report_exception({
-                'module': 'github'})
-            time.sleep(ERROR_BACKOFF_TIME)
-        finally:
-            handler.unregister_task()
-
-            try:
-                check_reboot(repo, creds)
-            except:
-                sentry_report_exception()
+            reboot(repo, creds)
+        except:
+            sentry_report_exception()
 
 
 if __name__ == '__main__':

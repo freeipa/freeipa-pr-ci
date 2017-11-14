@@ -27,8 +27,8 @@ Vagrant.configure(2) do |config|
 
     config.vm.define "builder"  do |builder|
         builder.vm.provider "libvirt" do |domain,override|
-            domain.cpus = 4
-            domain.memory = 4096
+            domain.cpus = 2
+            domain.memory = 3800
         end
 
         builder.vm.provision "ansible" do |ansible|
