@@ -7,4 +7,5 @@
   tags: nested_virt
 - include: setup.yml
 - include: create_libvirt_pool.yml
+- include: configure_zabbix.yml
 - include: deploy_pr_ci.yml
