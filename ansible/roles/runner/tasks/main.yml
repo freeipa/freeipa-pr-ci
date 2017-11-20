@@ -1,10 +1,10 @@
 ---
-- include: manage_ssh_keys.yml
+- import_tasks: manage_ssh_keys.yml
   when: deploy_ssh_key
   tags: fedorapeople
-- include: enable_nested_virt.yml
+- import_tasks: enable_nested_virt.yml
   when: enable_nested_virt
   tags: nested_virt
-- include: setup.yml
-- include: create_libvirt_pool.yml
-- include: deploy_pr_ci.yml
+- import_tasks: setup.yml
+- import_tasks: create_libvirt_pool.yml
+- import_tasks: deploy_pr_ci.yml
