@@ -3,7 +3,6 @@
   selinux:
     policy: targeted
     state: permissive
-  notify: reboot
 
 # Workaround for bug in lab -- dnf makecache created metadata lock
 - name: "workaround: stop dnf-makecache.service"
