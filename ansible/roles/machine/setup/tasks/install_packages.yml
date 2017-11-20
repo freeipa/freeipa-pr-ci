@@ -37,6 +37,12 @@
     - vim
     - NetworkManager
 
+    # the packages below are used to run the tox tests
+    - autoconf
+    - gettext-devel
+    - automake
+    - libtool
+
 - name: install py3 pip dependencies
   pip:
     executable: pip3
