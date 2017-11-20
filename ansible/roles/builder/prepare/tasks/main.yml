@@ -1,4 +1,4 @@
 ---
-- include: install_packages.yml
-- include: setup_mock.yml
+- import_tasks: install_packages.yml
+- import_tasks: setup_mock.yml
 

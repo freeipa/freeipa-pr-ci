@@ -1,6 +1,6 @@
 ---
-- include: configuration.yml
-- include: setup_rng.yml
-- include: install_packages.yml
-- include: manage_ssh_keys.yml
+- import_tasks: configuration.yml
+- import_tasks: setup_rng.yml
+- import_tasks: install_packages.yml
+- import_tasks: manage_ssh_keys.yml
 
