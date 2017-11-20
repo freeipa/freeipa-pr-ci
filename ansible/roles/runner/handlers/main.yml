@@ -3,15 +3,3 @@
   service:
     name: nfs
     state: restarted
-
-- name: reboot
-  shell: 'sleep 2 && shutdown -r now "Ansible updates triggered"'
-  async: 1
-  poll: 0
-  ignore_errors: true
-  notify:
-    - reboot_message
-
-- name: reboot_message
-  debug:
-    msg: "System {{ inventory_hostname }} is rebooting."

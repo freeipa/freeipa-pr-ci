@@ -1,19 +1,67 @@
----
-- name: check if nested virtualization is enabled
+- name: Set CPU vendor
+  set_fact:
+    cpu_vendor: "{{ 'intel' if 'Intel' in ansible_processor|join('') else
+                    'amd' if 'AMD' in ansible_processor|join('') else 'unknown' }}"
+
+- name: Get CPU flags
+  command: "awk -F: '/^flags/ {print $2; exit}' /proc/cpuinfo"
+  register: cpu_flags_cmd
+  changed_when: false
+
+- name: Check for nested support
+  set_fact:
+    cpu_nested_support: "{{ true if cpu_vendor == 'intel' and 'vmx' in cpu_flags_cmd.stdout.split() else
+                            true if cpu_vendor == 'amd' and 'svm' in cpu_flags_cmd.stdout.split() else false }}"
+
+- name: Abort if nested virtualization isn't supported
+  fail:
+    msg: "Nested virtualization isn't supported"
+  when: not cpu_nested_support|bool
+
+- name: Remove previous KVM modprobe configs
+  shell: find /etc/modprobe.d/ -type f -print0| xargs -r -0 sed -i '/^options kvm_intel/d;/^options kvm_amd/d'
+  changed_when: true
+
+- name: Configure KVM module
+  copy:
+    dest: "/etc/modprobe.d/kvm.conf"
+    content: |
+      options kvm_{{ cpu_vendor }} nested=1
+
+- name: Fetch current runtime nested setting
+  command: cat /sys/module/kvm_{{ cpu_vendor }}/parameters/nested
+  register: kvm_nested_info
+  changed_when: false
+
+- name: Check if nested is enabled currently
+  set_fact:
+    cpu_nested_enabled: "{{ true if 'Y' in kvm_nested_info.stdout else
+                            true if '1' in kvm_nested_info.stdout else false }}"
+
+- when: cpu_nested_support|bool != cpu_nested_enabled|bool
   block:
-    - command: cat /sys/module/kvm_intel/parameters/nested
-      register: nested_virt_enabled
-      changed_when: false
-  rescue:
-    - command: cat /sys/module/kvm_amd/parameters/nested
-      register: nested_virt_enabled
+    - name: Unload KVM module
+      modprobe:
+        name: "kvm_{{ cpu_vendor }}"
+        state: "absent"
+      become: true
+
+    - name: Reload KVM module
+      modprobe:
+        name: "kvm_{{ cpu_vendor }}"
+        state: "present"
+      become: true
+
+    - name: Fetch current runtime nested setting
+      command: cat /sys/module/kvm_{{ cpu_vendor }}/parameters/nested
+      register: kvm_nested_info
       changed_when: false
 
-- name: enable nested virtualization in kvm config
-  blockinfile:
-    dest: /etc/modprobe.d/kvm-intel.conf
-    create: yes
-    block: |
-      options kvm-intel nested=1
-  notify: reboot
-  when: nested_virt_enabled.stdout == "N"
+    - name: Check again if nested is enabled currently
+      set_fact:
+        cpu_nested_enabled: "{{ true if 'Y' in kvm_nested_info.stdout else
+                                true if '1' in kvm_nested_info.stdout else false }}"
+    - name: Fail when the desired and actual state do not match
+      fail:
+        msg: "Cannot change the state of nested virtualization. Please shut down any running VMs."
+      when: cpu_nested_support|bool != cpu_nested_enabled|bool
