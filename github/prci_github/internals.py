@@ -11,6 +11,7 @@ import pytz
 import requests
 import time
 import yaml
+import psutil
 
 import cachecontrol
 import redis
@@ -28,6 +29,10 @@ logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
 class TaskAlreadyTaken(Exception):
+    pass
+
+
+class InsufficientResources(Exception):
     pass
 
 
@@ -171,6 +176,7 @@ class Task(object):
 
         self.priority = conf['priority']
         self.requires = conf['requires']
+        self.resources = conf['job']['args'].get('topology', {})
         self.job = job_cls(conf['job'],
                            (self.repo.clone_url, self.refspec))
 
@@ -203,6 +209,12 @@ class Task(object):
 
         self.status_description = desc
 
+    def drop(self):
+        # change the task description to pending, another runner can
+        # get it and execute it.
+        Status.create(self.repo, self.pull, self.name, 'unassigned', '', 'pending')
+        self.status_description = ''
+
     def execute(self, exc_handler=None):
         depends_results = {}
         for dep in self.requires:
@@ -213,6 +225,8 @@ class Task(object):
         try:
             result = self.job(depends_results)
         except Exception as exc:
+            logging.error(exc, exc_info=True)
+
             state = 'error'
             description = getattr(exc, 'description', '{type_}: {msg}'.format(
                 type_=type(exc).__name__, msg=str(exc)))
@@ -369,6 +383,49 @@ class TaskQueue(collections.Iterator):
         self.tasks_config_path = tasks_config_path
         self.allowed_users = allowed_users
         self.runner_id = runner_id
+        self.total_cpus = psutil.cpu_count()
+        self.total_memory = psutil.virtual_memory().total / float(2 ** 20)
+        self.running_tasks = dict()
+        self.done = False
+
+    @property
+    def used_cpus(self):
+        return sum([t['cpu'] for t in self.running_tasks.values()])
+
+    @property
+    def used_memory(self):
+        return sum([t['memory'] for t in self.running_tasks.values()])
+
+    @property
+    def available_cpus(self):
+        return self.total_cpus - self.used_cpus
+
+    @property
+    def available_memory(self):
+        return self.total_memory - self.used_memory
+
+    def check_resources(self, task):
+        # if task don't specify resource requirements behave like it needs
+        # whole runner to avoid overloading the runner
+        task_cpu = task.resources.get('cpu', self.total_cpus)
+        task_mem = task.resources.get('memory', self.total_memory)
+
+        if task_cpu <= self.available_cpus and task_mem <= self.available_memory:
+            task_key = (task.pull.pull.head.sha, task.name,)
+            self.running_tasks[task_key] = {'cpu': task_cpu,
+                                            'memory': task_mem}
+            logger.debug(
+                'TaskQueue: added PR#%d/%s (%d CPUs, %d MiB RAM)',
+                task.pull.pull.number, task.name, task_cpu, task_mem)
+        else:
+            logger.debug(
+                'TaskQueue: PR#%d/%s skipped, insufficient resources: '
+                '%d CPUs, %f MiB RAM (required %d CPUs, %f MiB RAM)',
+                task.pull.pull.number, task.name,
+                self.available_cpus, self.available_memory,
+                task_cpu, task_mem
+            )
+            raise InsufficientResources()
 
     def create_tasks_for_pulls(self):
         """

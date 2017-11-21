@@ -16,7 +16,8 @@ import github3
 import redis
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from prci_github import TaskQueue, AbstractJob, JobResult
+from prci_github import (TaskQueue, AbstractJob, JobResult,
+                         InsufficientResources)
 from prci_github.adapter import GitHubAdapter
 
 
@@ -25,7 +26,8 @@ ERROR_BACKOFF_TIME = 600
 REBOOT_DELAY = 3600 * 3
 REBOOT_TIME_FILE = '/root/next_reboot'
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
-
+TASK_MIN_CPU = 2
+TASK_MIN_MEM = 900
 
 class ExitHandler(object):
     done = False
@@ -79,6 +81,7 @@ class Job(AbstractJob):
         try:
             url = subprocess.check_output(cmd, shell=True)
         except subprocess.CalledProcessError as err:
+            logging.error(err, exc_info=True)
             if err.returncode == 1:
                 state = 'error'
                 url = ''
@@ -123,12 +126,12 @@ class JobDispatcher(AbstractJob):
         try:
             job()
         except Exception as exc:
+            logging.error(exc, exc_info=True)
             description = '{type_}: {msg}'.format(type_=type(exc).__name__,
                                                   msg=str(exc))
             state = 'error'
 
-            sentry_report_exception({
-                'module': 'tasks'})
+            sentry_report_exception({'module': 'tasks'})
         else:
             description = job.description
             if job.returncode == 0:
@@ -276,11 +279,18 @@ def main():
                 time.sleep(no_task_backoff_time)
                 continue
 
+            try:
+                task_queue.check_resources(task)
+            except InsufficientResources:
+                # if the runner does not has enough resources
+                # it's necessary to drop the assign status in the task
+                task.drop()
+                continue
+
             handler.register_task(task)
             task.execute()
         except Exception:
-            sentry_report_exception({
-                'module': 'github'})
+            sentry_report_exception({'module': 'github'})
             time.sleep(ERROR_BACKOFF_TIME)
         finally:
             handler.unregister_task()
