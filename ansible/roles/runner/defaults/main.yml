@@ -9,3 +9,4 @@ pr_ci_repo_owner: freeipa
 pr_ci_repo: "https://github.com/{{ pr_ci_repo_owner }}/freeipa-pr-ci"
 pr_ci_repo_branch: master
 no_task_backoff_time: 300
+limit_size_systemd_journal: 300M
