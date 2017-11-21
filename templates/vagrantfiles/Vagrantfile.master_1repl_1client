@@ -1,8 +1,5 @@
-# -*- mode: ruby -*-
-# vi: set ft=ruby :
-#
 
-Vagrant.configure(2) do |config|
+ |config|
 
     config.ssh.username = "root"
 
@@ -18,7 +15,7 @@ Vagrant.configure(2) do |config|
         # WARNING: Do not overcommit CPUs, it causes issues during
         # provisioning, when RPMs are installed
         domain.cpus = 1
-        domain.memory = 2560
+        domain.memory = 2400
 
         # Nested virtualization options
         domain.nested = true
@@ -34,7 +31,7 @@ Vagrant.configure(2) do |config|
     config.vm.define "controller" , primary: true do |controller|
         controller.vm.provider "libvirt" do |domain,override|
             # Less resources needed for controller
-            domain.memory = 1024
+            domain.memory = 950
         end
 
         controller.vm.provision :ansible do |ansible|
@@ -45,18 +42,16 @@ Vagrant.configure(2) do |config|
         end
     end
 
-
     config.vm.define "master"  do |master|
-        # FIXME: This is strictly a temporary change for debugging purposes
-        # https://pagure.io/freeipa/issue/7165
-        # Added by mreznik's request
-        master.vm.provider "libvirt" do |domain,override|
-            domain.cpus = 2
-        end
     end
 
-
     config.vm.define "replica0"  do |replica0|
+    end
+
+    config.vm.define "client0"  do |client0|
+        client0.vm.provider "libvirt" do |domain,override|
+            domain.memory = 950
+        end
     end
 
 end
