@@ -16,8 +16,7 @@ import github3
 import redis
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from prci_github import (TaskQueue, AbstractJob, JobResult,
-                         InsufficientResources)
+from prci_github import TaskQueue, AbstractJob, JobResult
 from prci_github.adapter import GitHubAdapter
 
 
@@ -26,8 +25,7 @@ ERROR_BACKOFF_TIME = 600
 REBOOT_DELAY = 3600 * 3
 REBOOT_TIME_FILE = '/root/next_reboot'
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
-TASK_MIN_CPU = 2
-TASK_MIN_MEM = 900
+
 
 class ExitHandler(object):
     done = False
@@ -277,14 +275,6 @@ def main():
                 task = next(task_queue)
             except StopIteration:
                 time.sleep(no_task_backoff_time)
-                continue
-
-            try:
-                task_queue.check_resources(task)
-            except InsufficientResources:
-                # if the runner does not has enough resources
-                # it's necessary to drop the assign status in the task
-                task.drop()
                 continue
 
             handler.register_task(task)
