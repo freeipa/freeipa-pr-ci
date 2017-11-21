@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 import abc
-import base64
 import collections
 import datetime
 import dateutil.parser
@@ -209,12 +208,6 @@ class Task(object):
 
         self.status_description = desc
 
-    def drop(self):
-        # change the task description to pending, another runner can
-        # get it and execute it.
-        Status.create(self.repo, self.pull, self.name, 'unassigned', '', 'pending')
-        self.status_description = ''
-
     def execute(self, exc_handler=None):
         depends_results = {}
         for dep in self.requires:
@@ -415,7 +408,7 @@ class TaskQueue(collections.Iterator):
             self.running_tasks[task_key] = {'cpu': task_cpu,
                                             'memory': task_mem}
             logger.debug(
-                'TaskQueue: added PR#%d/%s (%d CPUs, %d MiB RAM)',
+                'TaskQueue: resource check ok PR#%d/%s (%d CPUs, %d MiB RAM)',
                 task.pull.pull.number, task.name, task_cpu, task_mem)
         else:
             logger.debug(
@@ -506,6 +499,9 @@ class TaskQueue(collections.Iterator):
 
         This strategy should prefer completion of PR testing over starting
         testing of new PR.
+
+        If the runner doesn't have sufficient resources for execution, it will
+        skip the task.
         """
         tasks_done_per_pr = {}
 
@@ -527,8 +523,9 @@ class TaskQueue(collections.Iterator):
                            tasks_done_per_pr[t.pull.pull.number]),
         ):
             try:
+                self.check_resources(task)
                 task.take(self.runner_id)
-            except TaskAlreadyTaken:
+            except (InsufficientResources, TaskAlreadyTaken):
                 continue
             else:
                 return task
