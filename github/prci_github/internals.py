@@ -378,24 +378,7 @@ class TaskQueue(collections.Iterator):
         self.runner_id = runner_id
         self.total_cpus = psutil.cpu_count()
         self.total_memory = psutil.virtual_memory().total / float(2 ** 20)
-        self.running_tasks = dict()
         self.done = False
-
-    @property
-    def used_cpus(self):
-        return sum([t['cpu'] for t in self.running_tasks.values()])
-
-    @property
-    def used_memory(self):
-        return sum([t['memory'] for t in self.running_tasks.values()])
-
-    @property
-    def available_cpus(self):
-        return self.total_cpus - self.used_cpus
-
-    @property
-    def available_memory(self):
-        return self.total_memory - self.used_memory
 
     def check_resources(self, task):
         # if task don't specify resource requirements behave like it needs
@@ -403,10 +386,8 @@ class TaskQueue(collections.Iterator):
         task_cpu = task.resources.get('cpu', self.total_cpus)
         task_mem = task.resources.get('memory', self.total_memory)
 
-        if task_cpu <= self.available_cpus and task_mem <= self.available_memory:
+        if task_cpu <= self.total_cpus and task_mem <= self.total_memory:
             task_key = (task.pull.pull.head.sha, task.name,)
-            self.running_tasks[task_key] = {'cpu': task_cpu,
-                                            'memory': task_mem}
             logger.debug(
                 'TaskQueue: resource check ok PR#%d/%s (%d CPUs, %d MiB RAM)',
                 task.pull.pull.number, task.name, task_cpu, task_mem)
@@ -415,7 +396,7 @@ class TaskQueue(collections.Iterator):
                 'TaskQueue: PR#%d/%s skipped, insufficient resources: '
                 '%d CPUs, %f MiB RAM (required %d CPUs, %f MiB RAM)',
                 task.pull.pull.number, task.name,
-                self.available_cpus, self.available_memory,
+                self.total_cpus, self.total_memory,
                 task_cpu, task_mem
             )
             raise InsufficientResources()
