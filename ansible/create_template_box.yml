@@ -16,8 +16,9 @@
     base_box_url: https://download.fedoraproject.org/pub/fedora/linux/releases/27/CloudImages/x86_64/images/Fedora-Cloud-Base-Vagrant-27-1.6.x86_64.vagrant-libvirt.box
   vars_prompt:
     - name: git_branch
-      prompt: "git branch (e.g. master)"
+      prompt: "git branch"
       private: false
+      default: "master"
   pre_tasks:
     - set_fact:
         template_box_name: "ci-{{ git_branch }}-{{ base_box_name }}"
@@ -46,11 +47,13 @@
     build_chroot: fedora-27-x86_64
   vars_prompt:
     - name: git_branch
-      prompt: "git branch (e.g. master)"
+      prompt: "git branch"
       private: false
+      default: "master"
     - name: freeipa_copr
-      prompt: "FreeIPA copr (e.g. @freeipa/freeipa-master)"
+      prompt: "FreeIPA copr"
       private: false
+      default: "@freeipa/freeipa-master"
   roles:
     - role: builder
       git_version: "{{ git_branch }}"
