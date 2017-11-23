@@ -378,7 +378,6 @@ class TaskQueue(collections.Iterator):
         self.runner_id = runner_id
         self.total_cpus = psutil.cpu_count()
         self.total_memory = psutil.virtual_memory().total / float(2 ** 20)
-        self.done = False
 
     def check_resources(self, task):
         # if task don't specify resource requirements behave like it needs
@@ -387,7 +386,6 @@ class TaskQueue(collections.Iterator):
         task_mem = task.resources.get('memory', self.total_memory)
 
         if task_cpu <= self.total_cpus and task_mem <= self.total_memory:
-            task_key = (task.pull.pull.head.sha, task.name,)
             logger.debug(
                 'TaskQueue: resource check ok PR#%d/%s (%d CPUs, %d MiB RAM)',
                 task.pull.pull.number, task.name, task_cpu, task_mem)
