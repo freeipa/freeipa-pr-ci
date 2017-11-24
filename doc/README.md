@@ -193,7 +193,25 @@ The config is an ordinary YAML file. The individual jobs are defined under the
 `fedora-26/simple_replication`. These identifiers have to be unique and will be
 used as commit status' *context*.
 
+In the config file is also described what topologies are supported. Each
+topology must describe the amount of `cpu` and `memory` needed, using the
+structure bellow, defined under the `topologies` key. The topology name must
+match the sufix of a Vagrantfile inside the `templates/vagrantfiles` dir.  
+As an example, for the `build` topology there is a
+`templates/vagrantfiles/Vagrantfile.build` file. You can check the already
+defined topologies [here](https://github.com/freeipa/freeipa-pr-ci/tree/master/templates/vagrantfiles).
+
 ```yaml
+topologies:
+  build: &build
+    name: build
+    cpu: 2
+    memory: 3800
+  master_1repl: &master_1repl
+    name: master_1repl
+    cpu: 4
+    memory: 5750
+
 jobs:
   fedora-26/build:
     requires: []
@@ -201,6 +219,7 @@ jobs:
     job:
       class: Build
       args:
+        topology: *build
         # <snip/>
 
   fedora-26/simple_replication:
@@ -209,6 +228,7 @@ jobs:
     job:
       class: RunPytest
       args:
+        topology: *master_1repl
         # <snip/>
 ```
 
@@ -227,6 +247,11 @@ Jobs can have the following arguments:
   classes are defined in [tasks/tasks.py](../tasks/tasks.py) and can be used to
   customize the PR CI in any way.
 
+Jobs **must** have the following argument:
+
+- `topology`: The name of the topology (defined at the top of config file) will
+  be used to run the job. The name must be prefixed by a `*`.  
+
 #### Build
 
 The following snippet defines a `Build` job. This is FreeIPA-specific task
@@ -242,6 +267,7 @@ FreeIPA packages.
           name: freeipa/ci-master-f26
           version: 0.1.3
         timeout: 1800
+        topology: *build
 ```
 
 Some of these arguments are common to all FreeIPA jobs.
