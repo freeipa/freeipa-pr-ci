@@ -46,10 +46,3 @@
   pip:
     executable: pip
     name: "{{ python_packages_to_install | join(' ') }}"
-
-- name: disable distro repositories
-  shell: "dnf config-manager --set-disabled {{ item }}"
-  with_items:
-    - fedora
-    - updates
-    - updates-testing

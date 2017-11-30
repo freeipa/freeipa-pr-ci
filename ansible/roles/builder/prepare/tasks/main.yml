@@ -1,4 +1,14 @@
 ---
-- include: install_packages.yml
-- include: setup_mock.yml
+- name: install packages for builder role
+  dnf:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - mock
+    - git
 
+- name: set default mock config
+  template:
+    src: templates/mock-fedora-{{ 'rawhide' if fedora_version == 'rawhide' else 'branched' }}.cfg.j2
+    dest: /etc/mock/default.cfg
+    force: yes

@@ -6,7 +6,7 @@ Vagrant.configure(2) do |config|
 
     config.vm.provider "libvirt" do |domain, override|
         override.vm.box_url = "{{ base_box_url }}"
-        override.vm.box = "{{ base_box_name }}"
+        override.vm.box = "f{{ fedora_version }}"
     end
 
     config.vm.define "template"  do |template|

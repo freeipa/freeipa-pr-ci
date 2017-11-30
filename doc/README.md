@@ -353,6 +353,23 @@ The same template is used both for building FreeIPA and running tests on it.
 Mock environment is configured to be used for build. This is made to ensure
 that Build and Runtime dependencies don't get mixed up in the spec file.
 
+### Add new Fedora version
+
+To enable template creation with a new Fedora version, add a config file in
+[`ansible/vars/fedora/`](../ansible/vars/fedora/). See any existing template for
+example.
+
+### Fedora Rawhide template
+
+This template is intended for testing stable code (aka master) that is known to
+be working on previous Fedoras. The intent of testing on rawhide is to uncover
+issues with dependencies. These tests should be regularly executed and
+packages should be updated every time.
+
+Don't forget to update
+[`ansible/vars/fedora/rawhide.yml`](../ansible/vars/fedora/rawhide.yml) when
+new Fedora is branched (bump `fedora_releasever`).
+
 ## Limitations
 
 The system was designed to not be dependent on any single machine. For this

@@ -1,0 +1,70 @@
+config_opts['root'] = 'fedora-{{ fedora_version }}-x86_64'
+config_opts['target_arch'] = 'x86_64'
+config_opts['legal_host_arches'] = ('x86_64',)
+config_opts['chroot_setup_cmd'] = 'install @buildsys-build'
+config_opts['dist'] = 'fc{{ fedora_releasever }}'  # only useful for --resultdir variable subst
+config_opts['extra_chroot_dirs'] = [ '/run/lock', ]
+config_opts['releasever'] = '{{ fedora_releasever }}'
+config_opts['package_manager'] = 'dnf'
+
+# Configure tmpfs to speed up mock
+config_opts['plugin_conf']['tmpfs_enable'] = True
+config_opts['plugin_conf']['tmpfs_opts'] = {}
+config_opts['plugin_conf']['tmpfs_opts']['required_ram_mb'] = 1024
+config_opts['plugin_conf']['tmpfs_opts']['max_fs_size'] = '4g'
+config_opts['plugin_conf']['tmpfs_opts']['mode'] = '0755'
+config_opts['plugin_conf']['tmpfs_opts']['keep_mounted'] = False
+
+
+config_opts['yum.conf'] = """
+[main]
+keepcache=1
+debuglevel=2
+reposdir=/dev/null
+logfile=/var/log/yum.log
+retries=20
+obsoletes=1
+gpgcheck=0
+assumeyes=1
+syslog_ident=mock
+syslog_device=
+install_weak_deps=0
+metadata_expire=0
+mdpolicy=group:primary
+best=1
+
+# repos
+
+[freeipa_copr]
+name=Copr repo @freeipa/freeipa-{{ freeipa_version }}
+baseurl=https://copr-be.cloud.fedoraproject.org/results/@freeipa/freeipa-{{ freeipa_version }}/fedora-$releasever-$basearch/
+type=rpm-md
+skip_if_unavailable=True
+gpgcheck=1
+gpgkey=https://copr-be.cloud.fedoraproject.org/results/@freeipa/freeipa-{{ freeipa_version }}/pubkey.gpg
+repo_gpgcheck=0
+enabled={{ repo_freeipa_copr_enabled }}
+enabled_metadata=1
+
+[fedora]
+name=fedora
+metalink=https://mirrors.fedoraproject.org/metalink?repo=fedora-$releasever&arch=$basearch
+failovermethod=priority
+gpgkey=file:///usr/share/distribution-gpg-keys/fedora/RPM-GPG-KEY-fedora-{{ fedora_releasever }}-primary
+gpgcheck=1
+enabled={{ repo_fedora_enabled }}
+
+[updates]
+name=updates
+metalink=https://mirrors.fedoraproject.org/metalink?repo=updates-released-f$releasever&arch=$basearch
+failovermethod=priority
+gpgkey=file:///usr/share/distribution-gpg-keys/fedora/RPM-GPG-KEY-fedora-{{ fedora_releasever }}-primary
+gpgcheck=1
+enabled={{ repo_updates_enabled }}
+
+[updates-testing]
+name=updates-testing
+metalink=https://mirrors.fedoraproject.org/metalink?repo=updates-testing-f$releasever&arch=$basearch
+failovermethod=priority
+enabled={{ repo_updates_testing_enabled }}
+"""
