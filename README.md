@@ -149,8 +149,8 @@ the label.
    version of the box, e.g. `0.1.0` (it doesn't need to be released or
    uploaded).
 
-3. Make sure correct variables for Fedora version are selected in
-   `ansible/create_box_template.yml`.
+3. Make sure correct variables for Fedora version are configured in
+   `ansible/vars/fedora/`.
 
 4. Run `create-box-template`
 

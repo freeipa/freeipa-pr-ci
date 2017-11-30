@@ -2,6 +2,9 @@
 - include: cleanup.yml
   tags: cleanup
 
+- include: download_rawhide_box.yml
+  when: fedora_version == 'rawhide'
+
 - name: create folder for image
   file:
     path: "{{ template_box_dir }}"
@@ -33,6 +36,8 @@
     ansible_user: "root"
     ansible_ssh_private_key_file: "keys/vagrant"
     ansible_ssh_common_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+    fedora_version: "{{ fedora_version }}"
+    git_branch: "{{ git_branch }}"
 
 - name: wait for image to come online
   local_action: wait_for host="{{ command_output.stdout }}" port=22 timeout=120

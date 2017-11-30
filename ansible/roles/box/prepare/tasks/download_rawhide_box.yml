@@ -1,0 +1,23 @@
+---
+- name: remove {{ fedora_rawhide_template_dir }}
+  file:
+    path: "{{ fedora_rawhide_template_dir }}"
+    state: absent
+
+- name: create {{ fedora_rawhide_template_dir }} directory
+  file:
+    path: "{{ fedora_rawhide_template_dir }}"
+    state: directory
+
+- name: download latest rawhide box
+  shell: >
+    wget -r -np -nH --cut-dirs=9 -A
+    'Fedora-Cloud-Base-Vagrant-Rawhide-*x86_64.vagrant-libvirt.box'
+    {{ fedora_rawhide_images_remote_dir }}
+  args:
+    chdir: "{{ fedora_rawhide_template_dir }}"
+
+- name: move the rawhide box to latest
+  shell: mv *.box latest.box
+  args:
+    chdir: "{{ fedora_rawhide_template_dir }}"

@@ -4,8 +4,25 @@
     state: "{{ selinux_mode }}"
     policy: targeted
 
-- name: enable FreeIPA COPR repo
-  shell: "dnf copr enable -y {{ copr_repo }}"
+- name: disable distro repositories
+  shell: "dnf config-manager --set-disabled {{ item }}"
+  with_items:
+    - fedora
+    - updates
+    - updates-testing
 
-- name: disable updates-testing repository
-  shell: dnf config-manager --set-disabled updates-testing
+- name: enable selected repositories
+  shell: "dnf config-manager --set-enabled {{ item.key }}"
+  with_dict:
+    fedora: "{{ repo_fedora_enabled }}"
+    updates: "{{ repo_updates_enabled }}"
+    updates-testing: "{{ repo_updates_testing_enabled }}"
+  when: fedora_version != 'rawhide' and item.value
+
+- name: configure rawhide repository
+  shell: "dnf config-manager --set-{{ 'enabled' if repo_rawhide_enabled else 'disabled' }} rawhide"
+  when: fedora_version == 'rawhide'
+
+- name: configure FreeIPA COPR repo
+  shell: "dnf copr enable -y @freeipa/freeipa-{{ freeipa_version }}"
+  when: repo_freeipa_copr_enabled

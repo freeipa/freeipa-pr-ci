@@ -1,0 +1,8 @@
+---
+fedora_releasever: 26
+base_box_url: https://download.fedoraproject.org/pub/fedora/linux/releases/26/CloudImages/x86_64/images/Fedora-Cloud-Base-Vagrant-26-1.5.x86_64.vagrant-libvirt.box
+
+repo_fedora_enabled: 1
+repo_updates_enabled: 1
+repo_updates_testing_enabled: 0
+repo_freeipa_copr_enabled: 1

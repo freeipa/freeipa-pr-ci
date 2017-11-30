@@ -1,0 +1,10 @@
+---
+fedora_releasever: 28  # bump when fedora gets branched
+
+fedora_rawhide_template_dir: /tmp/rawhide_box
+base_box_url: "file://{{ fedora_rawhide_template_dir }}/latest.box"
+
+fedora_rawhide_images_remote_dir: http://ftp.fi.muni.cz/pub/linux/fedora/linux/development/rawhide/CloudImages/x86_64/images/
+
+repo_rawhide_enabled: 1
+repo_freeipa_copr_enabled: 0
