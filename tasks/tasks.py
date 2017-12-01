@@ -189,10 +189,12 @@ class RunPytest(JobTask):
     action_name = 'run_pytest'
 
     def __init__(self, template, build_url, test_suite, topology=None,
-                 timeout=constants.RUN_PYTEST_TIMEOUT, **kwargs):
+                 timeout=constants.RUN_PYTEST_TIMEOUT, update_packages=False,
+                 **kwargs):
         super(RunPytest, self).__init__(template, timeout=timeout, **kwargs)
         self.build_url = build_url + '/'
         self.test_suite = test_suite
+        self.update_packages = update_packages
 
         if not topology:
             topology = {'name': constants.DEFAULT_TOPOLOGY}
@@ -214,7 +216,8 @@ class RunPytest(JobTask):
                     action_name=self.action_name),
                 os.path.join(self.data_dir, 'vars.yml'),
                 dict(repofile_url=urllib.parse.urljoin(
-                        self.build_url, 'rpms/freeipa-prci.repo')))
+                        self.build_url, 'rpms/freeipa-prci.repo'),
+                     update_packages=self.update_packages))
         except (OSError, IOError) as exc:
             msg = "Failed to prepare test config files"
             logging.debug(exc, exc_info=True)

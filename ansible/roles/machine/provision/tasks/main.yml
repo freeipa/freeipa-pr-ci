@@ -15,6 +15,12 @@
     dest: /etc/yum.repos.d/
     url: "{{ repofile_url }}"
 
+- name: update packages
+  dnf:
+    name: '*'
+    state: latest
+  when: update_packages is defined and update_packages
+
 - name: install freeipa packages
   block:
     - dnf:
