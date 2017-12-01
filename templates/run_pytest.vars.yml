@@ -1,2 +1,3 @@
 ---
 repofile_url: {{ repofile_url }}
+update_packages: {{ update_packages }}
