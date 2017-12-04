@@ -1,6 +1,7 @@
 [Unit]
 Description=FreeIPA PR CI
 After=syslog.target network-online.target libvirtd.service
+StartLimitIntervalSec=0
 
 [Service]
 Type=simple
@@ -10,6 +11,8 @@ WorkingDirectory=/root/freeipa-pr-ci
 ExecStart=/bin/bash -c '/root/freeipa-pr-ci/github/prci.py "$(hostname -s)" --config /root/.config/freeipa-pr-ci/config.yml'
 StandardOutput=syslog
 StandardError=syslog
+Restart=on-failure
+RestartSec=10m
 
 [Install]
 WantedBy=multi-user.target
