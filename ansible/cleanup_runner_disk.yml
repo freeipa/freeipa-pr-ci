@@ -25,10 +25,25 @@
   tasks:
     - name: remove vagrant and libvirt box
       block:
-        - shell: "vagrant box remove freeipa/{{ box_name }} 
-                  --provider {{ default_provider }} 
-                  --box-version {{ box_version }}"
-        - shell: "virsh vol-delete --pool default 
-                 {{ box_initial_name }}-{{ box_name }}_vagrant_box_image_{{ box_version }}.img"
-      when: user_confirmation == "YES" and box_name != "" and box_version != ""
+        - name: remove box from vagrant
+          shell: >
+            vagrant box remove freeipa/{{ box_name }}
+            --provider {{ default_provider }}
+            --box-version {{ box_version }}
+          register: res
+          changed_when: res.rc == 0
+          failed_when:
+            res.rc != 0
+            and "could not be found" not in res.stderr
+            and "not installed" not in  res.stderr
 
+        - name: delete image from libvirt
+          shell: >
+            virsh vol-delete --pool default
+            {{ box_initial_name }}-{{ box_name }}_vagrant_box_image_{{ box_version }}.img
+          register: res
+          changed_when: res.rc == 0
+          failed_when:
+            res.rc != 0
+            and "not found" not in res.stderr
+      when: user_confirmation == "YES" and box_name != "" and box_version != ""
