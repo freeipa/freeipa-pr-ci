@@ -98,8 +98,15 @@ from the up-to-date code should fix such issues.
 
 By default, ansible will prompt for API token and other variables. To fully
 automate the deployment, you can pass the variables as arguments to the
-`ansible-playbook` command with `-e key=value`. To find the variable names,
-check the ansible playbooks.
+`ansible-playbook` command with `-e key=value`. Arguments might be seen in
+the following table. Availability of arguments is also mentioned in the table.
+
+| Key                    | Value              | Production | Development |
+| ---------------------- |------------------- | :--------: | :---------: |
+| `github_token`         | GitHub API token   | x          | x           |
+| `monitored_repo_owner` | FreeIPA repo owner |            | x           |
+| `pr_ci_repo_owner`     | PR CI repo owner   |            | x           |
+| `pr_ci_repo_branch`    | PR CI repo branch  |            | x           |
 
 #### Monitoring runner activity
 
