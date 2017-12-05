@@ -10,10 +10,10 @@
       prompt: API token for GitHub
       private: false
     - name: pr_ci_repo_owner
-      prompt: Owner of PR CI repo to test
+      prompt: Owner of PR CI repo to deploy 
       private: false
     - name: pr_ci_repo_branch
-      prompt: Branch of PR CI repo to test
+      prompt: Branch of PR CI repo to deploy
       private: false
   gather_facts: false
   pre_tasks:
