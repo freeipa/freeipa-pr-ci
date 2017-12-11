@@ -46,7 +46,7 @@
     state: directory
 
 - name: get all packages
-  shell: rpm -qa > /vagrant/installed_packages/installed_packages_{{inventory_hostname}}.log
+  shell: rpm -qa | sort > /vagrant/installed_packages/installed_packages_{{inventory_hostname}}.log
 
 - name: create hosts file from template
   template:
