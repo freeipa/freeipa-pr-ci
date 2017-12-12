@@ -1,0 +1,31 @@
+---
+- name: create .ipa dir
+  file:
+    path: /root/.ipa
+    state: directory
+
+- name: create ui_test.conf
+  template:
+    src: ui_test.conf.j2
+    dest: /root/.ipa/ui_test.conf
+
+- name: deploy default.conf
+  copy:
+    src: default.conf
+    dest: /root/.ipa/default.conf
+
+- name: deploy script to execute webui tests
+  copy:
+    src: ipa-run-webui-tests
+    dest: /usr/local/bin/ipa-run-webui-tests
+    mode: 0755
+
+- name: install freeipa
+  shell: >
+    ipa-server-install -U
+    -n ipa.test
+    -r IPA.TEST
+    -p Secret.123
+    -a Secret.123
+    --setup-dns
+    --forwarder=192.168.121.1

@@ -1,0 +1,11 @@
+#!/bin/bash
+set -e
+trap 'kill $(jobs -p)' EXIT
+
+export PATH=$PATH:/opt
+export DISPLAY=:99
+/usr/bin/Xvfb $DISPLAY -ac -noreset -screen 0 1400x1200x8 > /dev/null &
+java -jar /opt/selenium.jar &
+IPATEST_YAML_CONFIG=/vagrant/ipa-test-config.yaml ipa-run-tests-3 "$@"
+
+exit 0

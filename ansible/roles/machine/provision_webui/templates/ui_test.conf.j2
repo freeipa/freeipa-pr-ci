@@ -1,0 +1,35 @@
+ipa_admin: admin
+ipa_password: Secret.123
+
+{% for host in groups['all'] %}
+{% if host.startswith('master') %}
+ipa_server: {{ hostvars[host]['inventory_hostname'] }}.ipa.test
+ipa_ip: {{ hostvars[host]['ansible_default_ipv4']['address'] }}
+ipa_domain: ipa.test
+ipa_realm: IPA.TEST
+{% endif %}
+{% endfor %}
+
+# Uncomment when IPA is installed without CA
+#no_ca: True
+
+# Uncomment when IPA is installed without DNS server
+#no_dns: True
+
+# Web driver setup:
+# =================
+# Selenium server is on localhost or remote machine.
+# Allowed: ['local', 'remote']
+type: local
+
+# Browser to test with
+# Allowed: ['chrome', 'chromium', 'firefox', 'ie']
+browser: firefox
+
+# Screenshots
+# ===========
+save_screenshots: False
+
+# Geckodriver setup:
+# =================
+geckodriver_log_path: /vagrant/geckodriver.log

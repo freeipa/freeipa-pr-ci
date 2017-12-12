@@ -8,7 +8,7 @@
       template:
         src: ipa-test-config.yaml
         dest: /vagrant/ipa-test-config.yaml
-  when: inventory_hostname == 'controller'
+  when: inventory_hostname == 'controller' or deploy_ipa_test_config
 
 - name: add PR build repository
   get_url:
