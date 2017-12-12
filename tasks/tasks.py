@@ -227,18 +227,14 @@ class RunPytest(JobTask):
     @with_vagrant
     def _run(self):
         try:
-            self.run_pytest()
+            self.execute_tests()
             logging.info('>>>>> TESTS PASSED <<<<<<')
             self.returncode = 0
         except TaskException as exc:
             self.returncode = exc.task.returncode
-            if self.returncode == 1:
-                logging.error('>>>>>> TESTS FAILED <<<<<<')
-            else:
-                logging.error('>>>>>> PYTEST ERROR ({code}) <<<<<<'.format(
-                    code=self.returncode))
+            self._handle_test_exception(exc)
 
-    def run_pytest(self):
+    def execute_tests(self):
         self.execute_subtask(
             PopenTask(['vagrant', 'ssh', '-c', (
                 'IPATEST_YAML_CONFIG=/vagrant/ipa-test-config.yaml '
@@ -247,3 +243,33 @@ class RunPytest(JobTask):
                 '--html=/vagrant/report.html'
                 ).format(test_suite=self.test_suite)],
                 timeout=None))
+
+    def _handle_test_exception(self, exc):
+        if self.returncode == 1:
+            logging.error('>>>>>> TESTS FAILED <<<<<<')
+        else:
+            logging.error('>>>>>> PYTEST ERROR ({code}) <<<<<<'.format(
+                code=self.returncode))
+
+
+class RunWebuiTests(RunPytest):
+    action_name = 'webui'
+
+    @property
+    def vagrantfile(self):
+        return constants.VAGRANTFILE_TEMPLATE.format(
+            vagrantfile_name=self.action_name)
+
+    def execute_tests(self):
+        self.execute_subtask(
+            PopenTask(['vagrant', 'ssh', '-c', (
+                'ipa-run-webui-tests {test_suite} '
+                '--verbose --logging-level=debug --logfile-dir=/vagrant/ '
+                '--html=/vagrant/report.html'
+                ).format(test_suite=self.test_suite)],
+                timeout=None))
+
+    def _handle_test_exception(self, exc):
+        logging.error(
+            '>>>>>> WEBUI TESTS FAILED (error code: {code}) <<<<<<'.format(
+                code=self.returncode))
