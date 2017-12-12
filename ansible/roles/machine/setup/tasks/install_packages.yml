@@ -36,6 +36,8 @@
     - PyYAML  # ipa-vagrant-ci dependency
     - vim
     - NetworkManager
+    - xorg-x11-server-Xvfb
+    - firefox
 
 - name: install py3 pip dependencies
   pip:
@@ -46,3 +48,20 @@
   pip:
     executable: pip
     name: "{{ python_packages_to_install | join(' ') }}"
+
+- name: download geckodriver
+  shell: |
+        VERSION=$(curl https://github.com/mozilla/geckodriver/releases/latest 2>/dev/null | \
+        egrep -o 'href="[^"]*"' | sed 's/href="//' | sed 's/"$//' | \
+        awk -F"/" '{print $NF}')
+        curl -L "https://github.com/mozilla/geckodriver/releases/download/$VERSION/geckodriver-$VERSION-linux64.tar.gz" | tar xzv -C /opt
+
+- name: download selenium
+  shell: |
+        URL="https://selenium-release.storage.googleapis.com"
+        SRC="$(curl $URL)"
+        MAIN_VERSION=$(echo "$SRC" | grep -oP '[\.0-9]*(?=/selenium-server-standalone)' | awk '{max=$1;if($1>max) {max=$1};} END {print max}')
+        SUBVERSION=$(echo "$SRC" | grep -oP "(?<=$MAIN_VERSION/selenium-server-standalone-$MAIN_VERSION\.)[0-9]" | awk '{max=$1;if($1>max) {max=$1};} END {print max}')
+        SELENIUM_VERSION=$MAIN_VERSION.$SUBVERSION
+        SELENIUM_JAR=selenium-server-standalone-${SELENIUM_VERSION}.jar
+        curl "$URL"/$MAIN_VERSION/$SELENIUM_JAR > /opt/selenium.jar
