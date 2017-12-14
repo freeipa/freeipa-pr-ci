@@ -4,6 +4,10 @@
       shell: awk '$1 == "nameserver" {print $2; exit}' /etc/resolv.conf
       register: dns_server
 
+    - name: set dns forwarder fact
+      set_fact:
+        dns_forwarder: "{{ dns_server.stdout }}"
+
     - name: create test config file
       template:
         src: ipa-test-config.yaml

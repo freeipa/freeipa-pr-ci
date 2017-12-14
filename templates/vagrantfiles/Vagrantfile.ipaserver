@@ -39,7 +39,7 @@ Vagrant.configure(2) do |config|
         master.vm.provision :ansible do |ansible|
             # Disable default limit to connect to all the machines
             ansible.limit = "all"
-            ansible.playbook = "../../ansible/provision_webui.yml"
+            ansible.playbook = "../../ansible/provision_ipaserver.yml"
             ansible.extra_vars = "vars.yml"
         end
     end

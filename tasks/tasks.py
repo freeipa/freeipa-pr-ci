@@ -258,7 +258,7 @@ class RunWebuiTests(RunPytest):
     @property
     def vagrantfile(self):
         return constants.VAGRANTFILE_TEMPLATE.format(
-            vagrantfile_name=self.action_name)
+            vagrantfile_name='ipaserver')
 
     def execute_tests(self):
         self.execute_subtask(
