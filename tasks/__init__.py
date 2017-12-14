@@ -1,2 +1,2 @@
 from .common import logging_init_stream_handler, TimeoutException
-from .tasks import Build, RunPytest, RunWebuiTests
+from .tasks import Build, RunPytest, RunWebuiTests, RunPytest2, RunPytest3
