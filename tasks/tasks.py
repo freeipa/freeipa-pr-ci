@@ -187,14 +187,16 @@ class Build(JobTask):
 
 class RunPytest(JobTask):
     action_name = 'run_pytest'
+    run_tests_cmd = 'ipa-run-tests'
 
     def __init__(self, template, build_url, test_suite, topology=None,
                  timeout=constants.RUN_PYTEST_TIMEOUT, update_packages=False,
-                 **kwargs):
+                 xmlrpc=False, **kwargs):
         super(RunPytest, self).__init__(template, timeout=timeout, **kwargs)
         self.build_url = build_url + '/'
         self.test_suite = test_suite
         self.update_packages = update_packages
+        self.xmlrpc = xmlrpc
 
         if not topology:
             topology = {'name': constants.DEFAULT_TOPOLOGY}
@@ -235,13 +237,20 @@ class RunPytest(JobTask):
             self._handle_test_exception(exc)
 
     def execute_tests(self):
+        if self.xmlrpc:
+            self.execute_subtask(
+                PopenTask(
+                    ['vagrant', 'ssh', '-c', "echo Secret.123 | kinit admin"],
+                    timeout=None))
         self.execute_subtask(
             PopenTask(['vagrant', 'ssh', '-c', (
                 'IPATEST_YAML_CONFIG=/vagrant/ipa-test-config.yaml '
-                'ipa-run-tests-2 {test_suite} '
+                '{run_tests_cmd} {test_suite} '
                 '--verbose --logging-level=debug --logfile-dir=/vagrant/ '
                 '--html=/vagrant/report.html'
-                ).format(test_suite=self.test_suite)],
+                ).format(
+                    run_tests_cmd=self.run_tests_cmd,
+                    test_suite=self.test_suite)],
                 timeout=None))
 
     def _handle_test_exception(self, exc):
@@ -250,6 +259,14 @@ class RunPytest(JobTask):
         else:
             logging.error('>>>>>> PYTEST ERROR ({code}) <<<<<<'.format(
                 code=self.returncode))
+
+
+class RunPytest2(RunPytest):
+    run_tests_cmd = 'ipa-run-tests-2'
+
+
+class RunPytest3(RunPytest):
+    run_tests_cmd = 'ipa-run-tests-3'
 
 
 class RunWebuiTests(RunPytest):
