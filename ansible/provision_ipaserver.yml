@@ -4,4 +4,4 @@
     deploy_ipa_test_config: true
   roles:
     - machine/provision
-    - machine/provision_webui
+    - machine/provision_ipaserver
