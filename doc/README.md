@@ -126,8 +126,12 @@ implemented the following basic jobs (see [tasks/tasks.py](../tasks/tasks.py)):
 - `Build` builds FreeIPA in a mock environment using the specified VM template
   that was generated with
   [ansible/create_template_box.yml](../ansible/create_template_box.yml)
-- `RunPytest` creates a multi host topology and runs a specified py.test suite,
-  also using the VM template above
+- `RunPytest` creates a topology and runs a specified py.test suite,
+  also using the VM template above; if `xmlrpc` argument is set to `True`, it
+  installs freeipa server and sets it up for xmlrpc tests
+- `RunPytest2` uses `ipa-run-tests-2`
+- `RunPytest3` uses `ipa-run-tests-3`
+- `RunWebuiTests` sets up freeipa server to execute webui tests
 
 See section [Template](#template) for details about the template.
 
