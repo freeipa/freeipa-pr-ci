@@ -1,0 +1,84 @@
+---
+- name: install packages dependencies
+  dnf:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - python3-github3py
+    - PyYAML
+
+- name: install pip dependencies
+  pip:
+    name: "{{ item }}"
+    executable: pip3
+  with_items:
+    - CacheControl
+    - gitpython
+
+- name: create base directory
+  file:
+    path: "{{ basedir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0700
+
+- name: create configuration file
+  template:
+    src: config.yml
+    dest: "{{ basedir }}/config.yml"
+
+- name: copy openclose_pr.py script
+  copy:
+    src: "{{ playbook_dir }}/../github/open_close_pr.py"
+    dest: "{{ basedir }}"
+
+- name: copy custom freeipa-pr-ci.yaml file
+  copy:
+    src: "{{ prci_config }}"
+    dest: "{{ basedir }}/{{ identifier }}.yaml"
+
+- name: copy git ssh key
+  copy:
+    src: "{{ git_sshkey }}"
+    dest: "/root/.ssh/git_ssh_key"
+    mode: 0600
+    owner: root
+    group: root
+
+- name: configure ssh to use the right ssh key when using git
+  blockinfile:
+    path: /root/.ssh/config
+    create: yes
+    block: |
+          Host github-pr_tool
+            Hostname github.com
+            IdentityFile /root/.ssh/git_ssh_key
+
+- name: clone freeipa fork
+  shell: git clone git@github-pr_tool:{{ repo_owner }}/freeipa.git {{ basedir }}/freeipa
+
+# - name: clone freeipa fork
+#   git:
+#     repo: "git@openclose_tool.com:{{ repo_owner }}/freeipa.git"
+#     dest: "{{ basedir }}/freeipa"
+
+# this is done to avoid confusion between the original remote (freeipa/freeipa)
+- name: rename remote origin to mygithub
+  shell: "cd {{ basedir }}/freeipa; git remote rename origin mygithub"
+
+- cron:
+    name: "openclose_{{ identifier }}"
+    minute: "0"
+    hour: "23"
+    job: >
+           python3 {{ basedir }}/open_close_pr.py
+           --config {{ basedir }}/config.yml
+           --id {{ identifier }}
+           --repo_path {{ basedir }}/freeipa
+           --branch {{ branch }}
+           --prci_config {{  basedir }}/{{ identifier }}.yaml
+           --pr_against_upstream {{ pr_against_upstream | bool }}
+           open_pr
+    user: root
+    state: present

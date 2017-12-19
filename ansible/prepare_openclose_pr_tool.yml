@@ -1,0 +1,46 @@
+---
+- hosts: scheduler
+  remote_user: root
+  name: deploy open_close_pr tool
+  vars:
+    repo_name: freeipa
+
+  vars_prompt:
+    - name: identifier
+      prompt: "Provide an unique identifier for the PR"
+      private: false
+
+    - name: branch
+      prompt: "Branch name to open PR against it"
+      private: false
+
+    - name: repo_owner
+      prompt: "Repo owner to create branches"
+      private: false
+
+    - name: github_token
+      prompt: "GitHub token"
+      private: false
+
+    - name: prci_config
+      prompt: "Provide a path to a .freeipa-pr-ci.yaml file to use it to open new PRs"
+      private: false
+    
+    - name: git_sshkey
+      prompt: "Provide a ssh key that has push access to the git repo"
+      private: false
+
+    - name: pr_against_upstream
+      prompt: "Should the PR be open against the upstream repo?. Type no for
+               opening it agaist your own freeipa repo (yes/no)"
+      private: false
+
+  pre_tasks:
+    - name: install python and deps for ansible modules
+      raw: dnf install -y python2 python2-dnf libselinux-python
+
+  roles:
+    - role: automation/openclose_pr
+      when: > 
+            prci_config != "" and github_token != "" and 
+            identifier != "" and  repo_owner != 'freeipa'

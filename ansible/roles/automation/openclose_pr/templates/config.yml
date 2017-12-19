@@ -1,0 +1,6 @@
+repository:
+    owner: {{ repo_owner }}
+    name: {{ repo_name }}
+credentials:
+    token: {{ github_token }}
+
