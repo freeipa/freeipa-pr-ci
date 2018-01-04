@@ -2,6 +2,7 @@
 - hosts: scheduler
   remote_user: root
   name: deploy open_close_pr tool
+  gather_facts: no
   vars:
     repo_name: freeipa
 

@@ -6,6 +6,7 @@
   with_items:
     - python3-github3py
     - PyYAML
+    - git
 
 - name: install pip dependencies
   pip:
@@ -51,21 +52,23 @@
     path: /root/.ssh/config
     create: yes
     block: |
-          Host github-pr_tool
+          Host github_pr_tool
             Hostname github.com
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
             IdentityFile /root/.ssh/git_ssh_key
 
 - name: clone freeipa fork
-  shell: git clone git@github-pr_tool:{{ repo_owner }}/freeipa.git {{ basedir }}/freeipa
-
-# - name: clone freeipa fork
-#   git:
-#     repo: "git@openclose_tool.com:{{ repo_owner }}/freeipa.git"
-#     dest: "{{ basedir }}/freeipa"
+  git:
+    repo: "git@github_pr_tool:{{ repo_owner }}/freeipa.git"
+    ssh_opts: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+    dest: "{{ basedir }}/freeipa"
+    update: no
 
 # this is done to avoid confusion between the original remote (freeipa/freeipa)
 - name: rename remote origin to mygithub
   shell: "cd {{ basedir }}/freeipa; git remote rename origin mygithub"
+  ignore_errors: True
 
 - cron:
     name: "openclose_{{ identifier }}"
