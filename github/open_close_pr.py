@@ -50,24 +50,33 @@ class AutomatedPR(object):
         Updates the .freeipa-pr-ci.yaml file with the content
         of the --prci_config provided file.
         """
+        repo = Repo(args.repo_path)
+
+        self.delete_local_branch(args)
+
+        # creates new branch using the identifier as the name
+        repo.git.checkout('-b', args.id)
+
         prci_config_file = os.path.join(args.repo_path,
                                         FREEIPA_PRCI_CONFIG_FILE)
 
-        shutil.copy(prci_config_file, new_prci_config)
+        shutil.copy(new_prci_config, prci_config_file)
 
-        repo = Repo(args.repo_path)
         repo.git.add(FREEIPA_PRCI_CONFIG_FILE)
         repo.git.commit('-m', DEFAULT_COMMIT_MSG)
-        repo.git.push(MYGITHUB_REMOTE_REF, args.id)
+        repo.git.push("-u", MYGITHUB_REMOTE_REF, args.id)
 
     def close_older_pr(self, identifier):
         refs = {r.ref:r for r in self.repo.refs()}
         ref_uri = '{}{}'.format(REF_FORMAT, identifier)
-        ref = refs[ref_uri]
-        ref.delete()
-        logger.debug("Branch %s deleted", identifier)
+        try:
+            ref = refs[ref_uri]
+            ref.delete()
+            logger.debug("Branch %s deleted", identifier)
+        except KeyError:
+            pass
 
-    def rebase_branch(self, base_branch, identifier, git_repo_path):
+    def rebase_branch(self, base_branch, git_repo_path):
         repo = Repo(git_repo_path)
 
         try:
@@ -79,16 +88,20 @@ class AutomatedPR(object):
         repo.git.fetch(UPSTREAM_REMOTE_REF)
         repo.git.checkout('{}/{}'.format(UPSTREAM_REMOTE_REF, base_branch))
 
-        # creates new branch using the identifier as the name
-        repo.git.checkout('-b', identifier)
-        repo.git.push(MYGITHUB_REMOTE_REF, '-u', identifier)
+    def delete_local_branch(self, args):
+        repo = Repo(args.repo_path)
+        repo.git.checkout(args.branch)
+        try:
+            repo.git.branch("-D", args.id)
+        except:
+            pass
 
     def open_pr(self, args):
         # before opening a new PR, we close the old one with the same
         # identifier. The PR list shoud have only one open PR.
         self.close_older_pr(args.id)
 
-        self.rebase_branch(args.branch, args.id, args.repo_path)
+        self.rebase_branch(args.branch, args.repo_path)
 
         self.commit_new_prci_config_file(args.prci_config, args)
 
@@ -109,6 +122,8 @@ class AutomatedPR(object):
             logger.info("PR %s created", pr.number)
         except github3.GitHubError as error:
             logger.error(error.errors)
+
+        self.delete_local_branch(args)
 
     def run(self, args):
         fnc = getattr(self, args.command)
@@ -147,8 +162,15 @@ def create_parser():
         help='freeIPA repo path'
     )
 
+    def __string_to_bool(value):
+        if value.lower() in ['yes', 'true', 't', 'y', '1']:
+            return True
+        elif value.lower() in ['no', 'false', 'f', 'n', '0']:
+            return False
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
     parser.add_argument(
-        '--pr_against_upstream', type=bool, required=True,
+        '--pr_against_upstream', type=__string_to_bool, required=True,
         help="Should the PR be open against the upstream repo?. Use False for "
              "opening agaist your own freeipa repo"
     )
