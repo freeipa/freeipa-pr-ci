@@ -1,0 +1,63 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+#
+
+Vagrant.configure(2) do |config|
+
+    config.ssh.username = "root"
+
+    config.vm.synced_folder "./", "/vagrant",
+        type: "nfs",
+        nfs_udp: false
+
+    config.vm.box = "{{ vagrant_template_name }}"
+    config.vm.box_version = "{{ vagrant_template_version }}"
+
+    config.vm.provider "libvirt" do |domain, override|
+        # Defaults for masters and replica
+        # WARNING: Do not overcommit CPUs, it causes issues during
+        # provisioning, when RPMs are installed
+        domain.cpus = 1
+        domain.memory = 2400
+
+        # Nested virtualization options
+        domain.nested = true
+        domain.cpu_mode = "host-passthrough"
+
+        # Disable graphics
+        domain.graphics_type = "none"
+
+        # Recommended for remote NFS storage
+        domain.volume_cache = "none"
+    end
+
+    config.vm.define "controller" , primary: true do |controller|
+        controller.vm.provider "libvirt" do |domain,override|
+            # Less resources needed for controller
+            domain.memory = 950
+        end
+
+        controller.vm.provision :ansible do |ansible|
+            # Disable default limit to connect to all the machines
+            ansible.limit = "all"
+            ansible.playbook = "../../ansible/provision.yml"
+            ansible.extra_vars = "vars.yml"
+        end
+    end
+
+    config.vm.define "master"  do |master|
+    end
+
+    config.vm.define "replica0"  do |replica0|
+    end
+
+    config.vm.define "replica1"  do |replica1|
+    end
+
+    config.vm.define "client0"  do |client0|
+        client0.vm.provider "libvirt" do |domain,override|
+            domain.memory = 950
+        end
+    end
+
+end
