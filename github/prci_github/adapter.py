@@ -36,7 +36,7 @@ class GitHubAdapter(CacheControlAdapter):
             logger.debug('%s: try %d', self.__class__.__name__, try_counter)
 
             # Rate-limit requests to avoid hitting GitHub API abuse limit
-            time.sleep(0.5)
+            time.sleep(1.5)
 
             try:
                 response = super(GitHubAdapter, self).send(
