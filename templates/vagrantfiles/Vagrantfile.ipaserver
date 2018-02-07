@@ -44,3 +44,5 @@ Vagrant.configure(2) do |config|
         end
     end
 end
+
+Vagrant::DEFAULT_SERVER_URL.replace('https://vagrantcloud.com')
