@@ -9,9 +9,10 @@
 - name: install python dependencies with pip
   pip:
     executable: pip3
-    state: present
+    state: latest
     name: "{{ item.name }}"
   with_items:
+    - name: "setuptools"
     - name: "github3.py>=1.0.0a4"
     - name: "CacheControl>=0.12.3"
 
