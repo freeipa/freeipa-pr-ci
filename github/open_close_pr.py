@@ -19,9 +19,9 @@ UPSTREAM_REMOTE_REF = 'upstream'
 MYGITHUB_REMOTE_REF = 'mygithub'
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 consoleHandler = logging.StreamHandler()
-consoleHandler.setLevel(logging.INFO)
+consoleHandler.setLevel(logging.DEBUG)
 logger.addHandler(consoleHandler)
 
 
@@ -67,7 +67,7 @@ class AutomatedPR(object):
         repo.git.push("-u", MYGITHUB_REMOTE_REF, args.id)
 
     def close_older_pr(self, identifier):
-        refs = {r.ref:r for r in self.repo.refs()}
+        refs = {r.ref: r for r in self.repo.refs()}
         ref_uri = '{}{}'.format(REF_FORMAT, identifier)
         try:
             ref = refs[ref_uri]
@@ -86,7 +86,9 @@ class AutomatedPR(object):
             pass
 
         repo.git.fetch(UPSTREAM_REMOTE_REF)
-        repo.git.checkout('{}/{}'.format(UPSTREAM_REMOTE_REF, base_branch))
+        repo.git.checkout(base_branch)
+        repo.git.pull(UPSTREAM_REMOTE_REF, base_branch)
+        repo.git.push(MYGITHUB_REMOTE_REF, base_branch)
 
     def delete_local_branch(self, args):
         repo = Repo(args.repo_path)
@@ -107,14 +109,16 @@ class AutomatedPR(object):
 
         pr_title = '[{}] Nightly PR'.format(args.id)
 
-        logger.debug("A new PR against %s/%s will be created with "
-                     "the title %s", self.repo.owner.login,
-                     self.repo.source.name, pr_title)
+        owner = ('freeipa' if args.pr_against_upstream
+                 else self.repo.owner.login)
+        logger.debug("A new PR against %s/freeipa will be created with "
+                     "the title %s", owner, pr_title)
 
         try:
             if args.pr_against_upstream:
-                base = 'freeipa:{}'.format(args.branch)
-                pr = self.upstream_repo.create_pull(pr_title, base, args.id)
+                users_head = '{}:{}'.format(self.repo.owner.login, args.id)
+                pr = self.upstream_repo.create_pull(pr_title, args.branch,
+                                                    users_head)
             else:
                 # will open a PR against user's fork
                 pr = self.repo.create_pull(pr_title, args.branch, args.id)
