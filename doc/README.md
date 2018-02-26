@@ -447,3 +447,29 @@ refreshed.
 0836fde2b73bac4c48731de7c4d0a5b91bbe2e17: runner is periodically rebooted after
 3 hours. See commit message for explanation. The behavior causing the issues was
 observed in ABC lab with Fedora 25.
+
+## Other tools
+
+### PR Scheduler
+With the need of scheduling nightly PRs, a tool was design to do that. It's a
+python script which creates a PR in a GH repo, commiting a change in the
+`.freeipa-pr-ci.yaml` file.
+
+The script needs a freeipa fork to work, because it will use this fork to create
+branches and open PRs. You can run the ansible playbook multiple times to
+schedule multiple PRs, but to each PR you want to create you need to provide a
+different identifier (ID). This ID is used to create the branch and to name the
+PR.
+
+To deploy it in some VM, you can use the `prepare_openclose_pr_tool.yml` ansible
+playbook.
+Add this to the inventory file:
+```
+[scheduler]
+1.2.3.4  # your VM IP
+```
+
+Then run:
+```
+ansible-playbook -i ansible/hosts/runners ansible/prepare_openclose_pr_tool.yml
+```
