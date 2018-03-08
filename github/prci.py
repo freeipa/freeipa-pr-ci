@@ -3,141 +3,37 @@
 import argparse
 import logging
 import logging.config
-import os
-import random
-import raven
 import signal
-import subprocess
 import sys
-import time
-import yaml
+from functools import partial
+from time import sleep
+from typing import Dict, Iterator, Optional, Text
 
 import github3
-import redis
+import yaml
+from github3.exceptions import NotFoundError
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from prci_github import TaskQueue, AbstractJob, JobResult
-from prci_github.adapter import GitHubAdapter
+from internals.entities import (
+    ExitHandler, JobDispatcher, PullRequest, Status, Task, World,
+    sentry_report_exception
+)
+from internals.gql import util, queries
 
 
-SENTRY_URL = 'https://d24d8d622cbb4e2ea447c9a64f19b81a:4db0ce47706f435bb3f8a02a0a1f2e22@sentry.io/193222'
+logger = logging.getLogger(__name__)
+
+
 ERROR_BACKOFF_TIME = 600
-REBOOT_DELAY = 3600 * 3
-REBOOT_TIME_FILE = '/root/next_reboot'
-logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
-class ExitHandler(object):
-    done = False
-    aborted = False
-    task = None
-
-    def finish(self, signum, frame):
-        if self.done:
-            return self.abort(signum, frame)
-
-        logger.info("Waiting for current task to finish. This may take long.")
-        self.done = True
-
-    def abort(self, signum, frame):
-        if self.aborted:
-            return self.quit()
-
-        if self.task:
-            self.task.abort()
-            logger.info("Waiting for aborted task to clean up. This may take "
-                        "few minutes.")
-
-        self.done = True
-        self.aborted = True
-
-    def quit(self):
-        logger.info("Quiting just now! No results will be reported.")
-        sys.exit()
-
-    def register_task(self, task):
-        self.task = task
-
-    def unregister_task(self):
-        self.task = None
+def skipping_pr(reason: Text, number: int) -> None:
+    logger.info("Skipping PR#%s: %s", number, reason)
 
 
-class Job(AbstractJob):
-    def __call__(self, depends_results={}):
-        url = None
-        description = None
-
-        dep_results = {}
-        for task_name, result in depends_results.items():
-            desc_key = '{}_description'.format(task_name)
-            url_key = '{}_url'.format(task_name)
-            dep_results[desc_key] = result.description
-            dep_results[url_key] = result.url
-
-        cmd = self.job.format(target_refspec=self.target, **dep_results)
-
-        try:
-            url = subprocess.check_output(cmd, shell=True)
-        except subprocess.CalledProcessError as err:
-            logging.error(err, exc_info=True)
-            if err.returncode == 1:
-                state = 'error'
-                url = ''
-            else:
-                raise
-        else:
-            state = 'success'
-            description = ''
-
-        return JobResult(state, description, url)
-
-
-class JobDispatcher(AbstractJob):
-    def __init__(self, job, build_target):
-        super(JobDispatcher, self).__init__(job, build_target)
-        self.klass = getattr(
-            __import__('tasks', fromlist=[self.job['class']]),
-            self.job['class'])
-        self.kwargs = self.job['args']
-        self.kwarg_lookup = {
-            'git_repo': build_target[0],
-            'git_refspec': build_target[1]}
-
-    @property
-    def timeout(self):
-        return self.kwargs.get('timeout') or 0
-
-    def __call__(self, depends_results=None):
-        if depends_results is not None:
-            for task_name, result in depends_results.items():
-                self.kwarg_lookup['{}_description'.format(task_name)] = \
-                    result.description
-                self.kwarg_lookup['{}_url'.format(task_name)] = result.url
-
-        kwargs = {}
-        for key, value in self.kwargs.items():
-            if isinstance(value, str):
-                value = value.format(**self.kwarg_lookup)
-            kwargs[key] = value
-
-        job = self.klass(**kwargs)
-        try:
-            job()
-        except Exception as exc:
-            logging.error(exc, exc_info=True)
-            description = '{type_}: {msg}'.format(type_=type(exc).__name__,
-                                                  msg=str(exc))
-            state = 'error'
-
-            sentry_report_exception({'module': 'tasks'})
-        else:
-            description = job.description
-            if job.returncode == 0:
-                state = 'success'
-            else:
-                state = 'failure'
-
-        return JobResult(state, description, job.remote_url)
+def skipping_task(reason: Text, task: Task) -> None:
+    logger.info(
+        "Skipping %s of #%s: %s", task.name, task.pr_number, reason
+    )
 
 
 def create_parser():
@@ -146,12 +42,12 @@ def create_parser():
             try:
                 with open(yml_path) as yml_file:
                     return yaml.load(yml_file)
-            except IOError as exc:
+            except IOError as e:
                 raise argparse.ArgumentTypeError(
-                    'Failed to open {}: {}'.format(yml_path, exc))
-            except yaml.YAMLError as exc:
+                    'Failed to open {}: {}'.format(yml_path, e))
+            except yaml.YAMLError as e:
                 raise argparse.ArgumentTypeError(
-                    'Failed to parse YAML from {}: {}'.format(yml_path, exc))
+                    'Failed to parse YAML from {}: {}'.format(yml_path, e))
 
         config = load_yaml(path)
         try:
@@ -187,57 +83,131 @@ def create_parser():
     return parser
 
 
-def update_runner(repo, creds):
-    cmd = ['git', 'pull']
-    stdout = subprocess.check_output(cmd).decode('utf-8')
-    if 'Already up-to-date' not in stdout:
-        logger.info('Code change detected, re-deploying runner')
-        subprocess.call([
-            'ansible-playbook',
-            '-i', 'ansible/hosts/runner_localhost',
-            '-e', 'github_token={}'.format(creds['token']),
-            '-e', 'deploy_ssh_key=false',
-            'ansible/prepare_test_runners.yml'])
+def process_pull_request(
+    world: World, pull_request: PullRequest, repository_url: Text
+) -> Optional[Iterator[Task]]:
 
+    if pull_request.postponed:
+        skipping_pr("postponed", pull_request.number)
+        return None
 
-def sentry_report_exception(context=None):
-    sentry = raven.Client(SENTRY_URL)
+    if not pull_request.mergeable:
+        skipping_pr("can't be merged", pull_request.number)
+        if not pull_request.needs_rebase:
+            pull_request.add_rebase_label(world)
+        return None
 
-    if context is not None:
-        with sentry.context:
-            sentry.context.merge(context)
     try:
-        sentry.captureException()
-    finally:
-        sentry.context.clear()
+        tasks_data = pull_request.get_tasks_data(world)
+    except (yaml.error.YAMLError, TypeError, KeyError) as e:
+        logger.error(e)
+        return None
+
+    if pull_request.needs_rerun:
+        # If all statuses are not failed (not in state ERROR or FAILURE) and
+        # re-run label was set previously, remove the re-run label
+        if all(map(
+            lambda t: t in pull_request.commit.statuses
+            and not pull_request.commit.statuses[t].failed,
+            tasks_data.keys()
+        )):
+            try:
+                pull_request.remove_rerun_label(world)
+            except NotFoundError as e:
+                logger.warning(e)
+
+    for name, task_data in tasks_data.items():
+        task = Task(
+            name, pull_request.number, pull_request.commit.sha,
+            repository_url, task_data, JobDispatcher
+        )
+        if task.name not in pull_request.commit.statuses:
+            if (
+                pull_request.author in world.whitelist
+                or pull_request.needs_rerun
+            ):
+                logger.info(
+                    "PR#%s %s updating status to unassigned",
+                    pull_request.number, task.name
+                )
+                try:
+                    task.set_unassigned(world)
+                except EnvironmentError as e:
+                    logger.error(e)
+                continue
+
+        status = pull_request.commit.statuses.get(task.name)
+        if status is not None:
+            task = process_status(
+                world, status, task, pull_request.needs_rerun
+            )
+            if task is None:
+                continue
+
+        task = process_task(world, task, pull_request.commit.statuses)
+        if task is None:
+            continue
+
+        yield task
 
 
-def check_reboot(repo, creds):
-    def plan_reboot(delay=REBOOT_DELAY):
-        next_reboot = int(time.time()) + delay
-        with open(REBOOT_TIME_FILE, 'w') as f:
-            f.write(str(next_reboot))
+def process_status(
+    world: World, status: Status, task: Task, needs_rerun: bool=False
+) -> Optional[Task]:
+    """Checks for status related skipping conditions"""
+    if status.unassigned or status.rerun_pending:
+        return task
 
-    def read_reboot_time():
+    if needs_rerun:
+        if status.failed:
+            logger.info(
+                "Setting pending %s PR #%s",
+                task.name, task.pr_number
+            )
+            try:
+                task.set_rerun(world)
+            except EnvironmentError as e:
+                logger.warning(e)
+
+    if status.stalled(task):
+        logger.info(
+            "Task %s on PR #%s is stale. Updating for rerun.",
+            task.name, task.pr_number
+        )
         try:
-            with open(REBOOT_TIME_FILE, 'r') as f:
-                return int(f.read())
-        except FileNotFoundError:
-            return None
+            task.set_rerun(world)
+        except EnvironmentError as e:
+            logger.warning(e)
 
-    reboot_time = read_reboot_time()
-    if reboot_time is None:
-        plan_reboot(delay=random.randint(1, REBOOT_DELAY))
-        return
 
-    if time.time() > reboot_time:
-        try:
-            update_runner(repo, creds)
-        except:
-            sentry_report_exception()
-        plan_reboot()
-        logging.info('Rebooting the machine')
-        subprocess.call('reboot', shell=True)
+def process_task(
+    world: World, task: Task, statuses: Dict
+) -> Optional[Task]:
+    """Checks for task related skipping conditions"""
+    if not world.available_resources.check(task):
+        skipping_task("not enough resources", task)
+        return None
+
+    if not task.check_dependencies(statuses):
+        skipping_task("waiting for dependencies", task)
+        return None
+
+    logger.info(
+        "Attempting to lock a task %s for PR#%s.",
+        task.name, task.pr_number
+    )
+    try:
+        task.lock(world)
+    except EnvironmentError as e:
+        logger.warning(e)
+        return None
+
+    logger.info(
+        "%s PR#%s is successfully locked.",
+        task.name, task.pr_number
+    )
+
+    return task
 
 
 def main():
@@ -247,49 +217,80 @@ def main():
     runner_id = args.ID
     config = args.config
 
-    creds = config['credentials']
-    repo = config['repository']
-    tasks_file = config['tasks_file']
-    whitelist = config['whitelist']
-    no_task_backoff_time = config['no_task_backoff_time']
+    credentials = config["credentials"]
+    repo = config["repository"]
+    tasks_path = config["tasks_file"]
+    whitelist = config["whitelist"]
+    no_task_backoff_time = config["no_task_backoff_time"]
 
-    logging.config.dictConfig(config['logging'])
+    logging.config.dictConfig(config["logging"])
 
-    github = github3.login(token=creds['token'])
-    github.session.mount('https://api.github.com',
-                         GitHubAdapter(cache=redis.Redis()))
+    exit_handler = ExitHandler()
+    signal.signal(signal.SIGINT, exit_handler.finish)
+    signal.signal(signal.SIGTERM, exit_handler.abort)
 
-    repo = github.repository(repo['owner'], repo['name'])
-    task_queue = TaskQueue(repo, tasks_file, JobDispatcher, runner_id,
-                           whitelist)
+    gh = github3.login(token=credentials["token"])
+    session = util.create_session(util.make_headers(credentials["token"]))
+    do_request = partial(util.perform_request, session=session)
 
-    handler = ExitHandler()
-    signal.signal(signal.SIGINT, handler.finish)
-    signal.signal(signal.SIGTERM, handler.abort)
+    world = World(
+        graphql_request=do_request,
+        github_api=gh,
+        session=session,
+        repo_owner=repo["owner"],
+        repo_name=repo["name"],
+        runner_id=runner_id,
+        tasks_path=tasks_path,
+        whitelist=whitelist
+    )
 
-    while not handler.done:
+    while not exit_handler.done:
+        world.check_graphql_limit()
+
         try:
-            task_queue.create_tasks_for_pulls()
+            response = do_request(
+                query=queries.make_pull_requests_query(
+                    world.repo_owner, world.repo_name
+                )
+            )
+        except EnvironmentError as e:
+            logger.error(e)
+            sys.exit(1)
 
-            try:
-                task = next(task_queue)
-            except StopIteration:
-                time.sleep(no_task_backoff_time)
-                continue
+        data = util.get_data(response)
+        repo = util.get_repository(data)
+        repo_url = util.get_repository_url(repo)
+        pull_requests_data = util.get_pull_requests(repo)
 
-            handler.register_task(task)
-            task.execute()
-        except Exception:
-            sentry_report_exception({'module': 'github'})
-            time.sleep(ERROR_BACKOFF_TIME)
-        finally:
-            handler.unregister_task()
+        pull_requests = sorted(
+            (
+                PullRequest.from_dict(pr_data)
+                for pr_data in pull_requests_data
+            ),
+            key=lambda pr: not pr.prioritized
+        )
+        for pull_request in pull_requests:
+            for task in process_pull_request(world, pull_request, repo_url):
+                exit_handler.register_task(task)
+                world.available_resources.take(task)
+                logger.info(
+                    "Available resources: %s", world.available_resources
+                )
+                try:
+                    task.execute(world, pull_request.commit.statuses)
+                except (EnvironmentError, RuntimeError) as e:
+                    logger.error(e)
+                    sentry_report_exception({"module": "github"})
+                    sleep(ERROR_BACKOFF_TIME)
+                finally:
+                    exit_handler.unregister_task()
+                    world.available_resources.give(task)
+                    logger.info(
+                        "Available resources: %s", world.available_resources
+                    )
 
-            try:
-                check_reboot(repo, creds)
-            except:
-                sentry_report_exception()
+        sleep(no_task_backoff_time)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
