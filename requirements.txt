@@ -1,0 +1,14 @@
+setuptools
+psutil
+pytz
+PyYAML
+python-dateutil
+github3.py>=1.0.0a4
+parse
+raven
+CacheControl>=0.12.3
+jinja2
+pytest
+GitPython
+tqdm
+requests

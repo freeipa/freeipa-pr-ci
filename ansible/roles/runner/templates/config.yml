@@ -22,7 +22,5 @@ logging:
     loggers:
         __main__:
             level: DEBUG
-        prci_github:
+        internals:
             level: DEBUG
-        prci_github.adapter:
-            level: WARNING

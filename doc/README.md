@@ -49,7 +49,7 @@ can be one of `pending`, `success`, `error` and `failure`.
 
 One of the runner's responsibilities is to generate `pending` commit
 statuses for jobs, to signal these jobs have to be executed as part of the
-CI testing. The source of the job defitions can be configured. For FreeIPA,
+CI testing. The source of the job definitions can be configured. For FreeIPA,
 it's set to `.freeipa-pr-ci.yaml` file in the root of the repository. This job
 definition file contains the necessary information to execute a job along with
 a unique job identifier, which is used for the commit status' context. The job
@@ -76,21 +76,6 @@ tuple containing:
 - `True` if PR has *prioritize* label, `False` otherwise,
 - job priority from the job definition file,
 - number of completed jobs for PR.
-
-#### CacheControl
-
-GitHub imposes a [rate limit](https://developer.github.com/v3/#rate-limiting)
-of 5000 API requests per hour. To avoid exceeding this limit, they also offer
-[conditional requests](https://developer.github.com/v3/#conditional-requests),
-which return data only if they changed and `304 Not Modified` otherwise.
-Conditional requests aren't deducted from the API limit. For this reason we use
-[CacheControl](https://github.com/ionrock/cachecontrol) which handles the
-conditional requests and transparently returns the latest up-to-date data with
-`200 OK`.
-
-As a CacheControl backend, we use a persistent cache
-[redis](https://redis.io/). This was necessary to avoid hitting the rate limit
-when rebooting the runners.
 
 ### B. Executing a job
 
@@ -120,7 +105,7 @@ next job.
 
 #### Executing a job
 
-In theory, PR CI can be used for arbitraty code execution. In practice, we've
+In theory, PR CI can be used for arbitrary code execution. In practice, we've
 implemented the following basic jobs (see [tasks/tasks.py](../tasks/tasks.py)):
 
 - `Build` builds FreeIPA in a mock environment using the specified VM template
@@ -141,7 +126,7 @@ After PR#83, it's possible to re-run only the failed tasks. To do that, the
 user just need to add the `RERUN_LABEL` label to the PR. In the next iteration,
 the code will check if the PR has tasks in status `error` or `failure`, and if
 it has the `RERUN_LABEL` label. If true, the tasks will have their status
-changed to `unassigned`.
+changed to `pending for rerun`.
 
 You can also re-run a PR in order to get new tasks that were added in the
 config file to the target branch.
@@ -180,7 +165,7 @@ The job can end in multiple ways:
   are uploaded. This can signify an issue with both the PR CI infrastructure or
   the changes proposed in the PR.
 
-A proper cleanup (decomissioning VMs, etc) should happen in all cases.
+A proper cleanup (decommissioning VMs, etc) should happen in all cases.
 
 ## Job definition file
 
@@ -404,7 +389,7 @@ available, this limit could be hit.
 
 #### Abuse limit
 
-Even the cached requests (wich return 304) are limited by the GitHub API.
+Even the cached requests (which returns 304) are limited by the GitHub API.
 Experimental testing showed 1500 requests per minute to be safe. Since a
 queue of 50 PR can take about 250 API requests to scan, this limit can be hit
 when multiple runners are polling the queue.
@@ -412,7 +397,7 @@ when multiple runners are polling the queue.
 Since the entire system is designed to have parallel testing with multiple
 runners, this limit can be hit, even with as little as ten runners. There is
 no good way to synchronize the runners or share the queue, so the workaround
-is to artifically slow down the rate at which the runners can query the API
+is to artificially slow down the rate at which the runners can query the API
 (see [PR#65](https://github.com/freeipa/freeipa-pr-ci/pull/65)).
 
 This imposes a limitation on the number of runners and open PRs. Currently,
@@ -440,19 +425,11 @@ To work around the potential re-run issue, a PR can be rebased (without any
 changes, just to generate new commit) and the commit status limit will be
 refreshed.
 
-## Workarounds
-
-### 3-hour reboot
-
-0836fde2b73bac4c48731de7c4d0a5b91bbe2e17: runner is periodically rebooted after
-3 hours. See commit message for explanation. The behavior causing the issues was
-observed in ABC lab with Fedora 25.
-
 ## Other tools
 
 ### PR Scheduler
 With the need of scheduling nightly PRs, a tool was design to do that. It's a
-python script which creates a PR in a GH repo, commiting a change in the
+python script which creates a PR in a GH repo, committing a change in the
 `.freeipa-pr-ci.yaml` file.
 
 The script needs a freeipa fork to work, because it will use this fork to create
@@ -472,4 +449,10 @@ Add this to the inventory file:
 Then run:
 ```
 ansible-playbook -i ansible/hosts/runners ansible/prepare_openclose_pr_tool.yml
+```
+
+## How to run available unit tests
+Make a venv and then in a project root run
+```
+python -m pytest
 ```
