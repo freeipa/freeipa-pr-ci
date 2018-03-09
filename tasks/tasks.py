@@ -247,7 +247,8 @@ class RunPytest(JobTask):
                 'IPATEST_YAML_CONFIG=/vagrant/ipa-test-config.yaml '
                 '{run_tests_cmd} {test_suite} '
                 '--verbose --logging-level=debug --logfile-dir=/vagrant/ '
-                '--html=/vagrant/report.html'
+                '--html=/vagrant/report.html '
+                '--junit-xml=/vagrant/junit.xml'
                 ).format(
                     run_tests_cmd=self.run_tests_cmd,
                     test_suite=self.test_suite)],
