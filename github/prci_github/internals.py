@@ -274,9 +274,7 @@ class Tasks(collections.Set, collections.Mapping):
                 repo=repo, ref=pull.pull.base.ref, tasks_path=tasks_config_path
             )
             log_retrieve(url)
-            response = session.get(
-                tasks_file_url.format(url)
-            )
+            response = session.get(url)
         try:
             self.tasks_conf = yaml.load(response.content)['jobs']
         except (yaml.error.YAMLError, TypeError, KeyError) as err:
