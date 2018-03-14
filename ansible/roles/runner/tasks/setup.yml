@@ -10,6 +10,11 @@
     name: dnf-makecache.service
     state: stopped
 
+- name: upgrade packages
+  dnf:
+    name: "*"
+    state: latest
+
 - name: install runner dependencies
   dnf:
     name: "{{ item }}"
