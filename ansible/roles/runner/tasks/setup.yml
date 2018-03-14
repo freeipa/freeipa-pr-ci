@@ -26,6 +26,7 @@
     - createrepo
     - gzip
     - gcc
+    - firewalld
     - python3-devel
     - python3-pip
     - redhat-rpm-config
@@ -39,8 +40,30 @@
     - python3-tqdm
     - python3-pytz
     - python3-jinja2
+    - python-firewall
+    - python3-firewall
   notify:
     - restart_nfs
+
+- name: enable firewalld
+  service:
+    name: firewalld
+    enabled: true
+    state: started
+
+- name: configure firewalld
+  firewalld:
+    service : "{{ item }}"
+    permanent: true
+    state: enabled
+  with_items:
+    - nfs
+    - ipp
+    - rpc-bind
+    - mountd
+
+- name: reload firewalld
+  shell: firewall-cmd --reload
 
 - name: start&enable nfs
   service:
