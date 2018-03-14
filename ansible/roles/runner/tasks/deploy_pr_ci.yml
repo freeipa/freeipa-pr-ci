@@ -6,16 +6,6 @@
     version: "{{ pr_ci_repo_branch }}"
     force: true
 
-- name: install python dependencies with pip
-  pip:
-    executable: pip3
-    state: latest
-    name: "{{ item.name }}"
-  with_items:
-    - name: "setuptools"
-    - name: "github3.py>=1.0.0a4"
-    - name: "CacheControl>=0.12.3"
-
 - name: create config directory if it dosn't exist
   file:
     path: /root/.config/freeipa-pr-ci
