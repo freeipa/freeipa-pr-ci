@@ -50,3 +50,21 @@
   template:
     src: ui_test.conf.j2
     dest: /root/.ipa/ui_test.conf
+
+- name: add service csr
+  copy:
+    src: service.csr
+    dest: /root/.ipa/service.csr
+    mode: 0755
+
+- name: add host csr
+  copy:
+    src: host.csr
+    dest: /root/.ipa/host.csr
+    mode: 0755
+
+- name: add user csr
+  copy:
+    src: user.csr
+    dest: /root/.ipa/user.csr
+    mode: 0755
