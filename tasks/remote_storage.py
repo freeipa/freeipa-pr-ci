@@ -17,6 +17,7 @@ class GzipLogFiles(PopenTask):
             '-a ! -path "*/assets/*" '
             '-a ! -path "*/rpms/*" '
             '-a ! -name "*.gz" '
+            '-a ! -name "*.png" '
             '-a ! -name "Vagrantfile" '
             '-a ! -name "ipa-test-config.yaml" '
             '-a ! -name "vars.yml" '
