@@ -20,6 +20,7 @@
     name: "{{ item }}"
     state: present
   with_items:
+    - tuned
     - vagrant
     - vagrant-libvirt
     - libguestfs-tools-c  # required for vagrant package command
@@ -65,6 +66,15 @@
     name: nfs
     enabled: true
     state: started
+
+- name: start&enable tuned
+  service:
+    name: tuned
+    enabled: true
+    state: started
+
+- name: select tuned profile
+  shell: tuned-adm profile virtual-host
 
 - name: start&enable libvirt services
   service:
