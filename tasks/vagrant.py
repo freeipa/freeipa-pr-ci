@@ -70,14 +70,24 @@ class VagrantCleanup(VagrantTask):
                 PopenTask(['vagrant', 'destroy']))
         except PopenException:
             self.execute_subtask(
-                PopenTask(['pkill', '-9', 'bin/vagrant'],
+                PopenTask(['pkill', '-9', '-f', '".*/bin/vagrant.*"'],
                           raise_on_err=False))
             self.execute_subtask(
-                PopenTask(['systemctl', 'restart', 'libvirt'],
+                PopenTask(['systemctl', 'restart', 'libvirtd'],
                           raise_on_err=False))
             self.execute_subtask(
                 PopenTask(['vagrant', 'destroy'],
                           raise_on_err=False))
+            self.execute_subtask(
+                PopenTask(
+                    [
+                        'pkill', '-9', '-f',
+                        '".*(\/bin\/qemu-system-x86_64).*'
+                        '(master|replica|client|controller)*"'
+                    ],
+                    raise_on_err=False
+                )
+            )
 
 
 class VagrantBoxDownload(VagrantTask):
