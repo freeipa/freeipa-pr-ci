@@ -584,7 +584,14 @@ class Task(object):
         """
         status = world.poll_status(self.pr_number, self.name)
 
-        if status is not None and status.pending and status.taken:
+        if status.failed or status.succeeded:
+            raise EnvironmentError(
+                "Task '{}' PR#{} was already processed.".format(
+                    self.name, self.pr_number
+                )
+            )
+
+        if status.pending and status.taken:
             raise EnvironmentError(
                 "Task '{}' PR#{} is already locked.".format(
                     self.name, self.pr_number
