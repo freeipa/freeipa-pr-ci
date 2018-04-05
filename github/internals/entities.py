@@ -176,7 +176,7 @@ class World(object):
         statuses = util.get_statuses(commit)
         status = util.get_status(statuses, task_name)
         if not status:
-            raise RuntimeError("Can't parse status data.")
+            raise EnvironmentError("Can't parse status data.")
 
         return Status.from_dict(status)
 
