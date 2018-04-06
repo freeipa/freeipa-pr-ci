@@ -625,14 +625,17 @@ class Task(object):
         """
         try:
             status = world.poll_status(self.pr_number, self.name)
-            if status.processing:
-                raise EnvironmentError(
-                    "Already processing task {} PR#{}".format(
-                        self.name, self.pr_number
-                    )
-                )
-        except RuntimeError:
+        except EnvironmentError:
             world.create_status(self, State.PENDING, "unassigned")
+            return
+
+        if status.processing:
+            raise EnvironmentError(
+                "Already processing task {} PR#{}".format(
+                    self.name, self.pr_number
+                )
+            )
+
 
     def set_rerun(self, world: World) -> None:
         """Creates a commit status on GitHub using REST API
