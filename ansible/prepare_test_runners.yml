@@ -17,3 +17,17 @@
       deploy_ssh_key: true
       enable_nested_virt: true
       create_systemd_unit: true
+  post_tasks:
+    - name: reboot host
+      shell: sleep 2 && /sbin/shutdown -r now "Packages upgrade"
+      async: 1
+      poll: 0
+      ignore_errors: true
+    - name: wait for server to come back
+      local_action: wait_for
+      args:
+        host: "{{ inventory_hostname }}"
+        port: 22
+        state: started
+        delay: 30
+        timeout: 300
