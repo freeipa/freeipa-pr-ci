@@ -643,7 +643,13 @@ class Task(object):
         Sets the status description to RERUN_PENDING value.
         """
         status = world.poll_status(self.pr_number, self.name)
-        if status is not None and status.rerun_pending:
+        if status.succeeded or status.taken:
+            raise EnvironmentError(
+                "Task {} PR#{} is changed".format(
+                    self.name, self.pr_number
+                )
+            )
+        if status.rerun_pending:
             raise EnvironmentError(
                 "Task {} PR#{} is already updated for rerun".format(
                     self.name, self.pr_number
