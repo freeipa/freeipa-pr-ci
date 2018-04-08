@@ -184,6 +184,15 @@ def process_task(
     world: World, task: Task, statuses: Dict
 ) -> Optional[Task]:
     """Checks for task related skipping conditions"""
+
+    # If there's no task name in GitHub commit statuses, we should skip it
+    # It happens in a case when PR's author is not listed in whitelist
+    # and statuses creation was not triggered by adding a re-run label by
+    # someone from whitelist
+    if statuses.get(task.name) is None:
+        skipping_task("GitHub status doesn't exist", task)
+        return None
+
     if not world.available_resources.check(task):
         skipping_task("not enough resources", task)
         return None
