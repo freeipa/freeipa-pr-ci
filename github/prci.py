@@ -171,11 +171,11 @@ def process_status(
 
     if status.stalled(task):
         logger.info(
-            "Task %s on PR #%s is stale. Updating for rerun.",
+            "Task %s on PR #%s is stale. Setting unassigned.",
             task.name, task.pr_number
         )
         try:
-            task.set_rerun(world)
+            task.set_unassigned(world)
         except EnvironmentError as e:
             logger.warning(e)
 
