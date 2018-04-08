@@ -643,7 +643,7 @@ class Task(object):
         Sets the status description to RERUN_PENDING value.
         """
         status = world.poll_status(self.pr_number, self.name)
-        if status.succeeded or status.taken:
+        if status.succeeded or (status.taken and not status.stalled):
             raise EnvironmentError(
                 "Task {} PR#{} is changed".format(
                     self.name, self.pr_number
