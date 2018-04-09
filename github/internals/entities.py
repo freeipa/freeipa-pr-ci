@@ -3,6 +3,7 @@ import sys
 from collections.abc import Callable as AbcCallable
 from datetime import datetime, timedelta
 from enum import Enum, unique
+from random import randint
 from time import sleep
 from typing import Callable, ByteString, Dict, List, Text, Tuple, SupportsFloat
 
@@ -163,6 +164,7 @@ class World(object):
         self, pr_number: int, task_name: Text
     ) -> "Status":
         """Gets commit status on GitHub using GraphQL API"""
+        sleep(randint(3, 8))  # FIXME: We're polling too concurrently
         pr_query = queries.make_pull_request_query(
             self.repo_owner, self.repo_name, pr_number
         )
