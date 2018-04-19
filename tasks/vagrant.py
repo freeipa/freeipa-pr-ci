@@ -9,7 +9,7 @@ def with_vagrant(func):
     def wrapper(self, *args, **kwargs):
         try:
             __setup_provision(self)
-        except TaskException as exc:
+        except (PopenException, TaskException) as exc:
             logging.critical('vagrant or provisioning failed')
             raise exc
         else:
