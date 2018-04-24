@@ -287,6 +287,8 @@ def main():
                 )
                 try:
                     task.execute(world, pull_request.commit.statuses)
+                except ReferenceError as e:
+                    logger.warning(e)
                 except (EnvironmentError, RuntimeError) as e:
                     logger.error(e)
                     sentry_report_exception({"module": "github"})
