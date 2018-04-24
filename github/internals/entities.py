@@ -677,7 +677,15 @@ class Task(object):
 
         result = self.job(dependencies_results)
 
-        status = world.poll_status(self.pr_number, self.name)
+        try:
+            status = world.poll_status(self.pr_number, self.name)
+        except EnvironmentError:
+            raise ReferenceError(
+                "Task {} PR#{} was updated".format(
+                    self.name, self.pr_number
+                )
+            )
+
         if status.description != self.description:
             raise EnvironmentError(
                 "Task {} PR#{} was processed by multiple runners".format(
