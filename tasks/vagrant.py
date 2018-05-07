@@ -1,8 +1,12 @@
 import logging
 import os
+import signal
 
 from . import constants
-from .common import PopenTask, PopenException, FallibleTask, TaskException
+from .common import (
+    PopenTask, PopenException, FallibleTask, TaskException,
+    kill_vagrant_processes, kill_vagrant_vms
+)
 
 
 def with_vagrant(func):
@@ -69,25 +73,20 @@ class VagrantCleanup(VagrantTask):
             self.execute_subtask(
                 PopenTask(['vagrant', 'destroy']))
         except PopenException:
-            self.execute_subtask(
-                PopenTask(['pkill', '-9', '-f', '".*/bin/vagrant.*"'],
-                          raise_on_err=False))
+            # First kill all stuck Vagrant processes
+            self.execute_subtask(kill_vagrant_processes)
+
+            # Then restart libvirt daemon
             self.execute_subtask(
                 PopenTask(['systemctl', 'restart', 'libvirtd'],
                           raise_on_err=False))
+
+            # Then remove all VMs related to tests
+            self.execute_subtask(kill_vagrant_vms)
+
+            # End finally remove all the images instances
             self.execute_subtask(
-                PopenTask(['vagrant', 'destroy'],
-                          raise_on_err=False))
-            self.execute_subtask(
-                PopenTask(
-                    [
-                        'pkill', '-9', '-f',
-                        '".*(\/bin\/qemu-system-x86_64).*'
-                        '(master|replica|client|controller)*"'
-                    ],
-                    raise_on_err=False
-                )
-            )
+                PopenTask(['vagrant', 'destroy'], raise_on_err=False))
 
 
 class VagrantBoxDownload(VagrantTask):
