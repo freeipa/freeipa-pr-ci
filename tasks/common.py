@@ -1,18 +1,24 @@
 import abc
 import collections
 import errno
-import jinja2
 import logging
 import os
-import psutil
+import signal
 import subprocess
 import threading
+from typing import Callable, List, Text
+
+import jinja2
+import psutil
 
 from . import constants
 
-
 LOG_FILE_HANDLER = None
 LOG_FORMAT = '%(asctime)-15s %(levelname)8s  %(message)s'
+
+
+PopenFileType = type(psutil._pslinux.popenfile)
+KillPredicateType = Callable[[PopenFileType], bool]
 
 
 class TaskException(Exception):
@@ -214,3 +220,48 @@ def create_file_from_template(template_path, dest, data):
 
     with open(dest, "w") as fh:
         fh.write(rendered_template)
+
+
+def get_processes(pname: Text) -> List[psutil.Process]:
+    """Gets all of the processes by name"""
+    return [
+        proc for proc in psutil.process_iter(
+            attrs=["pid", "name", "open_files"]
+        ) if pname in proc.info["name"]
+    ]
+
+
+def kill_processes(proc_list: List[psutil.Process],
+                   kill_predicate: KillPredicateType) -> None:
+    """Kills the processes using given predicate"""
+    for proc in proc_list:
+        open_files = proc.info["open_files"]
+        if open_files is None:
+            continue
+        for open_file in open_files:
+            if kill_predicate(open_file):
+                proc.send_signal(signal.SIGKILL)
+
+
+def get_ruby_processes() -> List[psutil.Process]:
+    """Because every Vagrant process is just a Ruby one"""
+    return get_processes("ruby-mri")
+
+
+def get_qemu_processes() -> List[psutil.Process]:
+    """Fetches every QEMU process on the host"""
+    return get_processes("qemu-system-x86_64")
+
+
+def kill_vagrant_processes() -> None:
+    """Kills all of Vagrant processes"""
+    return kill_processes(get_ruby_processes(), lambda f: "vagrant" in f.path)
+
+
+def kill_vagrant_vms() -> None:
+    """Kills all of Vagrant created VMs"""
+    def predicate(f: PopenFileType) -> bool:
+        roles = ["master", "replica", "controller", "client"]
+        return any([role in f.path for role in roles])
+
+    return kill_processes(get_qemu_processes(), predicate)
