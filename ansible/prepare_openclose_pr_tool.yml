@@ -24,7 +24,8 @@
       private: false
 
     - name: prci_config
-      prompt: "Provide a path to a .freeipa-pr-ci.yaml file to use it to open new PRs"
+      prompt: "Provide the path to a test definition file to use it to open new
+               PRs. For example: ipatests/prci_definition/gating"
       private: false
     
     - name: git_sshkey

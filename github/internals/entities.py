@@ -465,6 +465,10 @@ class PullRequest(object):
         Returns:
             dict: Dictionary of a tasks defined in the tasks file.
         """
+        # the .freeipa-pr-ci is a link to a file, first we need to get it
+        # and then get the file it points
+        task_link = self.__get_tasks_file_content(world)
+        world.tasks_path = task_link.decode()
         tasks_file_content = self.__get_tasks_file_content(world)
         return yaml.load(tasks_file_content)["jobs"]
 
