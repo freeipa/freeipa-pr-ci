@@ -4,7 +4,6 @@ import os
 import github3
 import argparse
 import logging
-import shutil
 import yaml
 from cachecontrol.adapter import CacheControlAdapter
 import git
@@ -57,10 +56,12 @@ class AutomatedPR(object):
         # creates new branch using the identifier as the name
         repo.git.checkout('-b', args.id)
 
-        prci_config_file = os.path.join(args.repo_path,
+        current_prci_test_config = os.path.join(args.repo_path,
                                         FREEIPA_PRCI_CONFIG_FILE)
 
-        shutil.copy(new_prci_config, prci_config_file)
+        # changing the file that FREEIPA_PRCI_CONFIG_FILE points to
+        os.unlink(current_prci_test_config)
+        os.symlink(new_prci_config, current_prci_test_config)
 
         repo.git.add(FREEIPA_PRCI_CONFIG_FILE)
         repo.git.commit('-m', DEFAULT_COMMIT_MSG)
@@ -148,7 +149,8 @@ def create_parser():
 
     parser.add_argument(
         '--prci_config', type=str, required=True,
-        help='Path to a new .freeipa-pr-ci.yml file'
+        help="Relative path to PR CI test definition (yaml) file in "
+             "FreeIPA repo. E.g: ipatests/prci_definitions/gating"
     )
 
     parser.add_argument(

@@ -35,11 +35,6 @@
     src: "{{ playbook_dir }}/../github/open_close_pr.py"
     dest: "{{ basedir }}"
 
-- name: copy custom freeipa-pr-ci.yaml file
-  copy:
-    src: "{{ prci_config }}"
-    dest: "{{ basedir }}/{{ identifier }}.yaml"
-
 - name: copy git ssh key
   copy:
     src: "{{ git_sshkey }}"
@@ -81,7 +76,7 @@
            --id {{ identifier }}
            --repo_path {{ basedir }}/freeipa
            --branch {{ branch }}
-           --prci_config {{  basedir }}/{{ identifier }}.yaml
+           --prci_config {{ prci_config }}
            --pr_against_upstream {{ pr_against_upstream | bool }}
            open_pr
     user: root
