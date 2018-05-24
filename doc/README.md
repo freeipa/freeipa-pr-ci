@@ -429,14 +429,20 @@ refreshed.
 
 ### PR Scheduler
 With the need of scheduling nightly PRs, a tool was design to do that. It's a
-python script which creates a PR in a GH repo, committing a change in the
-`.freeipa-pr-ci.yaml` file.
+python script which creates a PR in a GH repo, changing in the 
+`.freeipa-pr-ci.yaml` to point to a different test definition file.
 
 The script needs a freeipa fork to work, because it will use this fork to create
 branches and open PRs. You can run the ansible playbook multiple times to
-schedule multiple PRs, but to each PR you want to create you need to provide a
-different identifier (ID). This ID is used to create the branch and to name the
-PR.
+schedule multiple PRs, but to each kind of PR you want to create you need to
+provide a different identifier (ID). This ID is used to create the branch and to
+name the PR.
+
+The playbook will ask for a repo owner, by default `freeipa-pr-ci` should be
+used. This user has a freeipa fork and we use it to open PRs against
+freeipa/freeipa repo. The playbook will also ask for a token, the token is how
+we authenticate the user against GH API. The token from `freeipa-pr-ci` user
+should be used.
 
 To deploy it in some VM, you can use the `prepare_openclose_pr_tool.yml` ansible
 playbook.
@@ -450,6 +456,7 @@ Then run:
 ```
 ansible-playbook -i ansible/hosts/runners ansible/prepare_openclose_pr_tool.yml
 ```
+
 
 ## How to run available unit tests
 Make a venv and then in a project root run

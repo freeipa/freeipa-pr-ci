@@ -18,6 +18,7 @@
     - name: repo_owner
       prompt: "Repo owner to create branches"
       private: false
+      default: "freeipa-pr-ci"
 
     - name: github_token
       prompt: "GitHub token"
