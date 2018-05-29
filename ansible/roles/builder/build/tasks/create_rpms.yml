@@ -9,6 +9,7 @@
 - name: create rpms
   shell: |
     mock --rebuild /root/rpmbuild/SRPMS/*.src.rpm \
+      --define 'with_python2 1' \
       --result /root/rpmbuild/RPMS/
 
 - name: remove srpm artifact from RPMS dir
