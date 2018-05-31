@@ -95,6 +95,15 @@ from the up-to-date code should fix such issues.
 
 ### Side notes about deployment
 
+#### Firewall configuration
+If it happened you use firewalld on your machine you wish to install runner
+on you should open ports for nfs, ipp, rpc-bind and mountd. Otherwise Vagrant
+will not mount the shared volume.
+
+If you're deploying freeipa-pr-ci on the FreeIPA infrastructure you don't
+need to care about firewalld as all of the security rules are managed by
+external firewall.
+
 #### Runner deployment automation
 
 By default, ansible will prompt for API token and other variables. To fully
