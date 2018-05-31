@@ -24,7 +24,7 @@
     - vagrant
     - vagrant-libvirt
     - libguestfs-tools-c  # required for vagrant package command
-    - ansible  # TODO requires >= 2.3 
+    - ansible  # TODO requires >= 2.3
     - nfs-utils
     - git
     - libvirt
@@ -32,12 +32,9 @@
     - createrepo
     - gzip
     - gcc
-    - firewalld
     - python3-devel
     - python3-pip
     - redhat-rpm-config
-    - python-firewall
-    - python3-firewall
   notify:
     - restart_nfs
 
@@ -47,26 +44,6 @@
     src: mime.types
     dest: /etc/mime.types
     mode: 0644
-
-- name: enable firewalld
-  service:
-    name: firewalld
-    enabled: true
-    state: started
-
-- name: configure firewalld
-  firewalld:
-    service : "{{ item }}"
-    permanent: true
-    state: enabled
-  with_items:
-    - nfs
-    - ipp
-    - rpc-bind
-    - mountd
-
-- name: reload firewalld
-  shell: firewall-cmd --reload
 
 - name: start&enable nfs
   service:
