@@ -27,8 +27,7 @@ Vagrant.configure(2) do |config|
         # Disable graphics
         domain.graphics_type = "none"
 
-        # Recommended for remote NFS storage
-        domain.volume_cache = "none"
+        domain.volume_cache = "unsafe"
     end
 
     config.vm.define "controller" , primary: true do |controller|
