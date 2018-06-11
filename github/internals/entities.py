@@ -516,7 +516,7 @@ class PullRequest(object):
 class Task(object):
     """Represents a task defined in a task file"""
     def __init__(
-        self, name: Text, pr_number: int, commit_sha: Text,
+        self, name: Text, pr_number: int, commit_sha: Text, pr_author: Text,
         repo_url: Text, task_data: Dict, job_handler: Callable
     ) -> None:
         """Constructs the instance of a Task to be processed by the handler"""
@@ -524,6 +524,7 @@ class Task(object):
         self.pr_number = pr_number
         self.commit_sha = commit_sha
         self.repo_url = repo_url
+        self.pr_author = pr_author
         self.ref_spec = "pull/{}/head".format(pr_number)
 
         # The data should be a dictionary with the following structure:
@@ -540,10 +541,20 @@ class Task(object):
         #           timeout: 3600
         #           topology: *master_1repl
         job_data = task_data["job"]
-        self.job = job_handler(job_data, (self.repo_url, self.ref_spec))
-        job_arguments_data = job_data["args"]
+        job_data["args"]["task_name"] = self.name
+        job_data["args"]["pr_number"] = self.pr_number
+        job_data["args"]["pr_author"] = self.pr_author
+
+        self.job = job_handler(
+            job_data,
+            {
+                "git_repo": self.repo_url,
+                "git_refspec": self.ref_spec
+            }
+        )
 
         self.dependencies = task_data["requires"]
+        job_arguments_data = job_data["args"]
         self.timeout = job_arguments_data.get("timeout")
         topology_data = job_arguments_data.get("topology")
         if topology_data is None:
@@ -675,7 +686,7 @@ class Task(object):
                 status.state, status.description, status.target_url
             )
 
-        result = self.job(dependencies_results)
+        result = self.job(world.repo_owner, dependencies_results)
 
         try:
             status = world.poll_status(self.pr_number, self.name)
@@ -737,7 +748,7 @@ class JobResult(Stateful):
 
 class JobDispatcher(AbcCallable):
     def __init__(
-        self, job_data: Dict, build_target: Tuple[Text, Text]
+        self, job_data: Dict, build_target: Dict[Text, Text]
     ) -> None:
         """Constructs a job for a runner from a given job dictionary
 
@@ -755,17 +766,16 @@ class JobDispatcher(AbcCallable):
                 memory: 5750
         """
         self.task_class = getattr(tasks, job_data["class"])
-        self.kwargs = job_data['args']
-        self.kwarg_lookup = {
-            'git_repo': build_target[0],
-            'git_refspec': build_target[1]
-        }
+        self.kwargs = job_data["args"]
+        self.kwarg_lookup = build_target
 
     @property
     def timeout(self) -> int:
         return self.kwargs.get('timeout') or 0
 
-    def __call__(self, dependencies_results: Dict=None) -> JobResult:
+    def __call__(
+        self, repo_owner: Text, dependencies_results: Dict=None
+    ) -> JobResult:
         """Calls the constructed job and waits for its result"""
 
         # As we can have dependencies, obviously, we will need theirs results
@@ -783,7 +793,7 @@ class JobDispatcher(AbcCallable):
                 value = value.format(**self.kwarg_lookup)
             kwargs[key] = value
 
-        job = self.task_class(**kwargs)
+        job = self.task_class(repo_owner=repo_owner, **kwargs)
         try:
             job()
         except TaskException as e:

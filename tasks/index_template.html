@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <title> FreeIPA PRCI results</title>
+  <link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.13/css/all.css">
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+</head>
+<body>
+  <a href="{{ cloud_jobs_url }}"><img src="{{ cloud_url }}prci.png"></a>
+  <h4 class="text-center"> {{ obj_data.hostname }} </h4>
+  <h4 class="text-center"> {{ obj_data.uuid }} </h4>
+  <h4 class="text-center"> <a href="https://github.com/freeipa/freeipa/pull/{{ obj_data.pr_number }}"> PR#{{ obj_data.pr_number }} </a> - {{ obj_data.task_name }}
+    {% if obj_data.returncode == '0' %}
+    <i class="fas fa-check" style="color:#28A745"></i> {% else %}
+    <i class="fas fa-times" style="color:#CB2431"></i>
+    {% endif %}</h4>
+  <h4 class="text-center"> Author: <a href="https://github.com/{{ obj_data.pr_author }}/freeipa/"> {{ obj_data.pr_author }} </a></h4>
+  <hr>
+  <div class="container">
+    <table id="results" class="table table-striped">
+      <thead>
+        <tr>
+          <th> Name </th>
+          <th> Date (UTC) </th>
+          <th> Size (B) </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><i class="fas fa-caret-up text-center"><a href="../"> Parent Directory </a></i></td>
+        </tr>
+        {% for item in obj_data.objects %}
+        <tr>
+          {% if item.type == 'dir' %}
+          <td><i class="fas fa-folder"><a href="{{ cloud_jobs_url }}{{obj_data.remote_path }}/{{ item.name }}/"> {{ item.name }} </a></i></td>
+          {% elif item.type == 'file' %}
+          <td><i class="fas fa-file"><a href="{{ cloud_jobs_url }}{{obj_data.remote_path }}/{{ item.name }}"> {{ item.name }} </a></i></td>
+          {% endif %}
+          <td> {{ item.mtime.strftime('%Y-%m-%d %H:%M') }} </td>
+          <td> {{ item.size }} </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</body>

@@ -5,10 +5,13 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
 JOBS_DIR = os.path.join(BASE_DIR, 'jobs')
 
-FEDORAPEOPLE_KEY_PATH = '/root/.ssh/freeipa_pr_ci'
-FEDORAPEOPLE_DIR = 'ipa-maint@fedorapeople.org:/srv/groups/freeipa/prci/{path}'
-FEDORAPEOPLE_BASE_URL = 'https://fedorapeople.org/groups/freeipa/prci/'
-FEDORAPEOPLE_JOBS_URL = urllib.parse.urljoin(FEDORAPEOPLE_BASE_URL, 'jobs/')
+CLOUD_BUCKET = 'freeipa-org-pr-ci'
+CLOUD_DIR = 's3://freeipa-org-pr-ci/'
+CLOUD_URL = 'http://freeipa-org-pr-ci.s3-website.eu-central-1.amazonaws.com/'
+CLOUD_JOBS_DIR = 'jobs/'
+CLOUD_JOBS_URL = urllib.parse.urljoin(CLOUD_URL, CLOUD_JOBS_DIR)
+
+TASKS_DIR = os.path.join(BASE_DIR, 'tasks')
 
 BUILD_PASSED_DESCRIPTION = "\(^_^)/"
 BUILD_FAILED_DESCRIPTION = "(✖╭╮✖)"

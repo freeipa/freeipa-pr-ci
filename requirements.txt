@@ -12,3 +12,5 @@ pytest
 GitPython
 tqdm
 requests
+boto3
+awscli
