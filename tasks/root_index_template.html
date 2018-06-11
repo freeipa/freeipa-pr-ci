@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <title> FreeIPA PRCI results</title>
+  <link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.13/css/all.css">
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="stylesheet" href="//cdn.datatables.net/1.10.18/css/jquery.dataTables.min.css">
+  <script src="//code.jquery.com/jquery-3.3.1.min.js"></script>
+  <script src="//cdn.datatables.net/1.10.18/js/jquery.dataTables.min.js"></script>
+</head>
+<body>
+  <script>
+    $(document).ready(function() {
+        $('#results').DataTable( {
+            "order": [[ 5, "desc" ]],
+            "pageLength": 100,
+            initComplete: function () {
+              this.api().columns().every( function () {
+                  var column = this;
+                  // skip columns for which the search should not be displayed
+                  // 0 = UUID
+                  // 5 = date
+                  var i = column.index();
+                  if (i === 0 || i === 5) return;
+
+                  // cell where to put the select
+                  var th = $(".column-select th")[i];
+                  // clear previous select
+                  $(th).empty();
+
+                  var select = $('<select><option value=""></option></select>')
+                      .prependTo(th)
+                      .on( 'change', function () {
+                          var val = $.fn.dataTable.util.escapeRegex(
+                              $(this).val()
+                          );
+
+                          column
+                              .search( val ? '^'+val+'$' : '', true, false )
+                              .draw();
+                      } );
+
+                  var icon_regex = /(<i[^>]+>[^>^<]*<\/i[^>]*>)/ig
+
+                  column.data().unique().sort().each( function ( d, j ) {
+                      var text = d;
+                      // treat it as HTML
+                      if (text.indexOf('</')> -1) {
+                        // remove icon
+                        text = text.replace(icon_regex, "");
+                      }
+                      if (text.indexOf('<') > -1) {
+                        var el = $(text);
+                        text = el.text();
+                      }
+
+                      select.append($("<option />", { value: text, text: text}))
+                  } );
+              } );
+            }
+            }
+        );
+    } );
+  </script>
+  <a href="{{ cloud_jobs_url }}"><img src="{{ cloud_url }}prci.png"></a>
+  <h4 class="text-center"> List of PRCI "freeipa" PRs job directories </h4>
+  <hr>
+  <div class="container-fluid">
+    <table id="results" class="table table-striped">
+      <thead>
+        <tr class="column-select">
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+        </tr>
+        <tr>
+          <th> Name </th>
+          <th> PR # </th>
+          <th> Author </th>
+          <th> Task </th>
+          <th> Status </th>
+          <th> Date (UTC) </th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in obj_data.objects %}
+        <tr>
+          <td><i class="fas fa-folder"><a href="{{ cloud_jobs_url }}{{ item.name }}/"> {{ item.name }} </a></i></td>
+          <td> <a href="https://github.com/freeipa/freeipa/pull/{{ item.pr_number }}"> {{ item.pr_number }} </a></td>
+          {% if item.pr_author == 'freeipa-pr-ci' %}
+            <td> <a href="https://github.com/{{ item.pr_author }}/freeipa/"> nightly </a></td>
+          {% else %}
+            <td> <a href="https://github.com/{{ item.pr_author }}/freeipa/"> {{ item.pr_author }} </a></td>
+          {% endif %}
+          <td> {{ item.task_name }} </td>
+          <td> {% if item.returncode == '0' %}
+            <p class="text-success">PASSED</p> {% else %}
+            <p class="text-danger">FAILED</p> {% endif %} </td>
+          <td> {{ item.mtime.strftime('%Y-%m-%d %H:%M') }} </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <br>
+</body>

@@ -2,6 +2,7 @@
 deploy_ssh_key: false
 enable_nested_virt: false
 create_systemd_unit: false
+cloud_conf_dir: /root/.aws
 ssh_key_dir: /root/.ssh
 monitored_repo_owner: freeipa
 monitored_repo_name: freeipa

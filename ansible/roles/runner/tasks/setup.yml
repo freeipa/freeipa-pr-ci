@@ -41,6 +41,13 @@
   notify:
     - restart_nfs
 
+# adding after packages install as the file can be overwritten by "mailcap"
+- name: add mime.types so awscli can correctly guess content-types
+  copy:
+    src: mime.types
+    dest: /etc/mime.types
+    mode: 0644
+
 - name: enable firewalld
   service:
     name: firewalld

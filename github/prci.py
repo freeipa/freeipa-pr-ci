@@ -119,7 +119,7 @@ def process_pull_request(
     for name, task_data in tasks_data.items():
         task = Task(
             name, pull_request.number, pull_request.commit.sha,
-            repository_url, task_data, JobDispatcher
+            pull_request.author, repository_url, task_data, JobDispatcher
         )
         if task.name not in pull_request.commit.statuses:
             if (

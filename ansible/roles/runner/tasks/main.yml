@@ -1,7 +1,9 @@
 ---
 - include: manage_ssh_keys.yml
   when: deploy_ssh_key
-  tags: fedorapeople
+  tags: deployment
+- include: add_cloud_conf_files.yml
+  tags: cloud_upload
 - include: enable_nested_virt.yml
   when: enable_nested_virt
   tags: nested_virt

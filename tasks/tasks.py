@@ -9,13 +9,14 @@ from .ansible import AnsiblePlaybook
 from .common import (FallibleTask, TaskException, PopenTask,
                      logging_init_file_handler, create_file_from_template)
 from . import constants
-from .remote_storage import GzipLogFiles, FedoraPeopleUpload
+from .remote_storage import GzipLogFiles, CloudUpload, CreateRootIndex
 from .vagrant import with_vagrant
 
 
 class JobTask(FallibleTask):
     def __init__(self, template, no_destroy=False, publish_artifacts=True,
-                 link_image=True, topology=None, **kwargs):
+                 link_image=True, pr_number=None, pr_author=None,
+                 task_name=None, repo_owner=None, **kwargs):
         super(JobTask, self).__init__(**kwargs)
         self.template_name = template['name']
         self.template_version = template['version']
@@ -27,6 +28,10 @@ class JobTask(FallibleTask):
         self.no_destroy = no_destroy
         self.description = '<no description>'
         self.link_image = link_image
+        self.pr_number = pr_number
+        self.pr_author = pr_author
+        self.task_name = task_name
+        self.repo_owner = repo_owner
 
     @property
     def vagrantfile(self):
@@ -88,19 +93,37 @@ class JobTask(FallibleTask):
         self.compress_logs()
         if self.publish_artifacts:
             self.upload_artifacts()
+            self.create_root_index()
 
     def upload_artifacts(self):
         try:
             self.execute_subtask(
-                FedoraPeopleUpload(uuid=self.uuid, timeout=5*60))
+                CloudUpload(uuid=self.uuid,
+                            repo_owner=self.repo_owner,
+                            pr_number=self.pr_number,
+                            pr_author=self.pr_author,
+                            task_name=self.task_name,
+                            returncode=self.returncode,
+                            timeout=5*60))
         except Exception as exc:
             logging.debug(exc, exc_info=True)
             raise TaskException(self, "Failed to publish artifacts")
         else:
             self.remote_url = urllib.parse.urljoin(
-                constants.FEDORAPEOPLE_JOBS_URL, self.uuid)
+                constants.CLOUD_JOBS_URL, self.uuid)
             logging.info('Job published at: {remote_url}'.format(
                 remote_url=self.remote_url))
+
+    def create_root_index(self):
+        """
+        Create jobs root index
+        """
+        try:
+            self.execute_subtask(CreateRootIndex(self.repo_owner))
+        except Exception as exc:
+            logging.error('Failed to create jobs root index.')
+            logging.debug(exc, exc_info=True)
+            raise RuntimeError('Failed to create jobs root index.')
 
     def terminate(self):
         logging.critical(
@@ -147,6 +170,7 @@ class Build(JobTask):
                 self.returncode = 1
             finally:
                 self.upload_artifacts()
+                self.create_root_index()
 
         if self.returncode == 0:
             self.description = constants.BUILD_PASSED_DESCRIPTION
@@ -169,7 +193,7 @@ class Build(JobTask):
                 playbook=constants.ANSIBLE_PLAYBOOK_COLLECT_BUILD,
                 raise_on_err=False))
 
-    def create_yum_repo(self, base_url=constants.FEDORAPEOPLE_JOBS_URL):
+    def create_yum_repo(self, base_url=constants.CLOUD_JOBS_URL):
         repo_path = os.path.join(self.data_dir, 'rpms')
         self.execute_subtask(
             PopenTask(['createrepo', repo_path]))

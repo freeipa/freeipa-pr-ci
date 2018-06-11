@@ -44,6 +44,7 @@ handled by our tooling.
 - GitHub token with *Full control of private repositories* (Settings ->
   Personal access tokens)
 - `freeipa_pr_ci` private key placed in `keys/`
+- Cloud `config` and `credentials` files in `keys/`
 - private keys in `keys/` have permissions set to 0600
 
 ### Development runner deployment
