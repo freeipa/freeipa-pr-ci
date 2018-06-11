@@ -147,6 +147,7 @@ class PopenTask(FallibleTask):
             self.cmd,
             shell=self.shell,
             env=self.env,
+            preexec_fn=os.setsid,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT)
 
@@ -162,23 +163,12 @@ class PopenTask(FallibleTask):
     def _terminate(self):
         if self.process is None:
             return
-        try:
-            parent = psutil.Process(pid=self.process.pid)
-            procs = parent.children(recursive=True)
-            procs.append(parent)
-            for proc in procs:
-                proc.terminate()
-            gone, still_alive = psutil.wait_procs(
-                procs,
-                timeout=constants.POPEN_TERM_TIMEOUT)
-            for proc in still_alive:
-                proc.kill()
-        except OSError as exc:
-            if exc.errno != errno.ESRCH:
-                # ESRCH -> process doesn't exist (already ended)
-                raise exc
-        except psutil.NoSuchProcess:
-            pass  # probably ended already
+
+        # Make sure every child process is gone
+        os.killpg(self.process.pid, signal.SIGKILL)
+        # Make sure every Vagrant process and VM process is gone
+        kill_vagrant_processes()
+        kill_vagrant_vms()
 
     def __str__(self):
         if not isinstance(self.cmd, str):
