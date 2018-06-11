@@ -74,7 +74,7 @@ class VagrantCleanup(VagrantTask):
                 PopenTask(['vagrant', 'destroy']))
         except PopenException:
             # First kill all stuck Vagrant processes
-            self.execute_subtask(kill_vagrant_processes)
+            kill_vagrant_processes()
 
             # Then restart libvirt daemon
             self.execute_subtask(
@@ -82,7 +82,7 @@ class VagrantCleanup(VagrantTask):
                           raise_on_err=False))
 
             # Then remove all VMs related to tests
-            self.execute_subtask(kill_vagrant_vms)
+            kill_vagrant_vms()
 
             # End finally remove all the images instances
             self.execute_subtask(
