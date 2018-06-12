@@ -93,7 +93,7 @@ class TestControl(object):
                     "{:<8}".format(status.state),
                     rgb=state2color[status.state]
                 ) +
-                "{s.context:<30.30} {s.description:<50.50} {s.target_url}"
+                "{s.context:<45.45} {s.description:<40.40} {s.target_url}"
                 "".format(s=status)
             )
 
