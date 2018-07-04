@@ -38,6 +38,7 @@
     - NetworkManager
     - xorg-x11-server-Xvfb
     - firefox
+    - python3-paramiko
 
 - name: install py3 pip dependencies
   pip:
