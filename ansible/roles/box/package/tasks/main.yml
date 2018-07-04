@@ -10,6 +10,7 @@
 # Turn template VM off and on again. Created vagrant box may not boot if 
 # this step is omitted.
 - name: shutdown template VM
+  become: true
   shell: vagrant halt
   args:
     chdir: "{{ template_box_dir }}"
