@@ -1,19 +1,16 @@
+import json
 import os
 import re
-import concurrent
 import socket
-from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 
-import logging
 import boto3
-from botocore.exceptions import ClientError
 from jinja2 import Template
 
 from .common import PopenTask, TaskException, FallibleTask
 from .constants import (CLOUD_JOBS_DIR, CLOUD_JOBS_URL, CLOUD_URL, CLOUD_DIR,
-                        CLOUD_BUCKET, UUID_RE, JOBS_DIR, TASKS_DIR)
-
+                        CLOUD_BUCKET, CLOUD_DB, CLOUD_REGION, UUID_RE,
+                        JOBS_DIR, TASKS_DIR)
 
 """
 Previously we were updating test results in Fedora infra where the results were
@@ -30,83 +27,27 @@ bucket.
 """
 
 
-def get_jobdir_metadata(job_uuid):
-    """
-    Job metadata for root index.
-    """
-    try:
-        client = boto3.client('s3')
-        job = client.head_object(Bucket=CLOUD_BUCKET, Key=job_uuid)
-        name = job_uuid.split(os.sep)[-2]
-        if re.match(UUID_RE, name):
-            mtime = job.get('LastModified')
-            metadata = job.get('Metadata', dict())
-            repo_owner = metadata.get('repo_owner')
-            pr_number = metadata.get('pr_number')
-            pr_author = metadata.get('pr_author')
-            task_name = metadata.get('task_name')
-            returncode = metadata.get('returncode')
-            if repo_owner == 'freeipa':
-                return {'name': name,
-                        'mtime': mtime,
-                        'pr_number': pr_number,
-                        'pr_author': pr_author,
-                        'task_name': task_name,
-                        'returncode': returncode}
-    except ClientError:
-        # lets not fail in case we cannot read metadata of some directory or
-        # there appears a rogue directory without metadata (returns None then)
-        pass
-
-
-def get_jobs():
-    """
-    Get all jobs (directories/objects) from root "jobs" directory. Pagination
-    is needed as S3 client returns only 1000 objects at once.
-    """
-    try:
-        client = boto3.client('s3')
-        paginator = client.get_paginator('list_objects_v2')
-        iterator = paginator.paginate(Bucket=CLOUD_BUCKET,
-                                      Prefix=CLOUD_JOBS_DIR,
-                                      Delimiter='/',
-                                      PaginationConfig={'PageSize': None})
-        for job_uuid in iterator.search('CommonPrefixes'):
-
-            job_dir = job_uuid['Prefix']
-            yield job_dir
-    except ClientError as exc:
-        logging.error('Error while getting job directory list')
-        logging.debug(exc, exc_info=True)
-
-
 def create_jobs_root_index():
     """
-    Generate root jobs index (only directories) using boto3 client. Threading
-    is needed as polling S3 objects serially is very slow.
+    Generate root jobs index from AWS DynamoDB table.
     """
-    try:
-        client = boto3.client('s3')
-        objects = []
-        with ThreadPoolExecutor(max_workers=100) as executor:
-            todo = []
-            for job in get_jobs():
-                future = executor.submit(get_jobdir_metadata, job)
-                todo.append(future)
-            for future in concurrent.futures.as_completed(todo):
-                res = future.result()
-                if res:
-                    objects.append(res)
+    client = boto3.client('s3')
+    dynamodb = boto3.resource('dynamodb', region_name=CLOUD_REGION)
+    table = dynamodb.Table(CLOUD_DB)
 
-        objects = sorted(objects, key=lambda k: k['mtime'], reverse=True)
-        obj_data = {'objects': objects}
+    response = table.scan()
+    objects = response['Items']
 
-        client.put_object(Body=generate_index(obj_data, is_root=True),
-                          Bucket=CLOUD_BUCKET, Key=CLOUD_JOBS_DIR+'index.html',
-                          ContentEncoding='utf-8', ContentType='text/html')
-    except ClientError as exc:
-        logging.error('Error while creating root index')
-        logging.debug(exc, exc_info=True)
+    while response.get('LastEvaluatedKey'):
+        response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+        objects.extend(response['Items'])
+
+    obj_data = {'objects': objects}
+
+    client.put_object(Body=generate_index(obj_data, is_root=True),
+                      Bucket=CLOUD_BUCKET,
+                      Key=os.path.join(CLOUD_JOBS_DIR, 'index.html'),
+                      ContentEncoding='utf-8', ContentType='text/html')
 
 
 def generate_index(obj_data, is_root=False):
@@ -200,21 +141,44 @@ def create_local_indeces(uuid, pr_number, pr_author, task_name, returncode,
         write_index(data, root)
 
 
-def assign_jobdir_metadata(uuid, repo_owner, pr_number, pr_author, task_name,
+def save_jobdir_metadata(uuid, repo_owner, pr_number, pr_author, task_name,
                            returncode):
     """
-    Update particular job dir metadata to the object (job uuid directory) for
-    root index listing.
+    Update particular job dir metadata to DynamoDB table.
     """
-    client = boto3.client('s3')
-    job_dir = os.path.join(CLOUD_JOBS_DIR, uuid)
-    metadata = {'repo_owner': repo_owner, 'pr_number': pr_number,
-                'pr_author': pr_author, 'task_name': task_name,
-                'returncode': returncode}
-    client.put_object(Body='',
-                      Bucket=CLOUD_BUCKET,
-                      Key=job_dir+'/',
-                      Metadata=metadata)
+    dynamodb = boto3.resource('dynamodb', region_name=CLOUD_REGION)
+    table = dynamodb.Table(CLOUD_DB)
+
+    table.put_item(
+        Item={
+            'name': uuid,
+            'repo_owner': repo_owner,
+            'pr_number': pr_number,
+            'pr_author': pr_author,
+            'task_name': task_name,
+            'returncode': returncode,
+            'mtime': datetime.now().strftime('%Y-%m-%d %H:%M'),
+        }
+    )
+
+
+def create_metadata_json(src, uuid, repo_owner, pr_number, pr_author,
+                         task_name, returncode):
+    """
+    Save particular job metadata into job UUID directory for external tools
+    usage
+    """
+    metadata = {
+        'name': uuid,
+        'repo_owner': repo_owner,
+        'pr_number': pr_number,
+        'pr_author': pr_author,
+        'task_name': task_name,
+        'returncode': returncode,
+        'mtime': datetime.now().strftime('%Y-%m-%d %H:%M'),
+        }
+    with open(os.path.join(src, 'metadata.json'), 'w') as file_obj:
+        json.dump(metadata, file_obj)
 
 
 class GzipLogFiles(PopenTask):
@@ -258,12 +222,15 @@ class CloudUpload(FallibleTask):
     def _run(self):
         # make sure we don't leak fqdn
         self.hostname = socket.gethostname().split('.')[0]
+        src = os.path.join(JOBS_DIR, self.uuid)
+        dest = os.path.join(CLOUD_DIR, CLOUD_JOBS_DIR, self.uuid)
+
+        create_metadata_json(src, self.uuid, self.repo_owner,
+                             self.pr_number, self.pr_author,
+                             self.task_name, self.returncode)
 
         create_local_indeces(self.uuid, self.pr_number, self.pr_author,
                              self.task_name, self.returncode, self.hostname)
-
-        src = os.path.join(JOBS_DIR, self.uuid)
-        dest = os.path.join(CLOUD_DIR, CLOUD_JOBS_DIR, self.uuid)
 
         aws_sync_cmd = ['aws', 's3', 'sync', src, dest]
         sync_all_except_gz = ['--include=*', '--exclude=*.gz']
@@ -275,24 +242,25 @@ class CloudUpload(FallibleTask):
         self.execute_subtask(PopenTask(aws_sync_cmd + sync_all_except_gz))
         self.execute_subtask(PopenTask(aws_sync_cmd + sync_gz))
 
-        try:
-            assign_jobdir_metadata(self.uuid, self.repo_owner, self.pr_number,
-                                   self.pr_author, self.task_name,
-                                   self.returncode)
-        except Exception as exc:
-            raise RuntimeError('Error while assigning metadata:', exc)
-
 
 class CreateRootIndex(FallibleTask):
     """
     Create jobs root index
     """
-    def __init__(self, repo_owner, **kwargs):
+    def __init__(self, uuid, repo_owner, pr_number, pr_author, task_name,
+                 returncode, **kwargs):
+        if not re.match(UUID_RE, uuid):
+            raise TaskException(self, "Invalid job UUID")
         super(CreateRootIndex, self).__init__(**kwargs)
+        self.uuid = uuid
         self.repo_owner = repo_owner
+        self.pr_number = str(pr_number) if not None else ''
+        self.pr_author = pr_author if not None else ''
+        self.task_name = task_name if not None else ''
+        self.returncode = str(returncode) if not None else ''
 
     def _run(self):
-        # list only "freeipa" repo PRs in root index
-        # (Jobs of PRs against forks are not listed)
-        if self.repo_owner == 'freeipa':
-            create_jobs_root_index()
+        save_jobdir_metadata(self.uuid, self.repo_owner,
+                             self.pr_number, self.pr_author,
+                             self.task_name, self.returncode)
+        create_jobs_root_index()

@@ -99,7 +99,7 @@
           <td> {% if item.returncode == '0' %}
             <p class="text-success">PASSED</p> {% else %}
             <p class="text-danger">FAILED</p> {% endif %} </td>
-          <td> {{ item.mtime.strftime('%Y-%m-%d %H:%M') }} </td>
+          <td> {{ item.mtime }} </td>
         </tr>
         {% endfor %}
       </tbody>

@@ -93,7 +93,10 @@ class JobTask(FallibleTask):
         self.compress_logs()
         if self.publish_artifacts:
             self.upload_artifacts()
-            self.create_root_index()
+            # list only "freeipa" repo PRs in root index
+            # (Jobs of PRs against forks are not listed)
+            if self.repo_owner == 'freeipa':
+                self.create_root_index()
 
     def upload_artifacts(self):
         try:
@@ -119,11 +122,19 @@ class JobTask(FallibleTask):
         Create jobs root index
         """
         try:
-            self.execute_subtask(CreateRootIndex(self.repo_owner))
+            self.execute_subtask(
+                CreateRootIndex(uuid=self.uuid,
+                                repo_owner=self.repo_owner,
+                                pr_number=self.pr_number,
+                                pr_author=self.pr_author,
+                                task_name=self.task_name,
+                                returncode=self.returncode,
+                                timeout=30))
         except Exception as exc:
-            logging.error('Failed to create jobs root index.')
+            logging.error('Failed to create jobs root index. This should not '
+                          'affect base PRCI functionality')
             logging.debug(exc, exc_info=True)
-            raise RuntimeError('Failed to create jobs root index.')
+
 
     def terminate(self):
         logging.critical(
@@ -170,7 +181,10 @@ class Build(JobTask):
                 self.returncode = 1
             finally:
                 self.upload_artifacts()
-                self.create_root_index()
+                # list only "freeipa" repo PRs in root index
+                # (Jobs of PRs against forks are not listed)
+                if self.repo_owner == 'freeipa':
+                    self.create_root_index()
 
         if self.returncode == 0:
             self.description = constants.BUILD_PASSED_DESCRIPTION
