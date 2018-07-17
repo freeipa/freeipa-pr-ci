@@ -307,7 +307,8 @@ class RunWebuiTests(RunPytest):
             PopenTask(['vagrant', 'ssh', '-c', (
                 'ipa-run-webui-tests {test_suite} '
                 '--verbose --logging-level=debug --logfile-dir=/vagrant/ '
-                '--html=/vagrant/report.html'
+                '--html=/vagrant/report.html '
+                '--junit-xml=/vagrant/junit.xml'
                 ).format(test_suite=self.test_suite)],
                 timeout=None))
 
