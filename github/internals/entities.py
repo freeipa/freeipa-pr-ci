@@ -399,6 +399,7 @@ class PullRequest(object):
         self.labels = [Label.from_str(l) for l in labels]
         self.commit = Commit.from_dict(commit_data)
         self.mergeable = mergeable != "CONFLICTING"
+        self.tasks_path = None
 
     def __eq__(self, other) -> bool:
         return all((
@@ -438,7 +439,7 @@ class PullRequest(object):
             url=tasks_file_url.format(
                 owner=world.repo_owner,
                 repo=world.repo_name,
-                path=world.tasks_path,
+                path=self.tasks_path,
                 sha=self.commit.sha
             )
         )
@@ -450,7 +451,7 @@ class PullRequest(object):
                 url=tasks_file_url.format(
                     owner=world.repo_owner,
                     repo=world.repo_name,
-                    path=world.tasks_path,
+                    path=self.tasks_path,
                     sha=self.base_ref
                 )
             )
@@ -467,10 +468,17 @@ class PullRequest(object):
         """
         # the .freeipa-pr-ci is a link to a file, first we need to get it
         # and then get the file it points
+        self.tasks_path = world.tasks_path
+
         task_link = self.__get_tasks_file_content(world)
-        world.tasks_path = task_link.decode()
+        self.tasks_path = task_link.decode()
         tasks_file_content = self.__get_tasks_file_content(world)
-        return yaml.load(tasks_file_content)["jobs"]
+
+        try:
+            return yaml.load(tasks_file_content)["jobs"]
+        # FIXME: for older PRs to pass. Can be later deleted
+        except KeyError:
+            return yaml.load(task_link)["jobs"]
 
     def __remove_label(self, world: World, label: Label) -> None:
         """Removes PR's label on GitHub using REST API
