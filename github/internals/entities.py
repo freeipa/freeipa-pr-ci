@@ -57,6 +57,10 @@ def sentry_report_exception(context: Dict):
         sentry.context.clear()
 
 
+class JobYAMLError(Exception):
+    pass
+
+
 class CIEnum(Enum):
     """Ordinary enum with a fabric"""
     @classmethod
@@ -552,7 +556,14 @@ class Task(object):
         #           template: *ci-master-f27
         #           timeout: 3600
         #           topology: *master_1repl
-        job_data = task_data["job"]
+
+        if task_data is None:
+            raise JobYAMLError
+        try:
+            job_data = task_data["job"]
+        except (TypeError, KeyError):
+            raise JobYAMLError
+
         job_data["args"]["task_name"] = self.name
         job_data["args"]["pr_number"] = self.pr_number
         job_data["args"]["pr_author"] = self.pr_author

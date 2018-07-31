@@ -15,7 +15,7 @@ from github3.exceptions import NotFoundError
 
 from internals.entities import (
     ExitHandler, JobDispatcher, PullRequest, Status, Task, World,
-    sentry_report_exception
+    sentry_report_exception, JobYAMLError
 )
 from internals.gql import util, queries
 
@@ -117,10 +117,16 @@ def process_pull_request(
                 logger.warning(e)
 
     for name, task_data in tasks_data.items():
-        task = Task(
-            name, pull_request.number, pull_request.commit.sha,
-            pull_request.author, repository_url, task_data, JobDispatcher
-        )
+        try:
+            task = Task(
+                name, pull_request.number, pull_request.commit.sha,
+                pull_request.author, repository_url, task_data, JobDispatcher
+            )
+        except JobYAMLError:
+            logger.warning(
+                'Wrong job definition found in PR #%s. Check YAML indentation',
+                pull_request.number)
+            continue
         if task.name not in pull_request.commit.statuses:
             if (
                 pull_request.author in world.whitelist
