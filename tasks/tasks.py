@@ -319,10 +319,11 @@ class RunWebuiTests(RunPytest):
     def execute_tests(self):
         self.execute_subtask(
             PopenTask(['vagrant', 'ssh', '-c', (
-                'ipa-run-webui-tests {test_suite} '
+                'ipa-run-webui-tests '
                 '--verbose --logging-level=debug --logfile-dir=/vagrant/ '
                 '--html=/vagrant/report.html '
-                '--junit-xml=/vagrant/junit.xml'
+                '--junit-xml=/vagrant/junit.xml '
+                '{test_suite}'
                 ).format(test_suite=self.test_suite)],
                 timeout=None))
 
