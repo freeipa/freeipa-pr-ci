@@ -19,14 +19,20 @@
     - freeipa-server-common
     - freeipa-server-dns
     - freeipa-server-trust-ad
-    - python2-ipaclient
-    - python2-ipalib
-    - python2-ipaserver
-    - python2-ipatests
     - python3-ipaclient
     - python3-ipalib
     - python3-ipaserver
     - python3-ipatests
+
+# this can be removed when python2 is gone completly
+- name: remove freeipa python2 packages seperately
+  shell: "rpm -e --nodeps '{{ item }}'"
+  with_items:
+    - python2-ipaclient
+    - python2-ipalib
+    - python2-ipaserver
+    - python2-ipatests
+  when: with_python2 is defined and with_python2 == 1
 
 - name: install additional packages
   dnf:
