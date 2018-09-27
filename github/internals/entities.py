@@ -6,6 +6,7 @@ from enum import Enum, unique
 from random import randint
 from time import sleep
 from typing import Callable, ByteString, Dict, List, Text, Tuple, SupportsFloat
+import os
 
 import psutil
 import pytz
@@ -37,6 +38,40 @@ SENTRY_URL = (
 # until the reset time will come.
 EPHEMERAL_LIMIT = 60
 STALE_TASK_EXTRA_TIME = 60
+
+VAGRANT_FILES_DEFAULT_DIR = "/root/freeipa-pr-ci/templates/vagrantfiles/"
+VAGRANT_TEMPLATE_FILE = "Vagrantfile.template"
+
+
+def _vagrant_definition_creator(world):
+
+    with open(VAGRANT_FILES_DEFAULT_DIR + VAGRANT_TEMPLATE_FILE) as file:
+        text = file.read()
+
+        for topology in world.keys():
+
+            vagrantfile = open(VAGRANT_FILES_DEFAULT_DIR +
+                               "Vagrantfile.{}".format(topology), "w")
+
+            vagrantfile.write(text)
+
+            for host in world[topology].keys():
+
+                vagrantfile.write('    config.vm.define "{}"  do ',
+                                  '|{}|\n'.format(host, host))
+                vagrantfile.write('      {}.vm.provider :libvirt do',
+                                  '|domain|\n'.format(host))
+
+                for inner, configuration in world[topology][host].items():
+
+                    vagrantfile.write('          domain.{} = ',
+                                      '{}\n'.format(inner, configuration))
+
+                vagrantfile.write('      end\n')
+                vagrantfile.write('    end\n')
+
+            vagrantfile.write("end")
+            vagrantfile.close()
 
 
 def sentry_report_exception(context: Dict):
@@ -477,6 +512,8 @@ class PullRequest(object):
         task_link = self.__get_tasks_file_content(world)
         self.tasks_path = task_link.decode()
         tasks_file_content = self.__get_tasks_file_content(world)
+
+        _vagrant_definition_creator(yaml.load(tasks_file_content)["topologies"])
 
         try:
             return yaml.load(tasks_file_content)["jobs"]
