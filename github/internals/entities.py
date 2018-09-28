@@ -251,6 +251,8 @@ class Topology(object):
     @staticmethod
     def from_dict(dict_data: Dict) -> "Topology":
         """Factory for Topology"""
+        if not isinstance(dict_data, dict):
+            raise JobYAMLError
         return Topology(
             name=dict_data.get("name"),
             memory=dict_data.get("memory"),
