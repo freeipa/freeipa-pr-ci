@@ -126,6 +126,8 @@ def process_pull_request(
             logger.warning(
                 'Wrong job definition found in PR #%s. Check YAML indentation',
                 pull_request.number)
+            world.create_error_status(pull_request.commit.sha, name,
+                "Test not executed: Wrong job definition")
             continue
         if task.name not in pull_request.commit.statuses:
             if (

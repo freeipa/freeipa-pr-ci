@@ -206,6 +206,22 @@ class World(object):
             target_url, description, task.name
         )
 
+    def create_error_status(
+        self, commit_sha: Text, name: Text, description: Text
+    ) -> None:
+        """Create ERROR commit status on GitHub using REST API
+
+        Raises:
+            github3.exceptions.GitHubError, ValueError
+        """
+        self.check_rest_limit()
+        self.github_api.repository(
+            self.repo_owner, self.repo_name
+        ).create_status(
+            commit_sha, "error",
+            "", description, name
+        )
+
     def __check_limit(self, resource: Text=None) -> None:
         error = None
         for _i in range(API_CHECK_TRIES):
