@@ -14,3 +14,4 @@ tqdm
 requests
 boto3
 awscli
+ryd

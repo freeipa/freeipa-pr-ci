@@ -10,3 +10,5 @@
 - include: setup.yml
 - include: create_libvirt_pool.yml
 - include: deploy_pr_ci.yml
+- include: autocleaner.yml
+  when: activate_autocleaner
