@@ -17,3 +17,4 @@
       deploy_ssh_key: true
       enable_nested_virt: true
       create_systemd_unit: true
+      activate_autocleaner: true

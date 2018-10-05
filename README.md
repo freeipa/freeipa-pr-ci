@@ -125,6 +125,15 @@ systemctl status prci
 journalctl -fu prci
 ```
 
+#### Autocleaning
+
+By default, after deployment there is an autocleaner job scheduled to run every
+Sunday to clean unused Vagrant boxes, old libvirt images and optionally old
+jobs directories.
+
+This feature can be disabled setting `activate_autocleaner: false` in the
+particular playbook.
+
 ## User Guide
 
 ### Re-running tasks

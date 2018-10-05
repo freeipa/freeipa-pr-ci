@@ -35,6 +35,7 @@
     - python3-devel
     - python3-pip
     - redhat-rpm-config
+    - crontabs
   notify:
     - restart_nfs
 

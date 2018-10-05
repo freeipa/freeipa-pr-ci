@@ -1,0 +1,9 @@
+- name: schedule PRCI autocleaner
+  cron:
+    name: "PRCI autocleaner"
+    minute: "0"
+    hour: "15"
+    weekday: "7"
+    job: python3 /root/freeipa-pr-ci/autocleaner.py
+    user: root
+    state: present
