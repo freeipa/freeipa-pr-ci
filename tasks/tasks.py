@@ -110,7 +110,9 @@ class JobTask(FallibleTask):
                             timeout=5*60))
         except Exception as exc:
             logging.debug(exc, exc_info=True)
-            raise TaskException(self, "Failed to publish artifacts")
+            hostname = socket.gethostname().split('.')[0] # don't leak fqdn
+            msg = 'Failed to publish artifacts from {}'.format(hostname)
+            raise TaskException(self, msg)
         else:
             self.remote_url = urllib.parse.urljoin(
                 constants.CLOUD_JOBS_URL, self.uuid)
