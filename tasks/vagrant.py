@@ -64,7 +64,8 @@ class VagrantUp(VagrantTask):
 class VagrantProvision(VagrantTask):
     def _run(self):
         self.execute_subtask(
-            PopenTask(['vagrant', 'provision'], timeout=None))
+            PopenTask(['vagrant', 'provision'],
+                      timeout=None))
 
 
 class VagrantCleanup(VagrantTask):
