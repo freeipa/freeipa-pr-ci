@@ -1,0 +1,12 @@
+- name: 'Create /shared/enrollment/{{ inventory_hostname }} directory'
+  become: True
+  file:
+    path: '/shared/enrollment/{{ inventory_hostname }}/'
+    state: directory
+
+- name: Copy certificate to shared folder
+  become: True
+  copy:
+    src: /etc/dirsrv/slapd-master-ldap/cacert.asc
+    dest: '/shared/enrollment/{{ inventory_hostname }}/'
+    remote_src: yes

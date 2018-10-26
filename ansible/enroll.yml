@@ -1,0 +1,30 @@
+---
+- hosts: ipa
+  gather_facts: no
+  roles:
+  - enroll-ipa
+  vars_files:
+  - variables.yml
+  tags:
+  - enroll-all
+  - enroll-ipa
+
+- hosts: ldap
+  gather_facts: no
+  roles:
+  - enroll-ldap
+  vars_files:
+  - variables.yml
+  tags:
+  - enroll-all
+  - enroll-ldap
+
+- hosts: client
+  gather_facts: no
+  roles:
+  - enroll-client
+  vars_files:
+  - variables.yml
+  tags:
+  - enroll-all
+  - enroll-client

@@ -1,5 +1,5 @@
 ad_admin_name: Administrator
-ad_admin_password: Secret123456
+ad_admin_password: Secret123
 admin_name: admin
 admin_password: Secret.123
 debug: false
@@ -26,6 +26,17 @@ domains:
 {% endfor %}
   name: ipa.test
   type: IPA
+- name: addomain.ipa.test
+  type: AD
+  hosts:
+  - name: ad.ipa.test.
+    external_hostname: {{ hostvars['forest']['ansible_default_ipv4']['address'] }}
+    ip: {{ hostvars['forest']['ansible_default_ipv4']['address'] }}
+    role: ad
+  - name: adchild.ipa.test.
+    external_hostname: {{ hostvars['root']['ansible_default_ipv4']['address'] }}
+    ip: {{ hostvars['root']['ansible_default_ipv4']['address'] }}
+    role: ad_subdomain
 nis_domain: ipatest
 ntp_server: 1.pool.ntp.org
 root_ssh_key_filename: /root/.ssh/freeipa_pr_ci_insecure

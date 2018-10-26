@@ -1,0 +1,62 @@
+# Network information
+network: {
+  base_ip: 192.168.100,
+  reverse_zone: 100.168.192.in-addr.arpa,
+  dns_tld: vm,
+  dns_server: '192.168.100.10'
+}
+
+# IPA server configuration
+ipa: {
+  ip: '{{ network.base_ip }}.10',
+  domain: 'ipa.{{ network.dns_tld }}',
+  hostname: 'master',
+  fqn: 'master.ipa.{{ network.dns_tld }}',
+  netbios: 'IPA',
+  password: '123456789'
+}
+
+# LDAP server configuration
+ldap: {
+  ip: '{{ network.base_ip }}.20',
+  domain: 'ldap.{{ network.dns_tld }}',
+  hostname: 'master',
+  fqn: 'master.ldap.{{ network.dns_tld }}',
+  suffix: 'dc=ldap,dc={{ network.dns_tld }}',
+  bind: {
+    dn: 'cn=Directory Manager',
+    password: '123456789'
+  }
+}
+
+# AD server configuration
+ad: {
+  ip: '{{ network.base_ip }}.110',
+  domain: 'ad.{{ network.dns_tld }}',
+  hostname: 'root-dc',
+  fqn: 'root-dc.ad.{{ network.dns_tld }}',
+  netbios: 'ADROOT',
+  forest_mode: WinThreshold,
+  domain_mode: WinThreshold,
+  safe_password: Secret123,
+  suffix: 'dc=ad,dc={{ network.dns_tld }}'
+}
+
+# AD child server configuration
+ad_child: {
+  ip: '{{ network.base_ip }}.120',
+  domain: 'child.{{ ad.domain }}',
+  hostname: 'child-dc',
+  fqn: 'child-dc.child.{{ ad.domain }}',
+  netbios: 'ADCHILD',
+  safe_password: Secret123,
+  suffix: 'dc=child,{{ ad.suffix }}'
+}
+
+# Client configuration
+client: {
+  ip: '{{ network.base_ip }}.30',
+  domain: 'client.{{ network.dns_tld }}',
+  hostname: 'master',
+  fqn: 'master.client.{{ network.dns_tld }}'
+}

@@ -1,0 +1,39 @@
+{
+  "boxes": {
+    "ad": {
+      "name": "sssd-winsrv2016-ad",
+      "url": "http://download.eng.brq.redhat.com/archive/sssd/vagrant/sssd-winsrv2016-ad.json",
+      "memory": 1024
+    },
+    "ad-child": {
+      "name": "sssd-winsrv2016-ad-child",
+      "url": "http://download.eng.brq.redhat.com/archive/sssd/vagrant/sssd-winsrv2016-ad-child.json",
+      "memory": 1024
+    },
+    "ipa": {
+      "name": "freeipa/ci-master-f29",
+      "url": "",
+      "memory": 2048
+    },
+    "ldap": {
+      "name": "freeipa/ci-master-f29",
+      "url": "",
+      "memory": 1024
+    },
+    "client": {
+      "name": "freeipa/ci-master-f29",
+      "url": "",
+      "memory": 2048
+    }
+  },
+  "folders": {
+    "sshfs": [
+      {
+        "host": "./",
+        "guest": "/vagrant"
+      }
+    ],
+    "rsync": [],
+    "nfs": []
+  }
+}

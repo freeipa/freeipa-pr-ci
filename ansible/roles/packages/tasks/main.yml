@@ -1,0 +1,191 @@
+- name: Upgrade all packages to their latest version
+  become: True
+  package:
+    name: '*'
+    state: latest
+
+- name: Install common packages
+  become: True
+  dnf:
+    state: present
+    name:
+    - bash-completion
+    - dnsmasq
+    - gdb
+    - git
+    - ldb-tools
+    - libselinux-python3
+    - NetworkManager
+    - openldap-clients
+    - systemtap
+    - tig
+    - valgrind
+    - vim
+    - wget
+
+- name: Install IPA specific packages
+  become: True
+  dnf:
+    state: present
+    name:
+    - freeipa-server
+    - freeipa-server-dns
+    - freeipa-server-trust-ad
+  when: inventory_hostname == 'ipa'
+
+- name: Install LDAP specific packages
+  become: True
+  dnf:
+    state: present
+    name:
+    - 389-ds-base
+  when: inventory_hostname == 'ldap'
+
+- name: Install Client specific packages
+  become: True
+  dnf:
+    state: present
+    name:
+    - adcli
+    - autoconf
+    - automake
+    - bind-utils
+    - c-ares-devel
+    - check
+    - check-devel
+    - cifs-utils-devel
+    - dbus-devel
+    - dbus-libs
+    - diffstat
+    - docbook-style-xsl
+    - doxygen
+    - fakeroot
+    - findutils
+    - freeipa-client
+    - gcc
+    - gdm-pam-extensions-devel
+    - gettext
+    - gettext-devel
+    - glib2-devel
+    - gnutls-utils
+    - http-parser-devel
+    - jansson-devel
+    - keyutils-libs-devel
+    - krb5-devel
+    - krb5-server
+    - libcmocka
+    - libcmocka-devel
+    - libcollection-devel
+    - libcurl-devel
+    - libdhash-devel
+    - libini_config-devel
+    - libldb
+    - libldb-devel
+    - libnfsidmap-devel
+    - libnl3-devel
+    - libpath_utils-devel
+    - libref_array-devel
+    - libselinux-devel
+    - libsemanage-devel
+    - libsmbclient-devel
+    - libtalloc
+    - libtalloc-devel
+    - libtdb
+    - libtdb-devel
+    - libtevent
+    - libtevent-devel
+    - libtool
+    - libuuid-devel
+    - libxml2
+    - libxslt
+    - m4
+    - nspr-devel
+    - nss-devel
+    - nss-tools
+    - nss-util-devel
+    - nss_wrapper
+    - oddjob
+    - oddjob-mkhomedir
+    - openldap-devel
+    - openssh
+    - openssl
+    - openssl-devel
+    - p11-kit-devel
+    - pam-devel
+    - pam_wrapper
+    - pcre-devel
+    - pkgconfig
+    - po4a
+    - popt-devel
+    - python2-ldap
+    - python2-dbus
+    - python2-devel
+    - python2-requests
+    - python3-dbus
+    - python3-devel
+    - python3-requests
+    - realmd
+    - resolv_wrapper
+    - samba-common-tools
+    - samba-devel
+    - samba-winbind
+    - samba4-devel
+    - selinux-policy-targeted
+    - socket_wrapper
+    - softhsm >= 2.1.0
+    - sssd
+    - sssd-*
+    - systemd
+    - systemd-devel
+    - systemtap-sdt-devel
+    - uid_wrapper
+  when: inventory_hostname == 'client'
+
+- name: Install Client specific packages required for integration tests
+  become: True
+  dnf:
+    state: present
+    name:
+    - openldap-servers
+    - python2-pytest
+    - python3-pytest
+    - python2-ldb
+    - python3-ldb
+    - python2-psutil
+    - python3-psutil
+  when: inventory_hostname == 'client'
+
+- name: Install debug information for specific packages
+  become: True
+  dnf:
+    state: present
+    enablerepo: '*-debuginfo'
+    name:
+    - authselect-debuginfo
+    - authselect-libs-debuginfo
+    - dbus-debuginfo
+    - ding-libs-debuginfo
+    - libcmocka-debuginfo
+    - libdhash-debuginfo
+    - libini_config-debuginfo
+    - libldb-debuginfo
+    - libtalloc-debuginfo
+    - libtevent-debuginfo
+  when: inventory_hostname == 'client'
+
+- name: Install additional packages
+  become: True
+  dnf:
+    state: present
+    name:
+    - authselect
+
+# 389-ds switched to new installation scripts but since the old scripts
+# are just moved to another package for now, we can still use them.
+- name: Install LDAP legacy tools
+  become: True
+  dnf:
+    state: present
+    name:
+    - 389-ds-base-legacy-tools
+  when: inventory_hostname == 'ldap'

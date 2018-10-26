@@ -10,7 +10,7 @@ from .common import (FallibleTask, TaskException, PopenTask,
                      logging_init_file_handler, create_file_from_template)
 from . import constants
 from .remote_storage import GzipLogFiles, CloudUpload, CreateRootIndex
-from .vagrant import with_vagrant
+from .vagrant import with_vagrant, with_vagrant_ad
 
 
 class JobTask(FallibleTask):
@@ -332,3 +332,17 @@ class RunWebuiTests(RunPytest):
         logging.error(
             '>>>>>> WEBUI TESTS FAILED (error code: {code}) <<<<<<'.format(
                 code=self.returncode))
+
+
+class RunADTests(RunPytest):
+    def _before(self):
+        super()._before()
+        # Prepare config files for AD Vagrant cluster
+        rubyfolder = self.data_dir
+        rubyfolder += "/ruby"
+        shutil.copytree(constants.VAGRANT_RUBY, rubyfolder)
+        shutil.copy(constants.VAGRANT_CONFIG, self.data_dir)
+
+    @with_vagrant_ad
+    def _run(self):
+        super()._run()

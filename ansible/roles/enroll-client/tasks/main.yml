@@ -1,0 +1,105 @@
+- name: 'Create /shared/enrollment/{{ inventory_hostname }} directory'
+  become: True
+  file:
+    path: '/shared/enrollment/{{ inventory_hostname }}/'
+    state: directory
+
+# KCM needs to be enabled in order to join to Active Directory domain
+- name: Start SSSD KCM socket
+  become: True
+  service:
+    name: sssd-kcm.socket
+    enabled: yes
+    state: started
+
+- name: Join IPA domain
+  become: True
+  shell: |
+    /usr/sbin/ipa-client-install --unattended          \
+      --domain {{ ipa.domain | quote }}                \
+      --principal admin                                \
+      --password {{ ipa.password | quote }}            \
+      --force-ntpd
+  register: client_ipa_installation
+  args:
+    creates: /etc/ipa/ca.crt
+
+- name: Copy IPA keytab to local folder
+  become: True
+  copy:
+    src: /etc/krb5.keytab
+    dest: '/etc/sssd/ipa.keytab'
+    remote_src: yes
+  when: client_ipa_installation.changed
+  
+- name: Remove /etc/krb5.keytab
+  become: True
+  file:
+    path: /etc/krb5.keytab
+    state: absent
+
+- name: Copy IPA keytab to shared folder
+  become: True
+  copy:
+    force: True
+    src: /etc/sssd/ipa.keytab
+    dest: '/shared/enrollment/{{ inventory_hostname }}/ipa.keytab'
+    remote_src: yes
+
+- name: Join to Active Directory domain
+  become: True
+  shell: |
+    echo vagrant | realm join {{ ad.domain | quote }} || exit $?
+    touch /etc/sssd/ad_enrolled || exit $?
+  register: client_ad_installation
+  args:
+    creates: /etc/sssd/ad_enrolled
+
+- name: Copy AD keytab to local folder
+  become: True
+  copy:
+    src: /etc/krb5.keytab
+    dest: '/etc/sssd/ad.keytab'
+    remote_src: yes
+  when: client_ad_installation.changed
+  
+- name: Remove /etc/krb5.keytab
+  become: True
+  file:
+    path: /etc/krb5.keytab
+    state: absent
+
+- name: Copy AD keytab to shared folder
+  become: True
+  copy:
+    force: True
+    src: /etc/sssd/ad.keytab
+    dest: '/shared/enrollment/{{ inventory_hostname }}/ad.keytab'
+    remote_src: yes
+
+- name: Create /etc/sssd/sssd.conf
+  become: True
+  template:
+    src: sssd.conf
+    dest: /etc/sssd/sssd.conf
+    owner: root
+    group: root
+    mode: 0600
+  register: client_configuration
+    
+- name: Create /etc/sudo.conf
+  become: True
+  template:
+    src: sudo.conf
+    dest: /etc/sudo.conf
+    owner: root
+    group: root
+    mode: 0644
+    
+- name: Restart SSSD
+  become: True
+  service:
+    name: sssd.service
+    enabled: yes
+    state: restarted
+  when: client_configuration.changed

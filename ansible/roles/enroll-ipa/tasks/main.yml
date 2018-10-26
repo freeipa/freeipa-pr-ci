@@ -1,0 +1,54 @@
+- name: 'Create /shared/enrollment/{{ inventory_hostname }} directory'
+  become: True
+  file:
+    path: '/shared/enrollment/{{ inventory_hostname }}/'
+    state: directory
+
+- name: Remove IPA CA trust from previous installation
+  become: True
+  local_action:
+    shell \
+      FILE="{{ playbook_dir }}/../shared-enrollment/ipa/ca.crt"; \
+      [ -f "$FILE" ] && /usr/bin/trust anchor --remove "$FILE" || exit 255
+  register: result
+  when: ipa_installation is defined and ipa_installation.changed
+  failed_when: "result.rc != 255 and result.rc != 0"
+  changed_when: "result.rc == 0"
+
+- name: Copy certificate to shared folder
+  become: True
+  copy:
+    force: True
+    src: /etc/ipa/ca.crt
+    dest: '/shared/enrollment/{{ inventory_hostname }}/'
+    remote_src: yes
+  register: ipa_cert
+
+- name: Trust IPA CA
+  become: True
+  local_action:
+    shell /usr/bin/trust anchor "{{ playbook_dir }}/../shared-enrollment/ipa/ca.crt"
+  when: ipa_cert.changed
+  
+- name: Install IPA-AD trust
+  become: True
+  shell: |
+    /usr/sbin/ipa-adtrust-install --unattended         \
+      --netbios-name={{ ipa.netbios | quote }}         \
+      --admin-password={{ ipa.password | quote }}
+  when: ipa_installation is not defined or ipa_installation.changed
+
+- name: 'Setup trust with {{ ad.domain }}'
+  shell: |
+    echo {{ ipa.password | quote }} | kinit admin
+
+    ipa trust-show {{ ad.domain | quote }}
+    if [ $? -eq 0 ]; then
+      echo "Trust with {{ ad.domain | quote }} already exists. Nothing to do."
+      exit 255
+    fi
+     
+    echo vagrant | ipa trust-add {{ ad.domain | quote }} --admin Administrator --password
+  register: result
+  failed_when: "result.rc != 255 and result.rc != 0"
+  changed_when: "result.rc == 0"

@@ -1,0 +1,62 @@
+---
+- hosts: ipa:ldap:client
+  roles:
+  - packages
+  vars_files:
+  - variables.yml
+
+- hosts: ad:ad-child
+  gather_facts: no
+  roles:
+  - win-common
+  vars_files:
+  - variables.yml
+
+- hosts: ad
+  gather_facts: no
+  roles:
+  - win-forest
+  vars_files:
+  - variables.yml
+
+- hosts: ipa
+  gather_facts: no
+  roles:
+  - ipa
+  vars_files:
+  - variables.yml
+
+# Continue with AD server after IPA is installed. It seems that the AD server
+# is not ready directly after win_reboot task is finished. This give the server
+# enough time to fully reboot.
+- hosts: ad
+  gather_facts: yes
+  roles:
+  - { role: win-schema, suffix: '{{ ad.suffix }}' }
+  - { role: win-dns, domain: '{{ ad.domain }}', hostname: '{{ ad.hostname }}' }
+  vars_files:
+  - variables.yml
+
+- hosts: ad-child
+  gather_facts: yes
+  roles:
+  - win-domain
+  - { role: win-dns, domain: '{{ ad_child.domain }}', hostname: '{{ ad_child.hostname }}' }
+  vars_files:
+  - variables.yml
+
+- hosts: ldap:client
+  gather_facts: no
+  roles:
+  - dnsclient
+  vars_files:
+  - variables.yml
+
+- hosts: ldap
+  gather_facts: no
+  roles:
+  - ldap
+  vars_files:
+  - variables.yml
+
+- import_playbook: enroll.yml
