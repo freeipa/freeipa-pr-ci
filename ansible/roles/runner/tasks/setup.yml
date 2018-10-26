@@ -22,22 +22,46 @@
   with_items:
     - tuned
     - vagrant
+    - vagrant-sshfs
     - vagrant-libvirt
     - libguestfs-tools-c  # required for vagrant package command
     - ansible  # TODO requires >= 2.3
     - nfs-utils
     - git
     - libvirt
+    - libvirt-devel
+    - ruby-devel
     - rsync
     - createrepo
     - gzip
     - gcc
     - python3-devel
     - python3-pip
+    - python3-winrm
+    - python2-winrm
+    - NetworkManager
+    - python-dnf
     - redhat-rpm-config
     - crontabs
   notify:
     - restart_nfs
+
+# as per sssd-suite readme file states, we need vagrant plugins...
+- name: install libvirt plugin for vagrant
+  raw: vagrant plugin install vagrant-libvirt
+  ignore_errors: yes
+
+- name: install vagrant plugin (winrm) for AD tests
+  raw: vagrant plugin install winrm
+  ignore_errors: yes
+
+- name: install vagrant plugins (winrm-fs) for AD tests
+  raw: vagrant plugin install winrm-fs
+  ignore_errors: yes
+
+- name: install vagrant plugins (winrm-elevated) for AD tests
+  raw: vagrant plugin install winrm-elevated
+  ignore_errors: yes
 
 # adding after packages install as the file can be overwritten by "mailcap"
 - name: add mime.types so awscli can correctly guess content-types
@@ -45,6 +69,9 @@
     src: mime.types
     dest: /etc/mime.types
     mode: 0644
+
+- name: force reinstall python3-six
+  raw: dnf reinstall python3-six -y
 
 - name: configure sunrpc to leave kadmin port 749/TCP open
   sysctl:

@@ -1,0 +1,86 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+#
+
+Vagrant.configure(2) do |config|
+
+    config.ssh.username = "root"
+
+    config.vm.synced_folder "./", "/vagrant",
+        type: "nfs",
+        nfs_udp: false
+
+    config.vm.box = "{{ vagrant_template_name }}"
+
+    config.vm.provider "libvirt" do |domain, override|
+        # Defaults for masters and replica
+        # WARNING: Do not overcommit CPUs, it causes issues during
+        # provisioning, when RPMs are installed
+        domain.cpus = 1
+        domain.memory = 2750
+
+        # Nested virtualization options
+        domain.nested = true
+        domain.cpu_mode = "host-passthrough"
+
+        # Disable graphics
+        domain.graphics_type = "none"
+
+        domain.volume_cache = "unsafe"
+    end
+
+    config.vm.provision :ansible do |ansible|
+        # Disable default limit to connect to all the machines
+        ansible.limit = "all"
+        ansible.playbook = "../../ansible/provision_ad.yml"
+        ansible.extra_vars = "vars.yml"
+        ansible.host_vars = {
+            "ad" => {"ansible_winrm_server_cert_validation" => "ignore"},
+            "ad-child" => {"ansible_winrm_server_cert_validation" => "ignore"}
+        }
+    end
+
+    config.vm.define "controller" , primary: true do |controller|
+        controller.vm.network "private_network", ip: "192.168.100.20"
+        controller.vm.provider "libvirt" do |domain,override|
+            # Less resources needed for controller
+            domain.memory = 950
+        end
+    end
+
+    config.vm.define "ad" do |ad|
+        ad.vm.box = "sssd-winsrv2019-ad"
+        ad.vm.box_url = "http://download.eng.brq.redhat.com/archive/sssd/vagrant/sssd-winsrv2019-ad.json"
+        ad.vm.hostname = "root-dc"
+        ad.vm.network "private_network", ip:"192.168.100.110"
+        # Disable NFS sharing (==> default: Mounting NFS shared folders...)
+        ad.vm.synced_folder ".", "/vagrant", type: "nfs", disabled: true
+    end
+
+    config.vm.define "ad-child" do |adchild|
+        adchild.vm.box = "sssd-winsrv2019-ad-child"
+        adchild.vm.box_url = "http://download.eng.brq.redhat.com/archive/sssd/vagrant/sssd-winsrv2019-ad-child.json"
+        adchild.vm.hostname = "child-dc"
+        adchild.vm.network "private_network", ip:"192.168.100.120"
+        # Disable NFS sharing (==> default: Mounting NFS shared folders...)
+        adchild.vm.synced_folder ".", "/vagrant", type: "nfs", disabled: true
+    end
+
+    config.vm.define "master" do |master|
+        # master.vm.box = "{{ vagrant_template_name }}"
+        master.vm.hostname = "master.ipa.vm"
+        master.vm.network "private_network", ip: "192.168.100.10"
+    end
+
+    config.vm.define "client0"  do |client0|
+        # client0.vm.box = "{{ vagrant_template_name }}"
+        client0.vm.hostname = "master.client.vm"
+        client0.vm.network "private_network", ip: "192.168.100.30"
+        client0.vm.provider "libvirt" do |domain,override|
+            domain.memory = 950
+        end
+    end
+
+end
+
+Vagrant::DEFAULT_SERVER_URL.replace('https://vagrantcloud.com')

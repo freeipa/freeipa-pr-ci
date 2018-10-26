@@ -1,0 +1,16 @@
+---
+- hosts: master:client0
+  roles:
+  - ping
+
+- hosts: ad:ad-child
+  vars:
+  - ansible_connection: winrm
+  - ansible_port: 5986
+  - ansible_user: Administrator
+  - ansible_password: vagrant
+  - ansible_winrm_server_cert_validation: ignore
+  - ansible_winrm_operation_timeout_sec: 60
+  - ansible_winrm_read_timeout_sec: 70
+  roles:
+  - win-ping

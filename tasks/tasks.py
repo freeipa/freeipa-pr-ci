@@ -332,3 +332,7 @@ class RunWebuiTests(RunPytest):
         logging.error(
             '>>>>>> WEBUI TESTS FAILED (error code: {code}) <<<<<<'.format(
                 code=self.returncode))
+
+
+class RunADTests(RunPytest):
+    action_name = 'ad'

@@ -1,0 +1,17 @@
+- name: Allow access from our network
+  win_firewall_rule:
+    name: Allow access from our network
+    direction: in
+    action: allow
+    enabled: yes
+    state: present
+
+- name: Install Active Directory Services
+  win_feature:
+    name: '{{ item }}'
+    include_management_tools: yes
+    include_sub_features: yes
+    state: present
+  with_items:
+  - AD-Domain-Services
+  - DNS

@@ -1,0 +1,26 @@
+- name: 'Create new AD domain {{ ad_child.domain }}'
+  win_shell: |
+    Import-Module ADDSDeployment
+    
+    $user = "Administrator@{{ ad.domain }}"
+    $password = ConvertTo-SecureString -String "vagrant" -AsPlainText -Force
+    $credential = New-Object                                                  \
+      System.Management.Automation.PSCredential($user, $password)
+    
+    Install-ADDSDomain                                                        \
+      -Credential $credential                                                 \
+      -NewDomainName "{{ ad_child.domain|regex_replace('([^.]+).+', '\1') }}" \
+      -ParentDomainName "{{ ad.domain }}"                                     \
+      -NewDomainNetbiosName "{{ ad_child.netbios }}"                          \
+      -Force:$true                                                            \
+      -InstallDns:$true                                                       \
+      -NoRebootOnCompletion:$true                                             \
+      -SafeModeAdministratorPassword                                          \
+        (ConvertTo-SecureString '{{ ad_child.safe_password }}' -AsPlainText -Force)
+  register: installation
+  args:
+    creates: 'C:\Windows\NTDS'
+
+- name: Reboot machine
+  win_reboot:
+  when: installation.changed

@@ -1,6 +1,6 @@
 ---
 - name: clone FreeIPA PR CI repo
-  git: 
+  git:
     dest: /root/freeipa-pr-ci
     repo: "{{ pr_ci_repo }}"
     version: "{{ pr_ci_repo_branch }}"
@@ -33,6 +33,11 @@
 
 - name: systemd daemon reload
   shell: systemctl daemon-reload
+
+# FIXME: something is breaking python3-six installation,
+# so reinstallation is required
+- name: force reinstall python3-six
+  raw: dnf reinstall python3-six -y
 
 - name: enable prci
   service:
