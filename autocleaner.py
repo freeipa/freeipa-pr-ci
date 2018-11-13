@@ -91,20 +91,71 @@ def load_yaml(yml_path):
         sys.exit(1)
 
 
-def delete_old_job_dirs(max_days):
+def get_old_job_dirs(max_days):
     """
-    Delete all PRCI job directories older then max_days if "--jobs_dir_exp"
+    Get all PRCI job directories older than max_days if "--jobs_dir_exp"
     cmdline argument defined
     """
-    dirs_deleted = []
+    old_job_dirs = []
     max_days = datetime.timedelta(max_days)
     for folder in os.scandir(JOBS_DIR):
         if folder.is_dir():
             mtime = datetime.datetime.fromtimestamp(
                 os.path.getmtime(folder.path))
             if mtime - datetime.datetime.now() < max_days:
-                shutil.rmtree(folder.path)
-                dirs_deleted.append(folder.path)
+                old_job_dirs.append(folder.path)
+    return old_job_dirs
+
+
+def prune_exports_file(prune_dirs):
+    """
+    Vagrant entries in /etc/exports are not removed on vagrant destroy,
+    hence /etc/exports must be accordingly cleaned-up before deleting
+    PRCI job folders in order to avoid nfs-server issues.
+    """
+    entries_deleted = []
+    try:
+        if not os.geteuid()==0:
+            print("\nUnable to prune /etc/exports. Must be run as root\n")
+            return None
+    except:
+	pass
+
+    exports = open('/etc/exports', 'r+')
+    content = exports.readlines()
+    exports.seek(0)
+    for line in content:
+        if "# VAGRANT-BEGIN" not in line:
+            exports.write(line)
+        else:
+            next_item = content.index(line) + 1
+            next_line = content[next_item]
+            export_folder = next_line.partition(' ')[0].strip('"')
+            if export_folder in prune_dirs:
+                entries_deleted.append(export_folder)
+                content.remove(line)
+                content.remove(next_line)
+            else:
+                exports.write(line)
+
+    # Write it out and close it.
+    exports.truncate()
+    exports.close()
+
+    # sync exportfs before deleting the folders
+    subprocess.run(['exportfs', '-ar'], timeout=TIMEOUT)
+
+    return entries_deleted
+
+
+def delete_job_dirs(old_dirs):
+    """
+    This function simply deletes a list of folders
+    """
+    dirs_deleted = []
+    for folder in old_dirs:
+        shutil.rmtree(folder)
+        dirs_deleted.append(folder)
     return dirs_deleted
 
 
@@ -311,12 +362,21 @@ def run(args):
             box.delete_libvirt_img()
 
     if args.jobs_dir_exp:
-        res = delete_old_job_dirs(args.jobs_dir_exp)
-        if not res:
+        # search old prci job dirs to be deleted
+        old_dirs = get_old_job_dirs(args.jobs_dir_exp)
+        if not old_dirs:
             logger.info('No job dir qualified for erase')
         else:
-            logger.info('Following directories deleted: ')
-            logger.info(res)
+            # prune and re-sync exportfs to avoid nfs-server issues
+            prune_exports = prune_exports_file(old_dirs)
+            if prune_exports:
+                logger.info('Following /etc/exports entries deleted: ')
+                logger.info(prune_exports)
+            # delete old prci job dirs
+            dirs_deleted = delete_job_dirs(old_dirs)
+            if dirs_deleted:
+                logger.info('Following directories deleted: ')
+                logger.info(dirs_deleted)
 
     res = del_dangling_libvirt_images()
     if not res:
