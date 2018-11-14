@@ -45,6 +45,42 @@
     - xorg-x11-server-Xvfb
     - firefox
     - python3-paramiko
+    - firewalld
+
+# Configure firewalld (make sure that ssh is enabled)
+# This is using the command line tool till python2/3 firewalld import issues
+# are really solved for the ansible firewalld module
+#
+# This can be used later on:
+#   firewalld:
+#     service : "{{ item }}"
+#     permanent: true
+#     state: enabled
+#   with_items:
+#     - ssh
+#
+- name: Configure firewalld
+  command: >
+    firewall-offline-cmd
+    --add-service=ssh
+
+# Mask firewalld - No auto-start and also dbus activation
+# This can be removed when all tests are able to configure firewalld
+#
+# If firwalld will not be masked, please enable the following section as
+# a replacement for masking firewalld:
+#
+# - name: Enable and start firewalld
+#   systemd:
+#     name: firewalld
+#     enabled: yes
+#     state: started
+#
+- name: Mask firewalld
+  systemd:
+    name: firewalld
+    enabled: no
+    masked: yes
 
 - name: install py3 pip dependencies
   pip:
