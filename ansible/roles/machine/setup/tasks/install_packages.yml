@@ -49,12 +49,12 @@
 - name: install py3 pip dependencies
   pip:
     executable: pip3
-    name: "{{ python_packages_to_install | join(' ') }}"
+    name: "{{ python_packages_to_install }}"
 
 - name: install py2 pip dependencies
   pip:
     executable: pip
-    name: "{{ python_packages_to_install | join(' ') }}"
+    name: "{{ python_packages_to_install }}"
 
 - name: download geckodriver
   shell: |
