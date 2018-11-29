@@ -119,7 +119,7 @@ def prune_exports_file(prune_dirs):
             print("\nUnable to prune /etc/exports. Must be run as root\n")
             return None
     except:
-	pass
+        pass
 
     exports = open('/etc/exports', 'r+')
     content = exports.readlines()
