@@ -46,6 +46,12 @@
     dest: /etc/mime.types
     mode: 0644
 
+- name: configure sunrpc to leave kadmin port 749/TCP open
+  sysctl:
+    name: sunrpc.min_resvport
+    value: 750
+    state: present
+
 - name: start&enable nfs
   service:
     name: nfs
