@@ -6,7 +6,7 @@
     - name: fedora_version
       prompt: fedora
       private: false
-      default: 27
+      default: 29
     - name: git_branch
       prompt: "git branch"
       private: false

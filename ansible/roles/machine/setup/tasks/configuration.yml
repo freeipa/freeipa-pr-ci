@@ -26,3 +26,7 @@
 - name: configure FreeIPA COPR repo
   shell: "dnf copr enable -y @freeipa/freeipa-{{ freeipa_version }}"
   when: repo_freeipa_copr_enabled
+
+- name: configure PKI COPR repo
+  shell: "dnf copr enable -y @pki/10.6-nightly"
+  when: repo_freeipa_copr_enabled

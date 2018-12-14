@@ -6,3 +6,4 @@ repo_fedora_enabled: 1
 repo_updates_enabled: 1
 repo_updates_testing_enabled: 0
 repo_freeipa_copr_enabled: 1
+repo_pki_testing_enabled: 0

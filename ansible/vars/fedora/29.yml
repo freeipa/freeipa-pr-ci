@@ -4,6 +4,6 @@ base_box_url: https://download.fedoraproject.org/pub/fedora/linux/releases/29/Cl
 
 repo_fedora_enabled: 1
 repo_updates_enabled: 1
-repo_updates_testing_enabled: 0
+repo_updates_testing_enabled: 1
 repo_freeipa_copr_enabled: 1
-
+repo_pki_testing_enabled: 1
