@@ -67,4 +67,15 @@ name=updates-testing
 metalink=https://mirrors.fedoraproject.org/metalink?repo=updates-testing-f$releasever&arch=$basearch
 failovermethod=priority
 enabled={{ repo_updates_testing_enabled }}
+
+[group_pki-10.6-nightly]
+name=Copr repo for 10.6-nightly owned by @pki
+baseurl=https://copr-be.cloud.fedoraproject.org/results/@pki/10.6-nightly/fedora-$releasever-$basearch/
+type=rpm-md
+skip_if_unavailable=True
+gpgcheck=1
+gpgkey=https://copr-be.cloud.fedoraproject.org/results/@pki/10.6-nightly/pubkey.gpg
+repo_gpgcheck=0
+enabled={{ repo_pki_testing_enabled }}
+enabled_metadata=1
 """

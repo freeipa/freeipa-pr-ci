@@ -8,3 +8,4 @@ fedora_rawhide_images_remote_dir: http://ftp.fi.muni.cz/pub/linux/fedora/linux/d
 
 repo_rawhide_enabled: 1
 repo_freeipa_copr_enabled: 0
+repo_pki_testing_enabled: 0
