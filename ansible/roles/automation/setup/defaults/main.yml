@@ -1,0 +1,3 @@
+---
+basedir: /root/openclose_pr
+pr_ci_repo: "https://github.com/freeipa/freeipa-pr-ci"

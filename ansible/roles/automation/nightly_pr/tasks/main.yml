@@ -1,0 +1,20 @@
+- name: schedule opening nightly PRs
+  cron:
+    name: "openclose_{{ item.name }}"
+    minute: "{{ item.minute }}"
+    hour: "{{ item.hour }}"
+    weekday: "{{ item.weekdays }}"
+    flow: "{{ item.flow }}"
+    job: >
+           python3 {{ basedir }}/open_close_pr.py
+           open_nightly_pr
+           --config {{ basedir }}/config.yml
+           --id {{ item.name }}
+           --repo_path {{ basedir }}/freeipa
+           --flow {{ item.flow }}
+           --branch {{ item.branch }}
+           --prci_config {{ prci_config }}
+           --pr_against_upstream {{ pr_against_upstream | bool }}
+    user: root
+    state: present
+    with_items: "{{ nightly_jobs }}"

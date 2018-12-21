@@ -8,6 +8,12 @@
     - PyYAML
     - git
     - crontabs
+    - python2-tqdm
+    - ansible
+    - vagrant
+    - libvirt
+    - vagrant-libvirt
+    - rsync
 
 - name: install pip dependencies
   pip:
@@ -16,6 +22,7 @@
   with_items:
     - CacheControl
     - gitpython
+    - ryd
 
 - name: create base directory
   file:
@@ -29,6 +36,22 @@
   template:
     src: config.yml
     dest: "{{ basedir }}/config.yml"
+
+- name: create config directory if it doesn't exist
+  file:
+    path: /root/.config/
+    state: directory
+    owner: root
+    group: root
+    mode: 0700
+
+- name: create Vagrant atlas conf file
+  template:
+    src: vagrant_config.yml
+    dest: "/root/.config/atlas_box_uploader.yaml"
+    owner: root
+    group: root
+    mode: 0600
 
 - name: copy openclose_pr.py script
   copy:
@@ -54,6 +77,13 @@
             UserKnownHostsFile /dev/null
             IdentityFile /root/.ssh/git_ssh_key
 
+
+- name: clone freeipa-pr-ci repo
+  git:
+    dest: "{{ basedir }}/freeipa-pr-ci"
+    repo: "{{ pr_ci_repo }}"
+    force: true
+
 - name: clone freeipa fork
   git:
     repo: "git@github_pr_tool:{{ repo_owner }}/freeipa.git"
@@ -65,21 +95,3 @@
 - name: rename remote origin to mygithub
   shell: "cd {{ basedir }}/freeipa; git remote rename origin mygithub"
   ignore_errors: True
-
-- cron:
-    name: "openclose_{{ item.name }}"
-    minute: "{{ item.minute }}"
-    hour: "{{ item.hour }}"
-    weekday: "{{ item.weekdays }}"
-    job: >
-           python3 {{ basedir }}/open_close_pr.py
-           --config {{ basedir }}/config.yml
-           --id {{ item.name }}
-           --repo_path {{ basedir }}/freeipa
-           --branch {{ branch }}
-           --prci_config {{ prci_config }}
-           --pr_against_upstream {{ pr_against_upstream | bool }}
-           open_pr
-    user: root
-    state: present
-  with_items: "{{ nightly_jobs }}"

@@ -1,0 +1,3 @@
+url: https://vagrantcloud.com
+username: freeipa
+token: {{ vagrant_atlas_token }}

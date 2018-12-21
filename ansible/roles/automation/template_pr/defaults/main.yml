@@ -1,0 +1,16 @@
+---
+basedir: /root/openclose_pr
+
+template_jobs:
+  - name: pki_master
+    weekdays: "4"
+    hour: "15"
+    minute: "00"
+    flow: "pki"
+    branch: "master"
+  - name: rawhide_master
+    weekdays: "4"
+    hour: "17"
+    minute: "00"
+    flow: "ci"
+    branch: "master"
