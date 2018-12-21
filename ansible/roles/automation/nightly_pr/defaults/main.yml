@@ -1,0 +1,34 @@
+---
+basedir: /root/openclose_pr
+
+nightly_jobs:
+  - name: testing_master
+    weekdays: "1,3,5"
+    hour: "23"
+    minute: "00"
+    flow: "ci"
+    branch: "master"
+  - name: testing_f28
+    weekdays: "2,4"
+    hour: "23"
+    minute: "00"
+    flow: "ci"
+    branch: "master"
+  - name: testing_rawhide
+    weekdays: "6"
+    hour: "10"
+    minute: "00"
+    flow: "ci"
+    branch: "master"
+  - name: testing_ipa-4.7
+    weekdays: "7"
+    hour: "10"
+    minute: "00"
+    flow: "ci"
+    branch: "ipa-4-7"
+  - name: testing_pki
+    weekdays: "7"
+    hour: "20"
+    minute: "00"
+    flow: "pki"
+    branch: "master"

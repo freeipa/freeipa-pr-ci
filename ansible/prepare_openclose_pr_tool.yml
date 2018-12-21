@@ -2,7 +2,7 @@
 - hosts: scheduler
   remote_user: root
   name: deploy open_close_pr tool
-  gather_facts: no
+  gather_facts: yes
   vars:
     repo_name: freeipa
 
@@ -11,9 +11,10 @@
       prompt: "Provide an unique identifier for the PR"
       private: false
 
-    - name: branch
-      prompt: "Branch name to open PR against it"
+    - name: flow
+      prompt: "Flow name to identify the nightly template: ci or pki"
       private: false
+      default: "ci"
 
     - name: repo_owner
       prompt: "Repo owner to create branches"
@@ -28,7 +29,7 @@
       prompt: "Provide the path to a test definition file to use it to open new
                PRs. For example: ipatests/prci_definition/gating"
       private: false
-    
+
     - name: git_sshkey
       prompt: "Provide a ssh key that has push access to the git repo"
       private: false
@@ -38,12 +39,27 @@
                opening it agaist your own freeipa repo (yes/no)"
       private: false
 
+    - name: prci_def_dir
+      prompt: "Provide PRCI test definitions folder.
+               E.g. ipatests/prci_definition"
+      private: false
+
+    - name: fedora_ver
+      prompt: "Provide Fedora version (int) for template creation. E.g. 29"
+      private: false
+
+    - name: vagrant_atlas_token
+      prompt: "Provide Vagrant atlas token for uploading boxes"
+      private: false
+
   pre_tasks:
     - name: install python and deps for ansible modules
       raw: dnf install -y python2 python2-dnf libselinux-python
 
   roles:
-    - role: automation/openclose_pr
-      when: > 
-            prci_config != "" and github_token != "" and 
+    - role: automation/setup
+      when: >
+            prci_config != "" and github_token != "" and
             identifier != "" and  repo_owner != 'freeipa'
+    - role: automation/nightly_pr
+    - role: automation/template_pr
