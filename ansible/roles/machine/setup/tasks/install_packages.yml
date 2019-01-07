@@ -49,12 +49,15 @@
     state: latest
   with_items:
     - PyYAML  # ipa-vagrant-ci dependency
+    - python3-pyyaml
     - vim
     - NetworkManager
     - xorg-x11-server-Xvfb
     - firefox
     - python3-paramiko
     - firewalld
+    - python3-dnf  # Ansible dependency
+    - python3-libselinux  # Ansible dependency
 
 # Configure firewalld (make sure that ssh is enabled)
 # This is using the command line tool till python2/3 firewalld import issues

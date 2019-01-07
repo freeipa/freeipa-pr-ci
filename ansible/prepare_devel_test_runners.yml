@@ -21,8 +21,8 @@
       debug:
         var: monitored_repo_owner
       failed_when: monitored_repo_owner == "freeipa"
-    - name: install python and deps for ansible modules
-      raw: dnf install -y python2 python2-dnf libselinux-python
+    - name: install Python 3 deps for ansible modules
+      raw: dnf install -y python3-dnf python3-libselinux
     - name: gather facts
       setup:
   roles:
