@@ -20,9 +20,15 @@ class AnsibleFixKeysPermissions(FallibleTask):
 class AnsiblePlaybook(PopenTask):
     def __init__(self, playbook=None, extra_vars=None,
                  verbosity=None, **kwargs):
+        if extra_vars is None:
+            extra_vars = {}
+        # use Python 3 as default Python interpreter for Ansible
+        extra_vars.setdefault(
+            'ansible_python_interpreter',
+            '/usr/bin/python3'
+        )
         self.extra_vars = extra_vars
         self.playbook = playbook
-        self.extra_vars = extra_vars
         self.verbosity = verbosity
 
         if self.playbook is None:
@@ -32,13 +38,12 @@ class AnsiblePlaybook(PopenTask):
             "ansible-playbook",
             self.playbook]
 
-        if self.extra_vars is not None:
-            for name, value in self.extra_vars.items():
-                if value is None:
-                    continue
-                cmd[2:2] = ['-e', '{name}={value}'.format(
-                    name=name,
-                    value=value)]
+        for name, value in self.extra_vars.items():
+            if value is None:
+                continue
+            cmd[2:2] = ['-e', '{name}={value}'.format(
+                name=name,
+                value=value)]
 
         if self.verbosity is not None:
             cmd.append('-{verbosity}'.format(verbosity=self.verbosity))
