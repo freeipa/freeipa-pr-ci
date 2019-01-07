@@ -1,3 +1,5 @@
 ---
 repofile_url: {{ repofile_url }}
 update_packages: {{ update_packages }}
+
+ansible_python_interpreter: /usr/bin/python3
