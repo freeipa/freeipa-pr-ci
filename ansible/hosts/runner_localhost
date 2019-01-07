@@ -1,5 +1,12 @@
 [image_box]
 # added dynamically from box_prepare (because IP is obtained from DHCP)
 
+[image_box:vars]
+ansible_python_interpreter=/usr/bin/python3
+
 [runners]
-localhost ansible_connection='local'
+localhost
+
+[runners:vars]
+ansible_connection=local
+ansible_python_interpreter=/usr/bin/python3
