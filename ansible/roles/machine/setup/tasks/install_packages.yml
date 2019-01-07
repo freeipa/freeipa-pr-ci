@@ -4,6 +4,15 @@
     name: '*'
     state: latest
 
+# temporary workaround for rawhide issue
+- name: remove packages that cause conflicts on rawhide
+  dnf:
+    name:
+      - gdbm
+      - python2-chardet
+    state: absent
+  when: fedora_version == 'rawhide'
+
 - name: install freeipa rpms with dependencies
   shell: dnf install -y /vagrant/rpms/*.rpm
 
