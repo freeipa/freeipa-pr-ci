@@ -84,8 +84,10 @@ class AutomatedPR(object):
         res.raise_for_status()
 
         latest_ver = res.json()['current_version']['version']
-        logger.info('Latest %s Vagrant box version is: %s', (
-            self.args.branch, latest_ver))
+        logger.info('Latest %s Vagrant box version is: %s',
+                    self.args.branch,
+                    latest_ver
+        )
 
         return latest_ver
 
@@ -105,7 +107,7 @@ class AutomatedPR(object):
 
         subprocess.run(['virsh', 'destroy', templ_vm_name])
         subprocess.run(['virsh', 'undefine', templ_vm_name])
-        subprocess.run(['vagrant', 'box', 'remove', box_name])
+        subprocess.run(['vagrant', 'box', 'remove', '--force', box_name])
         subprocess.run(['virsh', 'vol-delete', '--pool', 'default',
                         libvirt_vol_name])
         try:
@@ -130,6 +132,7 @@ class AutomatedPR(object):
                     playbook_path,
                     '-e', 'fedora_version={}'.format(self.args.fedora_ver),
                     '-e', 'git_branch={}'.format(self.args.branch),
+                    '-e', 'flow={}'.format(self.args.flow),
                 ], cwd=self.args.prci_repo_path)
             return res.decode()
         except subprocess.CalledProcessError:
@@ -195,10 +198,15 @@ class AutomatedPR(object):
             yield file.path
 
     def bump_prci_version(self, templ_ver):
+        templ_name = 'freeipa/'+TEMPL_NAME.format(
+            flow=self.args.flow,
+            branch=self.args.branch,
+            fedora_version=self.args.fedora_ver
+        )
         for file in self.get_prci_defs():
             yaml_data = load_yaml(file)
             template = self.get_templ_list(yaml_data)
-            if template:
+            if template['name'] == templ_name:
                 template['version'] = templ_ver
                 yaml = ruamel.yaml.YAML()
                 dump_yaml(file, yaml_data)
