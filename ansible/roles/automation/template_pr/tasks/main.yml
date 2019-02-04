@@ -19,4 +19,4 @@
            --pr_against_upstream {{ pr_against_upstream | bool }}
     user: root
     state: present
-    with_items: "{{  template_jobs }}"
+  with_items: "{{ template_jobs }}"

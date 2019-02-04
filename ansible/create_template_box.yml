@@ -11,12 +11,16 @@
       prompt: "git branch"
       private: false
       default: "master"
+    - name: flow
+      prompt: "template flow"
+      private: false
+      default: "ci"
   vars_files:
     - vars/fedora/{{ fedora_version }}.yml
     - vars/ipa_branches/{{ git_branch }}.yml
   pre_tasks:
     - set_fact:
-        template_box_name: "ci-{{ git_branch }}-f{{ fedora_version }}"
+        template_box_name: "{{ flow  }}-{{ git_branch }}-f{{ fedora_version }}"
   roles:
     - box/prepare
 

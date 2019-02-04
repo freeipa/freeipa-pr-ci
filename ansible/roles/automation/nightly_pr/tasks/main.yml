@@ -4,7 +4,6 @@
     minute: "{{ item.minute }}"
     hour: "{{ item.hour }}"
     weekday: "{{ item.weekdays }}"
-    flow: "{{ item.flow }}"
     job: >
            python3 {{ basedir }}/open_close_pr.py
            open_nightly_pr
@@ -17,4 +16,4 @@
            --pr_against_upstream {{ pr_against_upstream | bool }}
     user: root
     state: present
-    with_items: "{{ nightly_jobs }}"
+  with_items: "{{ nightly_jobs }}"

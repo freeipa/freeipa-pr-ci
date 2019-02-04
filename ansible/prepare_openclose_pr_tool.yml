@@ -11,11 +11,6 @@
       prompt: "Provide an unique identifier for the PR"
       private: false
 
-    - name: flow
-      prompt: "Flow name to identify the nightly template: ci or pki"
-      private: false
-      default: "ci"
-
     - name: repo_owner
       prompt: "Repo owner to create branches"
       private: false
