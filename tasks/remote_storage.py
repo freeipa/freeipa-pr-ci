@@ -128,17 +128,23 @@ def create_local_indeces(uuid, pr_number, pr_author, task_name, returncode,
     JavaScript solution on storage side. Also there is no concept of
     files/directories but rather objects. In this case it is more convenient
     to do this locally.
+
+    Return list of all artifacts - files and dirs
     """
+    artifacts = []
+
     job_dir = os.path.join(JOBS_DIR, uuid)
     job_path_start = job_dir.rfind(os.sep) + 1
     for root, dirs, files in os.walk(job_dir):
         remote_path = root[job_path_start:]
         objects = list(make_objects(root, dirs + files))
+        artifacts += objects
         data = make_aws_data(
             remote_path, uuid, pr_number, pr_author,
             task_name, returncode, hostname, objects
         )
         write_index(data, root)
+    return artifacts
 
 
 def save_jobdir_metadata(uuid, repo_owner, pr_number, pr_author, task_name,
@@ -163,7 +169,7 @@ def save_jobdir_metadata(uuid, repo_owner, pr_number, pr_author, task_name,
 
 
 def create_metadata_json(src, uuid, repo_owner, pr_number, pr_author,
-                         task_name, returncode):
+                         task_name, returncode, artifacts):
     """
     Save particular job metadata into job UUID directory for external tools
     usage
@@ -176,6 +182,7 @@ def create_metadata_json(src, uuid, repo_owner, pr_number, pr_author,
         'task_name': task_name,
         'returncode': returncode,
         'mtime': datetime.now().strftime('%Y-%m-%d %H:%M'),
+        'artifacts': artifacts,
         }
     with open(os.path.join(src, 'metadata.json'), 'w') as file_obj:
         json.dump(metadata, file_obj)
@@ -225,12 +232,13 @@ class CloudUpload(FallibleTask):
         src = os.path.join(JOBS_DIR, self.uuid)
         dest = os.path.join(CLOUD_DIR, CLOUD_JOBS_DIR, self.uuid)
 
+        artifacts = create_local_indeces(self.uuid, self.pr_number,
+                                         self.pr_author, self.task_name,
+                                         self.returncode, self.hostname)
+
         create_metadata_json(src, self.uuid, self.repo_owner,
                              self.pr_number, self.pr_author,
-                             self.task_name, self.returncode)
-
-        create_local_indeces(self.uuid, self.pr_number, self.pr_author,
-                             self.task_name, self.returncode, self.hostname)
+                             self.task_name, self.returncode, artifacts)
 
         aws_sync_cmd = ['aws', 's3', 'sync', src, dest]
         sync_all_except_gz = ['--include=*', '--exclude=*.gz']
