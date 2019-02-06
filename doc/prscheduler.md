@@ -5,24 +5,24 @@
 ### Overview
 
 With the PR-CI, a suite of tests is launched when a Pull Request is opened
-against freeipa github repository, but this test suite contains only a
+against FreeIPA GitHub repository, but this test suite contains only a
 selection among all the tests available in `ipatests/` directory (the
 full suite would take too long to execute on each PR).
 
 However, the team wants to run the full test suite regularly, in an automated
 way. The PR scheduler tool is allowing this scheduling of nightly PRs. It
-consists in a python script `open_close_pr.py` which creates a PR in a github
+consists of a python script `open_close_pr.py` which creates a PR in a GitHub
 repository, changing the `.freeipa-pr-ci.yaml` file to point to a different
 test definition file (e.g. ipatests/prci_definitions/nightly_master.yaml from
-freeipa project). The PR-CI runners then detect the PR and launch the test
+FreeIPA project). The PR-CI runners then detect the PR and launch the test
 suite defined in `.freeipa-pr-ci.yaml` file.
 
-In addition, PR-CI uses pre-defined templates for gating/nightly runs. The
-templates can rely on different OS versions such as f28, f29, rawhide, and
-different repositories such as updates, pki-copr, etc... This is good
+In addition, PR-CI uses pre-defined VM templates for gating/nightly runs.
+The templates can rely on different OS versions such as f28, f29, rawhide,
+and different repositories such as updates, pki-copr, etc... This is good
 because it makes the process more stable by avoiding repeating unnecessary
 steps. Based on these templates, the team wants to trigger different nightly
-flow runs so the CI can catch bugs from, for instance, newer version of
+flow runs so the CI can catch bugs from, for instance, a newer version of
 IPA dependencies.
 
 Hence, PR scheduler tool is also used to automatically upgrade vagrant
@@ -41,22 +41,22 @@ of the script on a scheduler machine
 
 ### open_close_pr script
 
-This script is automating the creation of a dummy pull request against
-the official freeipa upstream repository. It is launched on a machine called
-the scheduler. This machine does not need to be very beefy, as it only
-creates a pull request (the tests are executed on PR-CI runners when they
-detect that a new PR has been created).
+This script currently supports two main commands: open_nightly_pr and
+open_template_pr.
 
-The script is basically doing what a regular user would do in order to
-create a PR.
+Open_nightly_pr command simply automates the creation of a pull request
+against the official FreeIPA upstream repository in order to trigger a
+nightly regression run. It is basically doing what a regular user
+would do in order to create a PR.
+
 Prerequisites:
-- a normal user needs to have a github account in order to create PRs.
-The github account is stored in the variable $repo_owner
-- a normal user needs to have a fork of freeipa github repo, accessible
+- a normal user needs to have a GitHub account in order to create PRs.
+The GitHub account is stored in the variable $repo_owner
+- a normal user needs to have a fork of FreeIPA GitHub repo, accessible
 through https://github.com/$repo_owner/freeipa
 
 In order to create a PR, a user needs to:
-- create a local clone of freeipa github repo (= the official freeipa repo)
+- create a local clone of FreeIPA GitHub repo (= the official FreeIPA repo)
 - checkout a local branch $branch (for instance master)
 - push this local branch to his fork
 - create a local branch for the commit: $identifier
@@ -80,8 +80,11 @@ python3 open_close_pr.py \
     [--pr-ci-config test_definitinon.yaml] \
     [--pr_against_upstream True|False] \
 ```
-
-while the script usage for open_template_pr is the following:
+Open_template_pr command automates the generation of a VM template. The
+scheduler runner, where this tool is deployed, is in charge of generating
+the corresponding template, upload it to Vagrant, and send a PR to the
+FreeIPA project to bump the version of the template. The script usage
+for open_template_pr is the following:
 ```
 python3 open_close_pr.py \
     open_template_pr
@@ -104,9 +107,9 @@ username: $vagrant_username
 token: $vagrant_token
 ```
 
-Taking an open_nightly_pr as an example, the arguments can be explained
-with the following picture, showing the resulting PR opened by the
-script:
+Taking open_nightly_pr command as an example, the arguments can be
+explained with the following picture, showing the resulting PR opened by
+the script:
 
 ![open_close_pr.jpg](images/open_close_pr.jpg)
 
@@ -145,19 +148,18 @@ ansible-playbook -i ansible/hosts/runners ansible/prepare_openclose_pr_tool.yml
 The playbook will prompt you for variables:
 ```
 # ansible-playbook -i ansible/hosts/runners ansible/prepare_openclose_pr_tool.yml
-Provide an unique identifier for the PR: testing_master    # $identifier
 Repo owner to create branches: freeipa-pr-ci               # $repo_owner
 GitHub token: 123qwerty                                    # $github_token
-Provide the path to a test definition file to use it to open new PRs. For example: ipatests/prci_definition/gating	# $prci_config, for instance ipatests/prci_definition/nightly_master.yaml
 Provide a ssh key that has push access to the git repo: ~/path/to/ssh_key #$git_sshkey
-Should the PR be open against the upstream repo?. Type no for opening it agaist your own freeipa repo (yes/no): no
+Should the PRs be opened against the upstream repo?. Type no for opening it agaist your own FreeIPA repo (yes/no): no
 Provide PRCI test definitions folder E.g. ipatests/prci_definition # $prci_def_dir
 Provide Fedora version (int) for template creation. E.g. 29 # $fedora_ver
 Provide Vagrant atlas token for uploading boxes # $vagrant_atlas_token
 ```
 
-The ansible playbook will schedule multiple PRs that are currently defined in
-the project (e.g. automation/nightly_pr/defaults/main.yaml), with unique IDs.
+The ansible playbook will schedule multiple PRs for both nightly runs and template
+upgrades, they are currently defined in the project: automation/nightly_pr/defaults/main.yaml
+and automation/template_pr/defaults/main.yaml, respectively. They must have unique IDs.
 These IDs are used to create the branch and to name the PR.
 
 
@@ -199,4 +201,4 @@ Friday: master
 Saturday: rawhide
 Sunday: ipa-4-7, pki
 
-The repo_owner is the github user `freeipa-pr-ci`.
+The repo_owner is the GitHub user `freeipa-pr-ci`.

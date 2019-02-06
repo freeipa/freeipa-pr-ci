@@ -12,7 +12,7 @@
            --repo_path {{ basedir }}/freeipa
            --flow {{ item.flow }}
            --branch {{ item.branch }}
-           --prci_config {{ prci_config }}
+           --prci_config {{ prci_def_dir }}/{{ item.prci_config }}
            --pr_against_upstream {{ pr_against_upstream | bool }}
     user: root
     state: present
