@@ -1,5 +1,5 @@
 ---
-- hosts: ipa:ldap:client
+- hosts: master:client0
   roles:
   - ping
 

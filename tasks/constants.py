@@ -24,8 +24,6 @@ RUNNER_LOG = 'runner.log'
 FREEIPA_PRCI_REPOFILE = 'freeipa-prci.repo'
 ANSIBLE_VARS_TEMPLATE = '{action_name}.vars.yml'
 VAGRANTFILE_TEMPLATE = os.path.join('vagrantfiles', 'Vagrantfile.{vagrantfile_name}')
-VAGRANT_RUBY = os.path.join(TEMPLATES_DIR, 'vagrantfiles', 'ruby')
-VAGRANT_CONFIG = os.path.join(TEMPLATES_DIR, 'vagrantfiles', 'config.json')
 VAGRANT_IMAGE_PATH = '/root/.vagrant.d/boxes/{name}/{version}/{provider}/box.img'
 LIBVIRT_IMAGE_PATH = '/var/lib/libvirt/images/{libvirt_name}_{version}.img'
 

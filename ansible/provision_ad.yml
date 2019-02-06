@@ -1,10 +1,4 @@
 ---
-- hosts: ipa:ldap:client
-  roles:
-  - packages
-  vars_files:
-  - variables.yml
-
 - hosts: ad:ad-child
   gather_facts: no
   roles:
@@ -16,13 +10,6 @@
   gather_facts: no
   roles:
   - win-forest
-  vars_files:
-  - variables.yml
-
-- hosts: ipa
-  gather_facts: no
-  roles:
-  - ipa
   vars_files:
   - variables.yml
 
@@ -45,18 +32,7 @@
   vars_files:
   - variables.yml
 
-- hosts: ldap:client
-  gather_facts: no
+- hosts: controller:master:client0
+  gather_facts: yes
   roles:
-  - dnsclient
-  vars_files:
-  - variables.yml
-
-- hosts: ldap
-  gather_facts: no
-  roles:
-  - ldap
-  vars_files:
-  - variables.yml
-
-- import_playbook: enroll.yml
+    - machine/provision

@@ -26,100 +26,6 @@ def with_vagrant(func):
     return wrapper
 
 
-def with_vagrant_ad(func):
-    def wrapper(self, *args, **kwargs):
-        try:
-            __setup_provision_ad(self)
-        except TaskException as exc:
-            logging.critical('vagrant or provisioning failed')
-            raise exc
-        else:
-            func(self, *args, **kwargs)
-        finally:
-            if not self.no_destroy:
-                self.execute_subtask(
-                    VagrantCleanup(raise_on_err=False))
-
-    return wrapper
-
-
-def retry(times=1):
-    def decorator(func):
-        def wrapper(*args, **kwargs):
-            counter = 0
-            while counter < times:
-                counter += 1
-                try:
-                    func(*args, **kwargs)
-                except:
-                    pass
-
-        return wrapper
-    return decorator
-
-
-def __setup_provision_ad(task):
-    """
-    This tries to execute the provision twice due to
-    problems described in issue #20
-    """
-    task.execute_subtask(
-        VagrantBoxDownload(
-            box_name=task.template_name,
-            box_version=task.template_version,
-            link_image=task.link_image,
-            timeout=None))
-
-    def setup_ad_machines():
-        task.execute_subtask(VagrantUpADRoot(timeout=None))
-        task.execute_subtask(VagrantUpADChild(timeout=None))
-
-    def prepare_ansible_config():
-        cfg_path = '.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory'
-        task.execute_subtask(PopenTask(['mkdir', '-p', '.vagrant/provisioners/ansible/inventory/']))
-        task.execute_subtask(PopenTask(['touch', cfg_path]))
-
-    def cfg_for_windows():
-        cfg_path = '.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory'
-        windows_part = '[windows]\n'
-        linux_part = ''
-        windows_vars = """[windows:vars]
-ansible_winrm_server_cert_validation=ignore
-ansible_connection=winrm
-        """
-        with open(cfg_path, 'r') as fl:
-            for line in fl:
-                if line.startswith('root') or line.startswith('forest'):
-                    windows_part += line + '\n'
-                else:
-                    linux_part += line + '\n'
-        with open(cfg_path, 'w') as fl:
-            fl.write(linux_part)
-            fl.write(windows_part)
-            fl.write(windows_vars)
-
-    def install_ad():
-        cfg_path = '.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory'
-        task.execute_subtask(PopenTask(['cat', cfg_path]))
-        task.execute_subtask(ProvisionADVMs(timeout=None))
-
-    try:
-        prepare_ansible_config()
-        setup_ad_machines()
-        task.execute_subtask(VagrantUpAD(timeout=None))
-        cfg_for_windows()
-        install_ad()
-        task.execute_subtask(VagrantProvision(timeout=None))
-        #task.execute_subtask(VagrantUpAD(timeout=None))
-    except Exception as exc:
-        logging.debug(exc, exc_info=True)
-        logging.info("Failed to provision/up VM. Trying it again")
-        task.execute_subtask(VagrantCleanup(raise_on_err=False))
-        setup_ad_machines()
-        task.execute_subtask(VagrantUpAD(timeout=None))
-        task.execute_subtask(VagrantProvision(timeout=None))
-
-
 def __setup_provision(task):
     """
     This tries to execute the provision twice due to
@@ -148,37 +54,11 @@ class VagrantTask(FallibleTask):
         self.timeout = kwargs.get('timeout', None)
 
 
-class ProvisionADVMs(VagrantTask):
-    def _run(self):
-        self.execute_subtask(PopenTask(["ansible-playbook -vvv /root/freeipa-pr-ci/ansible/provision_ad.yml -i .vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory"], timeout=None, raise_on_err=False))
-
-
 class VagrantUp(VagrantTask):
     def _run(self):
         self.execute_subtask(
             PopenTask(['vagrant', 'up', '--no-provision', '--parallel'],
                       timeout=None, raise_on_err=False))
-
-
-
-class VagrantUpAD(VagrantTask):
-    def _run(self):
-        self.execute_subtask(PopenTask(['vagrant', 'up', 'ipa', 'ldap',
-                                        'client', '--no-provision',
-                                        '--parallel'],
-                                       timeout=None, raise_on_err=False))
-
-
-class VagrantUpADRoot(VagrantTask):
-    def _run(self):
-        self.execute_subtask(PopenTask(['vagrant', 'up', 'ad'],
-                                       timeout=None, raise_on_err=False))
-
-
-class VagrantUpADChild(VagrantTask):
-    def _run(self):
-        self.execute_subtask(PopenTask(['vagrant', 'up', 'ad-child'],
-                                       timeout=None, raise_on_err=False))
 
 
 class VagrantProvision(VagrantTask):

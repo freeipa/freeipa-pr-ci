@@ -7,26 +7,13 @@ network: {
 }
 
 # IPA server configuration
-ipa: {
+master: {
   ip: '{{ network.base_ip }}.10',
   domain: 'ipa.{{ network.dns_tld }}',
   hostname: 'master',
   fqn: 'master.ipa.{{ network.dns_tld }}',
   netbios: 'IPA',
   password: '123456789'
-}
-
-# LDAP server configuration
-ldap: {
-  ip: '{{ network.base_ip }}.20',
-  domain: 'ldap.{{ network.dns_tld }}',
-  hostname: 'master',
-  fqn: 'master.ldap.{{ network.dns_tld }}',
-  suffix: 'dc=ldap,dc={{ network.dns_tld }}',
-  bind: {
-    dn: 'cn=Directory Manager',
-    password: '123456789'
-  }
 }
 
 # AD server configuration
@@ -54,9 +41,17 @@ ad_child: {
 }
 
 # Client configuration
-client: {
+client0: {
   ip: '{{ network.base_ip }}.30',
   domain: 'client.{{ network.dns_tld }}',
   hostname: 'master',
   fqn: 'master.client.{{ network.dns_tld }}'
+}
+
+# Controller configuration
+controller: {
+  ip: '{{ network.base_ip }}.20',
+  domain: 'ipa.{{ network.dns_tld }}',
+  hostname: 'master',
+  fqn: 'master.controller.{{ network.dns_tld }}',
 }
