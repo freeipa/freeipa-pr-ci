@@ -11,7 +11,7 @@
 
 - name: download latest rawhide box
   shell: >
-    wget -r -np -nH --cut-dirs=9 -A
+    wget -r -np -nd -H --cut-dirs=9 -A
     'Fedora-Cloud-Base-Vagrant-Rawhide-*x86_64.vagrant-libvirt.box'
     {{ fedora_rawhide_images_remote_dir }}
   args:
