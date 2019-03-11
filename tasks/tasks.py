@@ -4,6 +4,7 @@ import shutil
 import socket
 import urllib
 import uuid
+import subprocess
 
 from .ansible import AnsiblePlaybook
 from .common import (FallibleTask, TaskException, PopenTask,
@@ -112,6 +113,7 @@ class JobTask(FallibleTask):
             logging.debug(exc, exc_info=True)
             hostname = socket.gethostname().split('.')[0] # don't leak fqdn
             msg = 'Failed to publish artifacts from {}'.format(hostname)
+            subprocess.run(['systemctl', 'stop', 'prci'], timeout=120)
             raise TaskException(self, msg)
         else:
             self.remote_url = urllib.parse.urljoin(
