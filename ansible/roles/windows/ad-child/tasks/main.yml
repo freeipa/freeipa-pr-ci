@@ -1,0 +1,21 @@
+---
+# tasks file for win-ad-forest
+- name: Setup DNS
+  win_dns_client:
+    adapter_names: "*"
+    ipv4_addresses:
+    - '{{ dns_server }}'
+
+- win_reboot:
+
+- name: Push script to Windows machine
+  win_template:
+    src: Install-ADDSDomain.ps1.j2 
+    dest: 'C:\Windows\Temp\Install-ADDSDomain.ps1'
+
+- name: Promote to Domain Controller
+  win_shell: 'C:\Windows\Temp\Install-ADDSDomain.ps1'
+
+- name: Restart
+  win_reboot:
+    test_command: 'dsquery user -name Administrator'

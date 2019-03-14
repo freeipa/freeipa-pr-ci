@@ -1,0 +1,12 @@
+---
+# defaults file for win-ad-domain
+
+ad_opts:
+    DomainName: ad.test
+    DomainMode: WinThreshold
+    ForestMode: WinThreshold
+    SafeModeAdministratorPassword: Secret123
+    DatabasePath: 'C:\Windows\NTDS'
+    LogPath: 'C:\Windows\NTDS'
+    SysvolPath: 'C:\Windows\SYSVOL'
+

@@ -1,38 +1,44 @@
 ---
-- hosts: ad:ad-child
-  gather_facts: no
-  roles:
-  - win-common
-  vars_files:
-  - variables.yml
+# Update Administrator's password
+- hosts: ad-root:ad-tree:ad-child
+  gather_facts: False
+  tasks:
+    - name: set administrator password
+      win_user:
+        name: Administrator
+        password: Secret123
+      vars:
+        ansible_password: vagrant
 
-- hosts: ad
-  gather_facts: no
+- hosts: ad-root:ad-tree:ad-child
   roles:
-  - win-forest
-  vars_files:
-  - variables.yml
+    # - win-ping
+    - windows/common
 
-# Continue with AD server after IPA is installed. It seems that the AD server
-# is not ready directly after win_reboot task is finished. This give the server
-# enough time to fully reboot.
-- hosts: ad
-  gather_facts: yes
+- hosts: ad-root
   roles:
-  - { role: win-schema, suffix: '{{ ad.suffix }}' }
-  - { role: win-dns, domain: '{{ ad.domain }}', hostname: '{{ ad.hostname }}' }
-  vars_files:
-  - variables.yml
+    - windows/ad-root
 
 - hosts: ad-child
-  gather_facts: yes
   roles:
-  - win-domain
-  - { role: win-dns, domain: '{{ ad_child.domain }}', hostname: '{{ ad_child.hostname }}' }
-  vars_files:
-  - variables.yml
+    - windows/ad-child
 
-- hosts: controller:master:client0
+- hosts: ad-tree
+  roles:
+    - windows/ad-tree
+
+- hosts: ad-root
+  roles:
+  - windows/ipa-ad-root
+
+- hosts: ad-child
+  roles:
+  - windows/ipa-ad-domain
+
+# Provision linux hosts but include ad and ad-child in the list so we can access
+# their data to generate ipa test config file
+- hosts: all
   gather_facts: yes
   roles:
-    - machine/provision
+    - role: machine/provision
+      when: not inventory_hostname.startswith('ad')

@@ -1,0 +1,19 @@
+Import-Module ADDSDeployment
+
+function InstallADForest{
+    Install-ADDSForest -Force -NoRebootOnCompletion:$true
+    {%- for key, value in ad_opts.items() -%}
+    {%- if key == 'SafeModeAdministratorPassword' %}
+     -{{ key }} (ConvertTo-SecureString -AsPlainText -Force -String "{{ value }}")
+    {%- else %}
+     -{{ key }} "{{ value }}"
+    {%- endif -%}
+    {%- endfor -%}
+}
+
+Try{
+    InstallADForest
+}Catch{
+    Write-Host "WARNING: AD Install Failed"
+}
+
