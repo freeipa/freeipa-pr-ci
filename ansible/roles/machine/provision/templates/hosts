@@ -5,3 +5,8 @@
       {{ hostvars[host]['ansible_default_ipv4']['address'] }} {{ hostvars[host]['inventory_hostname'] }}.ipa.test
    {% endif %}
 {% endfor %}
+{% if groups['all']|select('startswith', 'ad') %}
+      {{ hostvars['ad-root']['ansible_ip_addresses']|ipv4|first }} ad.test
+      {{ hostvars['ad-child']['ansible_ip_addresses']|ipv4|first }} child.ad.test
+      {{ hostvars['ad-tree']['ansible_ip_addresses']|ipv4|first }} ad2.test
+{% endif %}

@@ -44,6 +44,13 @@
         - freeipa-*
         - python*-ipatests
 
+- name: install client packages
+  dnf:
+    state: latest
+    name:
+    - samba-client
+  when: ad is defined
+
 - name: create directory to save installed packages logs
   file:
     path: /vagrant/installed_packages/

@@ -1,0 +1,10 @@
+---
+# defaults file for win-ad-domain
+
+ad_opts:
+    NewDomainName: child
+    ParentDomainName: ad.test
+    DomainType: ChildDomain
+    SafeModeAdministratorPassword: Secret123
+
+dns_server: "{{ hostvars['ad-root'].ansible_host }}"
