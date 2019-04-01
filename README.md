@@ -58,6 +58,9 @@ testing and development purposes.
    ```
    [runners_devel]
    2.3.4.5
+
+   [runners_devel:vars]
+   ansible_python_interpreter=/usr/bin/python3
    ```
 
 2. Run the `prepare_devel_test_runners.yml` playbook, specify which repository
@@ -77,6 +80,9 @@ testing and development purposes.
    ```
    [runners]
    1.2.3.4
+
+   [runners:vars]
+   ansible_python_interpreter=/usr/bin/python3
    ```
 
 2. Run the `prepare_test_runners.yml` playbook
