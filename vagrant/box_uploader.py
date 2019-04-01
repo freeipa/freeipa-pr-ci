@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import argparse
 import logging
@@ -19,7 +19,7 @@ def _get_user_config(user_config_path=None):
 
     try:
         with open(user_config_path) as user_config_file:
-            user_config = yaml.load(user_config_file)
+            user_config = yaml.full_load(user_config_file)
     except IOError as e:
         logger.error(
             'Unable to open user config file (user_config_path): {}'.format(e))
@@ -54,7 +54,7 @@ def create_parser():
 
     parser = argparse.ArgumentParser(description='Upload vagrant box to HashiCorp Atlas.')
     parser.add_argument('name', type=str, help='name of the box visible in Atlas')
-    parser.add_argument('box', type=file, help='box to upload')
+    parser.add_argument('box', type=open, help='box to upload')
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--box-description', type=str)

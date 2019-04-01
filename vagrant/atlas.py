@@ -5,8 +5,7 @@ import os
 import requests
 import timeit
 import tqdm  # dnf install python{2,3}-tqdm
-from urllib import urlencode
-from urlparse import urljoin
+from urllib.parse import urlencode, urljoin
 import logging
 
 logger = logging.getLogger('atlas')
@@ -169,7 +168,7 @@ class BoxProvider(CRUD):
             raise
 
         try:
-            with open(boxpath) as boxfile:
+            with open(boxpath, 'rb') as boxfile:
                 upload_start = timeit.default_timer()
 
                 self.context.put(url['upload_path'],
