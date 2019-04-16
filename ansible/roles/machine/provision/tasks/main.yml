@@ -49,7 +49,7 @@
     state: latest
     name:
     - samba-client
-  when: ad is defined
+  when: testing_ad is defined
 
 - name: create directory to save installed packages logs
   file:
