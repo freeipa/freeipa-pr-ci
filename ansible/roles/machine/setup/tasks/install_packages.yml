@@ -11,7 +11,7 @@
       - gdbm
       - python2-chardet
     state: absent
-  when: fedora_version == 'rawhide'
+  when: fedora_version in ['rawhide', '30']
 
 - name: install freeipa rpms with dependencies
   shell: dnf install -y /vagrant/rpms/*.rpm
