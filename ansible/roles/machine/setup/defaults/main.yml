@@ -1,5 +1,5 @@
 ---
-selinux_mode: permissive
+selinux_mode: disabled
 copr_repo: "@freeipa/freeipa-master"
 python_packages_to_install:
   - pytest-html
