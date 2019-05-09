@@ -26,8 +26,8 @@
 
 - name: set pre_release version
   shell: |
-    sed 's/^define(IPA_VERSION_PRE_RELEASE, .*/define(IPA_VERSION_PRE_RELEASE, test)/' -i /root/freeipa/VERSION.m4
+    sed 's/^define(IPA_VERSION_PRE_RELEASE, .*/define(IPA_VERSION_PRE_RELEASE, .dev)/' -i /root/freeipa/VERSION.m4
 
 - name: create version
   set_fact:
-    build_version: "{{ major.stdout }}.{{ minor.stdout }}.{{ release.stdout }}test"
+    build_version: "{{ major.stdout }}.{{ minor.stdout }}.{{ release.stdout }}.dev"
