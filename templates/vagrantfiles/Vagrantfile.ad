@@ -5,12 +5,12 @@
 Vagrant.configure(2) do |config|
 
     config.ssh.username = "root"
-
     config.vm.synced_folder "./", "/vagrant",
         type: "nfs",
         nfs_udp: false
 
     config.vm.box = "{{ vagrant_template_name }}"
+    config.vm.box_version = "{{ vagrant_template_version }}"
 
     config.vm.provider "libvirt" do |domain, override|
         # Defaults for masters and replica
@@ -41,38 +41,29 @@ Vagrant.configure(2) do |config|
             ansible.playbook = "../../ansible/provision_ad.yml"
             ansible.extra_vars = "vars.yml"
             ansible.host_vars = {
-                "ad-root" => {"ansible_winrm_server_cert_validation" => "ignore"},
-                "ad-tree" => {"ansible_winrm_server_cert_validation" => "ignore"},
-                "ad-child" => {"ansible_winrm_server_cert_validation" => "ignore"}
+                "ad-root" => {"ansible_winrm_server_cert_validation" => "ignore"}
             }
         end
     end
 
     config.vm.define "ad-root" do |ad_root|
         ad_root.vm.box = "peru/windows-server-2016-standard-x64-eval"
+        ad_root.vm.box_version = ">=0"
         ad_root.vm.hostname = "ad-root"
+        ad_root.winrm.username = "Administrator"
+        ad_root.winrm.password = "vagrant"
         ad_root.vm.synced_folder ".", "/vagrant", type: "nfs", disabled: true
-    end
 
-    config.vm.define "ad-child" do |ad_child|
-        ad_child.vm.box = "peru/windows-server-2016-standard-x64-eval"
-        ad_child.vm.hostname = "ad-child"
-        ad_child.vm.synced_folder ".", "/vagrant", type: "nfs", disabled: true
-    end
+        config.vm.provider "libvirt" do |domain, override|
+            domain.cpus = 2
+            domain.memory = 4096
+        end
 
-    config.vm.define "ad-tree" do |ad_tree|
-        ad_tree.vm.box = "peru/windows-server-2016-standard-x64-eval"
-        ad_tree.vm.hostname = "ad-tree"
-        ad_tree.vm.synced_folder ".", "/vagrant", type: "nfs", disabled: true
     end
 
     config.vm.define "master" do |master|
-    end
-
-    config.vm.define "client0"  do |client0|
-        client0.vm.provider "libvirt" do |domain,override|
-            domain.memory = 950
-        end
+        master.vm.box = "{{ vagrant_template_name }}"
+        master.vm.synced_folder "./", "/vagrant", type: "nfs", nfs_udp: false
     end
 
 end

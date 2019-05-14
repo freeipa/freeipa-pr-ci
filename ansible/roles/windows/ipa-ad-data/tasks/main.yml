@@ -1,0 +1,83 @@
+---
+- name: testgroup
+  win_domain_group:
+    name: testgroup
+    scope: global
+    attributes:
+      gidNumber: 10047
+
+- name: A test user with posix attributes defined
+  include_role:
+    name: windows/ipa-ad-data
+    tasks_from: user.yml
+  vars:
+    options:
+      Name: testuser
+      GivenName: Test
+      Surname: User
+      AccountPassword: Secret123
+      PasswordNeverExpires: $true
+      Enabled: $true
+      OtherAttributes: "@{'uidNumber'='10042'; 'gidNumber'='10047'; 'loginShell'='/bin/sh'; 'homeDirectory'='/home/testuser'; 'gecos'='Test User'}"
+
+- name: set Test User primary group
+  include_role:
+    name: windows/ipa-ad-data
+    tasks_from: primary_group.yml
+  vars:
+    user: testuser
+    group: testgroup
+
+- name: A test user without posix attributes defined
+  include_role:
+    name: windows/ipa-ad-data
+    tasks_from: user.yml
+  vars:
+    options:
+      Name: nonposixuser
+      GivenName: Nonposix
+      Surname: User
+      AccountPassword: Secret123
+      PasswordNeverExpires: $true
+      Enabled: $true
+
+- name: A test user with posix attributes which is disabled
+  include_role:
+    name: windows/ipa-ad-data
+    tasks_from: user.yml
+  vars:
+    options:
+      Name: disabledaduser
+      GivenName: Disabledad
+      Surname: User
+      AccountPassword: Secret123
+      PasswordNeverExpires: $true
+      Enabled: $false
+      OtherAttributes: "@{'uidNumber'='10043'; 'gidNumber'='10047'; 'loginShell'='/bin/sh'; 'homeDirectory'='/home/disableduser'}"
+
+- name: create UPN suffix
+  win_shell: Get-ADForest | Set-ADForest -UPNSuffixes @{add="UPNsuffix.com"}
+
+
+- name: A user with UPN suffix
+  include_role:
+    name: windows/ipa-ad-data
+    tasks_from: user.yml
+  vars:
+    options:
+      Name: upnuser
+      GivenName: UPN
+      Surname: User
+      AccountPassword: Secret123456
+      PasswordNeverExpires: $true
+      Enabled: $true
+      UserPrincipalName: upnuser@UPNsuffix.com
+      OtherAttributes: "@{'uidNumber'='10048'; 'gidNumber'='10047'; 'loginShell'='/bin/sh'; 'homeDirectory'='/home/ad.test/upnuser'; 'gecos'='UPN User'}"
+
+- name: set UPN User primary group
+  include_role:
+    name: windows/ipa-ad-data
+    tasks_from: primary_group.yml
+  vars:
+    user: upnuser
+    group: testgroup
