@@ -1,0 +1,9 @@
+- name: set primary group
+  win_shell: |
+    $username = "{{ user }}"
+    $NewGroup = "{{ group }}"
+
+    Add-ADGroupMember -Identity $NewGroup -Members $username
+
+    $NewPrimaryGroupToken = (Get-ADGroup $NewGroup -Properties primaryGroupToken).primaryGroupToken
+    Set-ADUser -Identity $username -Replace @{primaryGroupID=$NewPrimaryGroupToken}

@@ -1,0 +1,2 @@
+- name: add domain user to group
+  win_shell: 'Add-ADGroupMember -Identity "{{ group }}" -Members "{{ user }}"'

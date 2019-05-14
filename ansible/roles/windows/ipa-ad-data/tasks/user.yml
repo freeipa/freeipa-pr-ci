@@ -1,0 +1,15 @@
+- name: remove user
+  win_shell:
+    Remove-ADUser -Identity {{ options.Name }} -Confirm:$false
+  ignore_errors: yes
+
+- name: create user
+  win_shell: |
+    $password = ConvertTo-SecureString -String "{{ options.AccountPassword }}" -AsPlainText -Force
+
+    New-ADUser
+    {%- for key, value in options.items() -%}
+    {%- if key == 'AccountPassword' -%}
+    {% set value = "$password" %}
+    {%- endif %} -{{ key }} {{ value }}
+    {%- endfor -%}
