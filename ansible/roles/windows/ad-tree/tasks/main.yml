@@ -1,6 +1,0 @@
----
-# tasks file for win-ad-tree-root
-- include_vars: "roles/windows/ad-tree/defaults/main.yml"
-- include_role:
-    name: windows/ad-child
-
