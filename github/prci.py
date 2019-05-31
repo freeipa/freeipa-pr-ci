@@ -4,11 +4,14 @@ import argparse
 import logging
 import logging.config
 import signal
+import subprocess
 import sys
 from functools import partial
 from time import sleep
 from typing import Dict, Iterator, Optional, Text
+import os
 
+import psutil
 import github3
 import yaml
 from github3.exceptions import NotFoundError
@@ -19,11 +22,76 @@ from internals.entities import (
 )
 from internals.gql import util, queries
 
-
 logger = logging.getLogger(__name__)
 
 
 ERROR_BACKOFF_TIME = 600
+OS_PID_FILE_PATH = "/run/"
+OS_PID_FILE = os.path.join(OS_PID_FILE_PATH, "prci.pid")
+
+
+def pid_file_creation():
+    """
+        Creates PID file with Proccess ID as content.
+    """
+    with open(OS_PID_FILE, "w") as pid_file:
+        pid_file.write(str(os.getpid()))
+
+
+def pid_file_handling():
+    """
+        Create the PID file for each run.
+    """
+    if os.path.exists(OS_PID_FILE):
+        vagrant_process_prune()
+        vagrant_machines_prune()
+        pid_file_creation()
+
+    else:
+        pid_file_creation()
+
+
+def vagrant_process_prune():
+    """
+        Ensure that no 'vagrant up' process is running, 
+        to ensure a clean startup.
+    """
+    for process in psutil.process_iter():
+        if "ruby" in process.name():
+            for cmdline in process.cmdline():
+                if "vagrant" in cmdline:
+                    print(process) # change to logger info
+                    process.kill()
+
+
+def vagrant_machines_prune():
+    """
+        Prune all the vagrant machines in stuck state
+        from previous runs.
+    """
+
+    get_vagrant_machines = """
+            vagrant global-status --prune |
+            cut -f1 -d ' ' | sed -e '/^$/,$d'| 
+            sed '1d;2d'"""
+
+    destroy_vagrant_machines = ["vagrant", "destroy", "--force"]
+
+    vagrant_machines = subprocess.run(
+                        get_vagrant_machines,
+                        capture_output=True,
+                        shell=True,
+    )
+    vagrant_machines = vagrant_machines \
+                        .stdout \
+                        .decode("utf-8") \
+                        .split()
+
+    vagrant_process_prune()
+    subprocess.run(
+        destroy_vagrant_machines + vagrant_machines,
+        capture_output=True,
+    )
 
 
 def skipping_pr(reason: Text, number: int) -> None:
@@ -230,6 +298,8 @@ def process_task(
 def main():
     parser = create_parser()
     args = parser.parse_args()
+
+    pid_file_handling()
 
     runner_id = args.ID
     config = args.config
