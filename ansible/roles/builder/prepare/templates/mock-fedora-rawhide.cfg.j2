@@ -51,4 +51,15 @@ name=rawhide
 metalink=https://mirrors.fedoraproject.org/metalink?repo=rawhide&arch=$basearch
 failovermethod=priority
 enabled={{ repo_rawhide_enabled }}
+
+[group_pki-master]
+name=Copr repo for master owned by @pki
+baseurl=https://copr-be.cloud.fedoraproject.org/results/@pki/master/fedora-$releasever-$basearch/
+type=rpm-md
+skip_if_unavailable=True
+gpgcheck=1
+gpgkey=https://copr-be.cloud.fedoraproject.org/results/@pki/master/pubkey.gpg
+repo_gpgcheck=0
+enabled={{ repo_pki_master_enabled }}
+enabled_metadata=1
 """
