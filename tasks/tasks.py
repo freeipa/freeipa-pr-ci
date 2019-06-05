@@ -57,6 +57,16 @@ class JobTask(FallibleTask):
             logging.warning("Failed to write hostname to file")
             logging.debug(exc, exc_info=True)
 
+    def write_pr_ci_version(self):
+        try:
+            git_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'])
+            git_hash = git_hash.decode()
+            with open('pr-ci-version', 'w') as version_file:
+                version_file.write(git_hash)
+        except Exception as exc:
+            logging.warning("Failed to write pr-ci-version file")
+            logging.debug(exc, exc_info=True)
+
     def _before(self):
         # Create job dir
         try:
@@ -75,6 +85,9 @@ class JobTask(FallibleTask):
 
         # Create a hostname file for debugging purposes
         self.write_hostname_to_file()
+
+        # Write PR-CI version for debugging purposes
+        self.write_pr_ci_version()
 
         # Prepare files for vagrant
         try:
