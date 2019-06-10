@@ -18,7 +18,7 @@
       AccountPassword: Secret123
       PasswordNeverExpires: $true
       Enabled: $true
-      OtherAttributes: "@{'uidNumber'='10042'; 'gidNumber'='10047'; 'loginShell'='/bin/sh'; 'homeDirectory'='/home/testuser'; 'gecos'='Test User'}"
+      OtherAttributes: "@{'uidNumber'='10042'; 'gidNumber'='10047'; 'loginShell'='/bin/sh'; 'homeDirectory'='/home/testuser'; 'unixHomeDirectory'='/home/testuser'; 'gecos'='Test User'}"
 
 - name: set Test User primary group
   include_role:
