@@ -9,6 +9,10 @@ ansible/vault-password
 # Python
 *.py[cod]
 __pycache__/
+.mypy_cache
 
 # Emacs
 *~
+
+# VScode
+.vscode
