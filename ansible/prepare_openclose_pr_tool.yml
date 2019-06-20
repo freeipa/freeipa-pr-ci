@@ -29,10 +29,12 @@
       prompt: "Provide PRCI test definitions folder.
                E.g. ipatests/prci_definition"
       private: false
+      default: ipatests/prci_definition
 
     - name: fedora_ver
       prompt: "Provide Fedora version (int) for template creation. E.g. 29"
       private: false
+      default: 30
 
     - name: vagrant_atlas_token
       prompt: "Provide Vagrant atlas token for uploading boxes"
@@ -44,8 +46,9 @@
 
   roles:
     - role: automation/setup
-      when: >
-            prci_config != "" and github_token != "" and
-            identifier != "" and  repo_owner != 'freeipa'
+      when: github_token != "" and  repo_owner != 'freeipa'
     - role: automation/nightly_pr
-    - role: automation/template_pr
+      when: github_token != "" and  repo_owner != 'freeipa'
+    # TODO: Enable automated template generation
+    # - role: automation/template_pr
+    #   when: github_token != "" and  repo_owner != 'freeipa'

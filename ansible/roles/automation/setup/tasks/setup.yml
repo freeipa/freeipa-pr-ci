@@ -60,6 +60,14 @@
     src: "{{ playbook_dir }}/../github/open_close_pr.py"
     dest: "{{ basedir }}"
 
+- name: create /root/.ssh directory
+  file:
+    path: /root/.ssh
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+
 - name: copy git ssh key
   copy:
     src: "{{ git_sshkey }}"
