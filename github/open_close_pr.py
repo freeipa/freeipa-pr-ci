@@ -271,8 +271,7 @@ class AutomatedPR(object):
         # identifier. The PR list shoud have only one open PR.
         self.close_older_pr()
         self.rebase_branch()
-        latest_ver = self.get_newest_templ_ver()
-        self.commit_new_prci_config_file(latest_ver)
+        self.commit_new_prci_config_file()
         pr_title = '[{}] Nightly PR'.format(self.args.id)
         owner = ('freeipa' if self.args.pr_against_upstream
                  else self.repo.owner.login)

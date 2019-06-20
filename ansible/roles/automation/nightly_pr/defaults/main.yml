@@ -9,13 +9,13 @@ nightly_jobs:
     flow: "ci"
     branch: "master"
     prci_config: "nightly_master.yaml"
-  - name: testing_f28
+  - name: testing_f29
     weekdays: "2,4"
     hour: "23"
     minute: "00"
     flow: "ci"
     branch: "master"
-    prci_config: "nightly_f28.yaml"
+    prci_config: "nightly_f29.yaml"
   - name: testing_rawhide
     weekdays: "6"
     hour: "10"
