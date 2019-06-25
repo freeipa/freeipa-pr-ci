@@ -110,6 +110,6 @@
 - name: configure size of systemd journal
   lineinfile:
     path: /etc/systemd/journald.conf
-    regexp: '^#?SystemMaxFileSize'
-    line: 'SystemMaxFileSize={{ limit_size_systemd_journal }}'
+    regexp: '^#?SystemMaxUse'
+    line: 'SystemMaxUse={{ limit_size_systemd_journal }}'
     state: present
