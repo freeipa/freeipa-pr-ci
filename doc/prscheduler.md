@@ -94,7 +94,7 @@ python3 open_close_pr.py \
     [--prci_repo_path freeipa-pr-ci_repo_path] \
     [--branch branch] \
     [--flow nightly_flow]\
-    [--prci_def_dir ipatests/prci_definition] \
+    [--prci_def_dir ipatests/prci_definitions] \
     [--fedora_ver version_number] \
     [--atlas_config atlas_box_uploader.yaml] \
     [--pr_against_upstream True|False] \
@@ -152,7 +152,7 @@ Repo owner to create branches: freeipa-pr-ci               # $repo_owner
 GitHub token: 123qwerty                                    # $github_token
 Provide a ssh key that has push access to the git repo: ~/path/to/ssh_key #$git_sshkey
 Should the PRs be opened against the upstream repo?. Type no for opening it agaist your own FreeIPA repo (yes/no): no
-Provide PRCI test definitions folder E.g. ipatests/prci_definition # $prci_def_dir
+Provide PRCI test definitions folder E.g. ipatests/prci_definitions # $prci_def_dir
 Provide Fedora version (int) for template creation. E.g. 29 # $fedora_ver
 Provide Vagrant atlas token for uploading boxes # $vagrant_atlas_token
 ```
