@@ -27,9 +27,9 @@
 
     - name: prci_def_dir
       prompt: "Provide PRCI test definitions folder.
-               E.g. ipatests/prci_definition"
+               E.g. ipatests/prci_definitions"
       private: false
-      default: ipatests/prci_definition
+      default: ipatests/prci_definitions
 
     - name: fedora_ver
       prompt: "Provide Fedora version (int) for template creation. E.g. 29"
