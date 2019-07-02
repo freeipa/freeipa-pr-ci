@@ -6,6 +6,7 @@ import logging.config
 import signal
 import sys
 from functools import partial
+from random import randint
 from time import sleep
 from typing import Dict, Iterator, Optional, Text
 
@@ -238,7 +239,7 @@ def main():
     repo = config["repository"]
     tasks_path = config["tasks_file"]
     whitelist = config["whitelist"]
-    no_task_backoff_time = config["no_task_backoff_time"]
+    no_task_backoff_time = config["no_task_backoff_time"] + randint(1, 30)
 
     logging.config.dictConfig(config["logging"])
 
