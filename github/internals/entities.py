@@ -168,7 +168,7 @@ class World(object):
         self, pr_number: int, task_name: Text
     ) -> "Status":
         """Gets commit status on GitHub using GraphQL API"""
-        sleep(randint(3, 8))  # FIXME: We're polling too concurrently
+        sleep(randint(8, 13))  # FIXME: We're polling too concurrently
         pr_query = queries.make_pull_request_query(
             self.repo_owner, self.repo_name, pr_number
         )
