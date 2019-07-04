@@ -30,6 +30,13 @@ nightly_jobs:
     flow: "ci"
     branch: "ipa-4-7"
     prci_config: "nightly_master.yaml"
+  - name: testing_ipa-4.8
+    weekdays: "6"
+    hour: "15"
+    minute: "00"
+    flow: "ci"
+    branch: "ipa-4-8"
+    prci_config: "nightly_master.yaml"
   - name: testing_ipa-4.6
     weekdays: "7"
     hour: "10"
