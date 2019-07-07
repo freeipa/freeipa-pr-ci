@@ -301,6 +301,9 @@ class Box():
 
         for def_file in def_files:
             res = self.get_file_from_gh(def_file)
+            if res.startswith(PRCI_DEF_DIR):
+                # Fetch again if `def_file` is a symlink
+                res = self.get_file_from_gh(res)
             templ_name, templ_ver = prci_def.get_templ_data(res)
 
             if (self.box_templ_name == templ_name and
