@@ -54,7 +54,7 @@ Vagrant.configure(2) do |config|
     end
 
     config.vm.define "client1"  do |client1|
-        client0.vm.provider "libvirt" do |domain,override|
+        client1.vm.provider "libvirt" do |domain,override|
             domain.memory = 1250
         end
     end
