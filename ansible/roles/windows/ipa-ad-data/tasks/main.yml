@@ -58,7 +58,6 @@
 - name: create UPN suffix
   win_shell: Get-ADForest | Set-ADForest -UPNSuffixes @{add="UPNsuffix.com"}
 
-
 - name: A user with UPN suffix
   include_role:
     name: windows/ipa-ad-data
