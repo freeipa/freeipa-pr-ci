@@ -11,3 +11,28 @@
 - name: Turn off firewall
   win_shell: |
     Get-NetFirewallProfile | Set-NetFirewallProfile -Enabled False
+
+- name: Install cygwin
+  win_chocolatey:
+    name: cyg-get
+    state: present
+
+- name: Check if sshd service installed
+  win_service:
+    name: sshd
+  register: sshd_service
+
+- name: Install OpenSSH
+  win_shell: cyg-get openssh
+  when: not sshd_service.exists
+
+- name: Create passwd file
+  win_shell: "bin/mkpasswd > etc/passwd"
+  args:
+    chdir: "{{ cygwin_dir }}"
+    creates: "{{ cygwin_dir }}/etc/passwd"
+
+- name: Configure ssh
+  win_shell: '{{ cygwin_dir }}/bin/bash -c "export PATH=${PATH}:/bin; ssh-host-config -y -w Secret123"'
+  args:
+    creates: "{{ cygwin_dir }}/etc/ssh_config"

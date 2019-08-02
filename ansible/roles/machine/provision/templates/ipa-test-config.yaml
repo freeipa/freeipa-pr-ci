@@ -34,6 +34,8 @@ domains:
       ip: {{ hostvars['ad-root']['ansible_ip_addresses']|ipv4|first }}
       name: ad-root.ad.test
       role: ad
+      username: Administrator
+      password: Secret123
 {% endif %}
 nis_domain: ipatest
 ntp_server: 1.pool.ntp.org

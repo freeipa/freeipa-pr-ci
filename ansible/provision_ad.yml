@@ -9,11 +9,11 @@
       win_user:
         name: Administrator
         password: Secret123
-    - name: set fact to update password
-      set_fact:
-        ansible_password: Secret123
 
 - hosts: ad-root
+  vars:
+    ansible_user: Administrator
+    ansible_password: Secret123
   roles:
     - windows/common
     - windows/ad-root
