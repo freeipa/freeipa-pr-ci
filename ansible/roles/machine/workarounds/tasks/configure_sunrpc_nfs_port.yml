@@ -1,0 +1,13 @@
+---
+# The default value of sunrpc.min_resvport is 665. An NFS mount can block
+# the kadmin service port and cause IPA installation to fail.
+#
+# `nfs-utils` must be installed, thus it was added to
+# `ansible/roles/machine/setup/tasks/install_packages.yml`, otherwise it would
+# be only installed later by Vagrant when bringing the machine.
+
+- name: configure sunrpc to leave kadmin port 749/TCP open
+  sysctl:
+    name: sunrpc.min_resvport
+    value: 750
+    state: present
