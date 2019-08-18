@@ -79,6 +79,17 @@ repo_gpgcheck=0
 enabled={{ repo_pki_testing_enabled }}
 enabled_metadata=1
 
+[group_389ds-389-ds-base-nightly]
+name=Copr repo for 389-ds-base-nightly owned by @389ds
+baseurl=https://copr-be.cloud.fedoraproject.org/results/@389ds/389-ds-base-nightly/fedora-$releasever-$basearch/
+type=rpm-md
+skip_if_unavailable=True
+gpgcheck=1
+gpgkey=https://copr-be.cloud.fedoraproject.org/results/@389ds/389-ds-base-nightly/pubkey.gpg
+repo_gpgcheck=0
+enabled={{ repo_389ds_testing_enabled }}
+enabled_metadata=1
+
 [group_pki-master]
 name=Copr repo for master owned by @pki
 baseurl=https://copr-be.cloud.fedoraproject.org/results/@pki/master/fedora-$releasever-$basearch/
