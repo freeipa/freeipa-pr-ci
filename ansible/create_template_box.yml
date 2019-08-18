@@ -6,7 +6,7 @@
     - name: fedora_version
       prompt: fedora
       private: false
-      default: 29
+      default: 30
     - name: git_branch
       prompt: "git branch"
       private: false
@@ -16,6 +16,7 @@
       private: false
       default: "ci"
   vars_files:
+    - vars/flows/{{ flow }}.yml
     - vars/fedora/{{ fedora_version }}.yml
     - vars/ipa_branches/{{ git_branch }}.yml
   gather_facts: false
@@ -33,6 +34,7 @@
 - hosts: image_box
   name: modify vagrant box template
   vars_files:
+    - vars/flows/{{ flow }}.yml
     - vars/fedora/{{ fedora_version }}.yml
     - vars/ipa_branches/{{ git_branch }}.yml
   roles:

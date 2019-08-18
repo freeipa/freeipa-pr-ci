@@ -38,6 +38,7 @@
     ansible_ssh_common_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
     fedora_version: "{{ fedora_version }}"
     git_branch: "{{ git_branch }}"
+    flow: "{{ flow }}"
 
 - name: wait for image to come online
   local_action: wait_for host="{{ command_output.stdout }}" port=22 timeout=120
