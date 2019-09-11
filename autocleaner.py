@@ -66,6 +66,13 @@ def stop_prci():
     subprocess.run(['systemctl', 'stop', 'prci'], timeout=TIMEOUT)
 
 
+def clear_journalctl():
+    """
+    Clear journalctl
+    """
+    subprocess.run(['journalctl', '--vacuum-time=2d'], timeout=TIMEOUT)
+
+
 def status_prci():
     """
     Check PRCI systemd service status
@@ -401,6 +408,8 @@ def main():
             if not is_qemu_running():
                 logger.info('PRCI not active, stopping systemd service...')
                 stop_prci()
+                logger.info('Clearing journalctl, retain the past two days...')
+                clear_journalctl()
                 logger.info('PRCI service stopped...')
                 logger.info('Started auto-cleaning process...')
                 cleaning_process = Process(target=run, args=(args,))
