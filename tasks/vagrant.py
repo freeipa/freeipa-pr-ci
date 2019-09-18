@@ -1,6 +1,7 @@
 import logging
 import os
 import signal
+import time
 
 from . import constants
 from .common import (
@@ -38,13 +39,15 @@ def __setup_provision(task):
             link_image=task.link_image,
             timeout=None))
     try:
-        task.execute_subtask(VagrantUp(timeout=None))
+        task.execute_subtask(
+            VagrantUp(action_name=task.action_name, timeout=None))
         task.execute_subtask(VagrantProvision(timeout=None))
     except Exception as exc:
         logging.debug(exc, exc_info=True)
         logging.info("Failed to provision/up VM. Trying it again")
         task.execute_subtask(VagrantCleanup(raise_on_err=False))
-        task.execute_subtask(VagrantUp(timeout=None))
+        task.execute_subtask(
+            VagrantUp(action_name=task.action_name, timeout=None))
         task.execute_subtask(VagrantProvision(timeout=None))
 
 
@@ -55,10 +58,28 @@ class VagrantTask(FallibleTask):
 
 
 class VagrantUp(VagrantTask):
+    def __init__(self, action_name, **kwargs):
+        super(VagrantUp, self).__init__(**kwargs)
+        self.action_name = action_name
+
     def _run(self):
-        self.execute_subtask(
-            PopenTask(['vagrant', 'up', '--no-provision', '--parallel'],
-                      timeout=None))
+        try:
+            self.execute_subtask(
+                PopenTask(['vagrant', 'up', '--no-provision', '--parallel'],
+                          timeout=None))
+        except Exception as exc:
+            if self.action_name != 'ad':
+                raise
+
+            # Handle possible WinRM error: 'The device is not ready'
+            logging.debug(exc, exc_info=True)
+            logging.info("Retrying to bring the machine up.")
+            # Trying again
+            self.execute_subtask(
+                PopenTask(['vagrant', 'up', '--no-provision', '--parallel'],
+                          timeout=None))
+            logging.info("Waiting before continuing to provision.")
+            time.sleep(120)
 
 
 class VagrantProvision(VagrantTask):
