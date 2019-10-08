@@ -94,6 +94,12 @@
     repo: "{{ pr_ci_repo }}"
     force: true
 
+- name: Fix git user.email
+  git_config:
+    name: user.email
+    scope: global
+    value: "root@{{ ansible_fqdn }}"
+
 - name: clone freeipa fork
   git:
     repo: "git@github_pr_tool:{{ repo_owner }}/freeipa.git"
