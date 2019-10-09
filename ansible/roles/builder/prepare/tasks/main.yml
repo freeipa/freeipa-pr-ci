@@ -1,11 +1,10 @@
 ---
 - name: install packages for builder role
   dnf:
-    name: "{{ item }}"
     state: latest
-  with_items:
-    - mock
-    - git
+    name:
+      - mock
+      - git
 
 - name: set default mock config
   template:

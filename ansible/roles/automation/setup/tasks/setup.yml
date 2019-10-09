@@ -1,20 +1,19 @@
 ---
 - name: install packages dependencies
   dnf:
-    name: "{{ item }}"
     state: present
-  with_items:
-    - python3-github3py
-    - PyYAML
-    - git
-    - crontabs
-    - python2-tqdm
-    - ansible
-    - vagrant
-    - libvirt
-    - vagrant-libvirt
-    - rsync
-    - libguestfs-tools-c  # required for vagrant package command
+    name:
+      - python3-github3py
+      - PyYAML
+      - git
+      - crontabs
+      - python2-tqdm
+      - ansible
+      - vagrant
+      - libvirt
+      - vagrant-libvirt
+      - rsync
+      - libguestfs-tools-c  # required for vagrant package command
 
 - name: install pip dependencies
   pip:

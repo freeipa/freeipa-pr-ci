@@ -17,36 +17,35 @@
 
 - name: install runner dependencies
   dnf:
-    name: "{{ item }}"
     state: present
-  with_items:
-    - tuned
-    - vagrant
-    - vagrant-sshfs
-    - vagrant-libvirt
-    - libguestfs-tools-c  # required for vagrant package command
-    - ansible  # TODO requires >= 2.3
-    - nfs-utils
-    - git
-    - libvirt
-    - libvirt-devel
-    - ruby-devel
-    - rsync
-    - createrepo
-    - gzip
-    - gcc
-    - python3-devel
-    - python3-pip
-    - python3-winrm
-    - python2-winrm
-    - python3-netaddr
-    - python2-netaddr
-    - python2-requests
-    - python3-requests
-    - NetworkManager
-    - python-dnf
-    - redhat-rpm-config
-    - crontabs
+    name:
+      - tuned
+      - vagrant
+      - vagrant-sshfs
+      - vagrant-libvirt
+      - libguestfs-tools-c  # required for vagrant package command
+      - ansible  # TODO requires >= 2.3
+      - nfs-utils
+      - git
+      - libvirt
+      - libvirt-devel
+      - ruby-devel
+      - rsync
+      - createrepo
+      - gzip
+      - gcc
+      - python3-devel
+      - python3-pip
+      - python3-winrm
+      - python2-winrm
+      - python3-netaddr
+      - python2-netaddr
+      - python2-requests
+      - python3-requests
+      - NetworkManager
+      - python-dnf
+      - redhat-rpm-config
+      - crontabs
   notify:
     - restart_nfs
 
