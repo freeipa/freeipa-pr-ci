@@ -32,6 +32,10 @@
         name:
           - freeipa-*
           - python*-ipatests
+      register: result
+      until: result.rc == 0
+      retries: 3
+      delay: 5
   rescue:
     # Distro repos are turned off in default template
     # If a new package from fedora/updates is required, this will fix it
