@@ -45,17 +45,16 @@
 
 - name: install additional packages
   dnf:
-    name: "{{ item }}"
     state: latest
-  with_items:
-    - PyYAML  # ipa-vagrant-ci dependency
-    - vim
-    - NetworkManager
-    - xorg-x11-server-Xvfb
-    - firefox
-    - python3-paramiko
-    - firewalld
-    - nfs-utils
+    name:
+      - PyYAML  # ipa-vagrant-ci dependency
+      - vim
+      - NetworkManager
+      - xorg-x11-server-Xvfb
+      - firefox
+      - python3-paramiko
+      - firewalld
+      - nfs-utils
 
 - name: install Ansible dependencies
   dnf:
