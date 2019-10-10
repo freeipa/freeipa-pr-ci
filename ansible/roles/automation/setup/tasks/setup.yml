@@ -120,3 +120,15 @@
   with_items:
     - virtlogd
     - libvirtd
+
+- name: enable cron journals
+  lineinfile:
+    path: /etc/sysconfig/crond
+    regexp: '^CRONDARGS='
+    line: CRONDARGS=-s
+
+- name: restart cron service
+  service:
+    name: crond
+    enabled: true
+    state: restarted
