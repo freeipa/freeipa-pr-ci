@@ -19,6 +19,7 @@ from internals.entities import (
     sentry_report_exception, JobYAMLError
 )
 from internals.gql import util, queries
+from tasks.common import destroy_libvirt_domains
 
 
 logger = logging.getLogger(__name__)
@@ -263,6 +264,7 @@ def main():
     )
 
     while not exit_handler.done:
+        logger.info("Checking pending pull requests.")
         world.check_graphql_limit()
 
         try:
@@ -305,6 +307,8 @@ def main():
                 finally:
                     exit_handler.unregister_task()
                     world.available_resources.give(task)
+                    # Make sure every vm is destroyed
+                    destroy_libvirt_domains()
                     logger.info(
                         "Available resources: %s", world.available_resources
                     )

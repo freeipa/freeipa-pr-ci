@@ -12,7 +12,7 @@ ExecStart=/bin/bash -c 'PYTHONPATH=$PYTHONPATH:/root/freeipa-pr-ci /root/freeipa
 StandardOutput=syslog
 StandardError=syslog
 Restart=on-failure
-RestartSec=10m
+RestartSec=3m
 
 [Install]
 WantedBy=multi-user.target
