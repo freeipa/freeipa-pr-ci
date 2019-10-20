@@ -5,8 +5,7 @@ import time
 
 from . import constants
 from .common import (
-    PopenTask, PopenException, FallibleTask, TaskException,
-    kill_vagrant_processes, kill_vagrant_vms
+    PopenTask, PopenException, FallibleTask, TaskException
 )
 
 
@@ -91,25 +90,9 @@ class VagrantProvision(VagrantTask):
 
 class VagrantCleanup(VagrantTask):
     def _run(self):
-        try:
-            self.execute_subtask(
-                PopenTask(['vagrant', 'destroy']))
-        except PopenException:
-            # First kill all stuck Vagrant processes
-            kill_vagrant_processes()
-
-            # Then restart libvirt daemon
-            self.execute_subtask(
-                PopenTask(['systemctl', 'restart', 'libvirtd'],
-                          raise_on_err=False))
-
-            # Then remove all VMs related to tests
-            kill_vagrant_vms()
-
-            # End finally remove all the images instances
-            self.execute_subtask(
-                PopenTask(['vagrant', 'destroy'], raise_on_err=False))
-
+        logging.info("Destroying vagrant machines.")
+        self.execute_subtask(
+            PopenTask(["vagrant", "destroy"], raise_on_err=False))
 
 class VagrantBoxDownload(VagrantTask):
     def __init__(self, box_name, box_version, link_image=True, **kwargs):

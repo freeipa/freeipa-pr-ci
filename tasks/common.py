@@ -166,9 +166,6 @@ class PopenTask(FallibleTask):
 
         # Make sure every child process is gone
         os.killpg(self.process.pid, signal.SIGKILL)
-        # Make sure every Vagrant process and VM process is gone
-        kill_vagrant_processes()
-        kill_vagrant_vms()
 
     def __str__(self):
         if not isinstance(self.cmd, str):
@@ -255,3 +252,16 @@ def kill_vagrant_vms() -> None:
         return any([role in f.path for role in roles])
 
     return kill_processes(get_qemu_processes(), predicate)
+
+
+def destroy_libvirt_domains() -> None:
+    """Destroy all libvirt domains by calling 'virsh' cli application"""
+    logging.info("Destroying all libvirt domains.")
+    res_virs_list = subprocess.run(
+        ["virsh", "list", "--all", "--name"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+    for domain in res_virs_list.stdout.decode().strip().splitlines():
+        subprocess.run(["virsh", "destroy", domain])
+        subprocess.run(["virsh", "undefine", "--remove-all-storage", domain])
