@@ -78,3 +78,7 @@
 # workaround for https://github.com/ansible/ansible/issues/19814
 - name: set hostname
   shell: "hostnamectl set-hostname {{ inventory_hostname }}.ipa.test"
+
+- include_role:
+    name: utils
+    tasks_from: enable_swap

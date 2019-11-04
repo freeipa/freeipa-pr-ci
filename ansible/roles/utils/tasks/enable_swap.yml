@@ -1,0 +1,41 @@
+---
+- block:
+  - name: write swap file
+    command: >
+      fallocate -l {{ swapfile_size }} {{ swapfile_file }}
+    args:
+      creates: "{{ swapfile_file }}"
+      warn: false
+    register: write_swap_file
+
+  - name: set swap file permissions
+    file:
+      path: "{{ swapfile_file }}"
+      owner: root
+      group: root
+      mode: 0600
+
+  - name: create swap file
+    command: >
+      mkswap {{ swapfile_file }}
+    args:
+      warn: false
+    when: write_swap_file is changed
+    register: create_swap_file
+
+  - name: enable swapfile
+    command: >
+      swapon {{ swapfile_file }}
+    args:
+      warn: false
+    when: create_swap_file is changed
+
+  - name: add swapfile to /etc/fstab
+    mount:
+      name: none
+      src: "{{ swapfile_file }}"
+      fstype: swap
+      opts: sw
+      passno: '0'
+      dump: '0'
+      state: present
