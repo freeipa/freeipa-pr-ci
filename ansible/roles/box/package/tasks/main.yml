@@ -38,7 +38,7 @@
 
 - name: destroy template VM
   become: true
-  shell: vagrant destroy
+  shell: vagrant destroy -f
   args:
     chdir: "{{ template_box_dir }}"
 

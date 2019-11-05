@@ -24,6 +24,7 @@
     chdir: "{{ template_box_dir }}"
 
 - name: get IP from vagrant ssh-config
+  become: true
   shell: "vagrant ssh-config | grep HostName | sed 's/  HostName //'"
   args:
     chdir: "{{ template_box_dir }}"
