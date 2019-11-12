@@ -2,41 +2,30 @@
 basedir: /root/openclose_pr
 
 nightly_jobs:
-  - name: testing_master
+  - name: testing_master_latest
     weekdays: "1,3,5"
     hour: "23"
     minute: "00"
     flow: "ci"
     branch: "master"
-    prci_config: "nightly_master.yaml"
-  - name: testing_f29
+    prci_config: "nightly_latest.yaml"
+
+  - name: testing_master_previous
     weekdays: "2,4"
     hour: "23"
     minute: "00"
     flow: "ci"
     branch: "master"
-    prci_config: "nightly_f29.yaml"
-  - name: testing_rawhide
+    prci_config: "nightly_previous.yaml"
+
+  - name: testing_master_rawhide
     weekdays: "6"
     hour: "10"
     minute: "00"
     flow: "ci"
     branch: "master"
     prci_config: "nightly_rawhide.yaml"
-  - name: testing_ipa-4.7
-    weekdays: "7"
-    hour: "10"
-    minute: "00"
-    flow: "ci"
-    branch: "ipa-4-7"
-    prci_config: "nightly_ipa-4-7.yaml"
-  - name: testing_ipa-4.8
-    weekdays: "6"
-    hour: "15"
-    minute: "00"
-    flow: "ci"
-    branch: "ipa-4-8"
-    prci_config: "nightly_ipa-4-8.yaml"
+
   - name: testing_ipa-4.6
     weekdays: "7"
     hour: "15"
@@ -44,24 +33,43 @@ nightly_jobs:
     flow: "ci"
     branch: "ipa-4-6"
     prci_config: "nightly_ipa-4-6.yaml"
-  - name: testing_pki
+
+  - name: testing_ipa-4.7
+    weekdays: "7"
+    hour: "10"
+    minute: "00"
+    flow: "ci"
+    branch: "ipa-4-7"
+    prci_config: "nightly_ipa-4-7.yaml"
+
+  - name: testing_ipa-4.8
+    weekdays: "6"
+    hour: "15"
+    minute: "00"
+    flow: "ci"
+    branch: "ipa-4-8"
+    prci_config: "nightly_ipa-4-8.yaml"
+
+  - name: testing_master_pki
     weekdays: "7"
     hour: "20"
     minute: "00"
     flow: "pki"
     branch: "master"
-    prci_config: "nightly_master_pki.yaml"
-  - name: testing_389ds
+    prci_config: "nightly_latest_pki.yaml"
+
+  - name: testing_master_389ds
     weekdays: "6"
     hour: "20"
     minute: "00"
     flow: "389ds"
     branch: "master"
-    prci_config: "nightly_master_389ds.yaml"
-  - name: testing_updates_testing
+    prci_config: "nightly_latest_389ds.yaml"
+
+  - name: testing_master_testing
     weekdays: "6"
     hour: "10"
     minute: "00"
     flow: "testing"
     branch: "master"
-    prci_config: "nightly_master_testing.yaml"
+    prci_config: "nightly_latest_testing.yaml"
