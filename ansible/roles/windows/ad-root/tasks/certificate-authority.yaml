@@ -1,0 +1,9 @@
+- name: Install Certification Authority feature
+  win_feature:
+    name: Adcs-Cert-Authority
+    include_management_tools: yes
+
+- name: setup Certification Authority
+  win_shell: Install-AdcsCertificationAuthority -CAType EnterpriseRootCA -Force
+  args:
+    creates: C:\Windows\System32\CertSrv\CertEnroll

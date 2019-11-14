@@ -11,3 +11,5 @@
 - name: Restart
   win_reboot:
     test_command: 'dsquery user -name Administrator'
+
+- import_tasks: certificate-authority.yaml
