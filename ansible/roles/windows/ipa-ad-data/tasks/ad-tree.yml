@@ -1,0 +1,29 @@
+- name: treetestgroup
+  win_domain_group:
+    name: treetestgroup
+    scope: global
+    attributes:
+      gidNumber: 10247
+
+- name: A test user with posix attributes defined
+  include_role:
+    name: windows/ipa-ad-data
+    tasks_from: user.yml
+  vars:
+    options:
+      Name: treetestuser
+      GivenName: TreeTest
+      Surname: User
+      AccountPassword: Secret123456
+      PasswordNeverExpires: $true
+      Enabled: $true
+      OtherAttributes: "@{'uidNumber'='10242'; 'gidNumber'='10247'; 'loginShell'='/bin/sh'; 'homeDirectory'='/home/treetestuser'; 'gecos'='TreeTest User'}"
+
+- name: set Subdomaintest User primary group
+  include_role:
+    name: windows/ipa-ad-data
+    tasks_from: primary_group.yml
+  vars:
+    user: treetestuser
+    group: treetestgroup
+

@@ -78,7 +78,7 @@
       PasswordNeverExpires: $true
       Enabled: $true
       UserPrincipalName: upnuser@UPNsuffix.com
-      OtherAttributes: "@{'uidNumber'='10048'; 'gidNumber'='10047'; 'loginShell'='/bin/sh'; 'homeDirectory'='/home/{{ ad_root_domain }}/upnuser'; 'gecos'='UPN User'}"
+      OtherAttributes: "@{'uidNumber'='10048'; 'gidNumber'='10047'; 'loginShell'='/bin/sh'; 'homeDirectory'='/home/upnuser'; 'gecos'='UPN User'}"
 
 - name: set UPN User primary group
   include_role:

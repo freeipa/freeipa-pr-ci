@@ -1,7 +1,8 @@
 ---
 # # Update Administrator's password
-- hosts: ad-root
+- hosts: ad-root,ad-child,ad-tree
   gather_facts: no
+  any_errors_fatal: true
   tasks:
     - name: set administrator password
       changed_when: yes
@@ -10,14 +11,39 @@
         name: Administrator
         password: Secret123
 
-- hosts: ad-root
+- hosts: ad-root,ad-child,ad-tree
+  any_errors_fatal: true
   vars:
     ansible_user: Administrator
     ansible_password: Secret123
   roles:
     - windows/common
+
+- hosts: ad-root
+  any_errors_fatal: true
+  vars:
+    ansible_user: Administrator
+    ansible_password: Secret123
+  roles:
     - windows/ad-root
-    - windows/ipa-ad-data
+
+- hosts: ad-child,ad-tree
+  any_errors_fatal: true
+  vars:
+    ansible_user: Administrator
+    ansible_password: Secret123
+  roles:
+    - windows/ad-subdomain
+
+- hosts: ad-root,ad-child,ad-tree
+  vars:
+    ansible_user: Administrator
+    ansible_password: Secret123
+  any_errors_fatal: true
+  tasks:
+    - name: create test data
+      include_role:
+        name: windows/ipa-ad-data
 
 # Provision linux hosts but include ad and ad-child in the list so we can access
 # their data to generate ipa test config file

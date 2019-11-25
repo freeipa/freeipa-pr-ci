@@ -1,0 +1,35 @@
+- name: Set root DC as DNS resolver
+  win_dns_client:
+    adapter_names: "*"
+    ipv4_addresses: "{{ hostvars[ad_root_dc_hostname]['ansible_ip_addresses']|ipv4|first }}"
+
+- name: check if AD domain service running
+  win_service:
+    name: NTDS
+  register: ad_service
+
+- when: ad_service.state != "running"
+  block:
+  - name: Create Windows child/tree domain
+    win_shell:
+      Import-Module ADDSDeployment
+
+      $parent_dc_password = ConvertTo-SecureString -String "Secret123" -AsPlainText -Force
+
+      $safe_mode_password = ConvertTo-SecureString -String "{{ safe_mode_password }}" -AsPlainText -Force
+
+      $credential = New-Object System.Management.Automation.PSCredential("Administrator@{{ ad_root_domain }}", $parent_dc_password)
+
+      Install-ADDSDomain -DomainMode Default
+        -DomainType {{ win_domain_setup_type }}
+        -Credential $credential
+        -SafeModeAdministratorPassword $safe_mode_password
+        -NewDomainName {{ win_domain_setup_name }}
+        -ParentDomainName "{{ ad_root_domain }}"
+        -InstallDNS
+        -NoRebootOnCompletion
+        -Force
+
+  - name: Reboot Windows
+    win_reboot:
+      test_command: 'Get-ADUser -Filter {Name -eq "Administrator"}'

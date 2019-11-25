@@ -1,0 +1,41 @@
+- name: subdomaintestgroup
+  win_domain_group:
+    name: subdomaintestgroup
+    scope: global
+    attributes:
+      gidNumber: 10147
+
+- name: A test user with posix attributes defined
+  include_role:
+    name: windows/ipa-ad-data
+    tasks_from: user.yml
+  vars:
+    options:
+      Name: subdomaintestuser
+      GivenName: Subdomaintest
+      Surname: User
+      AccountPassword: Secret123
+      PasswordNeverExpires: $true
+      Enabled: $true
+      OtherAttributes: "@{'uidNumber'='10142'; 'gidNumber'='10147'; 'loginShell'='/bin/sh'; 'homeDirectory'='/home/subdomaintestuser'; 'gecos'='Subdomaintest User'}"
+
+- name: set Subdomaintest User primary group
+  include_role:
+    name: windows/ipa-ad-data
+    tasks_from: primary_group.yml
+  vars:
+    user: subdomaintestuser
+    group: subdomaintestgroup
+
+- name: A test user with posix attributes which is disabled
+  include_role:
+    name: windows/ipa-ad-data
+    tasks_from: user.yml
+  vars:
+    options:
+      Name: subdomaindisabledadu
+      UserPrincipalName: subdomaindisabledaduser@{{ ad_child_domain }}
+      AccountPassword: Secret123
+      PasswordNeverExpires: $true
+      Enabled: $false
+      OtherAttributes: "@{'uidNumber'='10143'; 'gidNumber'='10147'; 'loginShell'='/bin/sh'; 'homeDirectory'='/home/subdomaindisableduser'}"
