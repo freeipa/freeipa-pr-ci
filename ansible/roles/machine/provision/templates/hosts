@@ -5,6 +5,13 @@
       {{ hostvars[host]['ansible_default_ipv4']['address'] }} {{ hostvars[host]['inventory_hostname'] }}.ipa.test
    {% endif %}
 {% endfor %}
-{% if testing_ad is defined %}
-      {{ hostvars[ad_root_dc_hostname]['ansible_ip_addresses']|ipv4|first }} {{ ad_root_dc_hostname }}.{{ ad_root_domain }}
+
+{% for host, domain in [
+  (ad_root_dc_hostname, ad_root_domain),
+  (ad_child_dc_hostname, ad_child_domain),
+  (ad_tree_dc_hostname, ad_tree_domain)
+] %}
+{% if host in groups['all'] %}
+      {{ hostvars[host]['ansible_ip_addresses']|ipv4|first }} {{ host }}.{{ domain }}
 {% endif %}
+{% endfor %}

@@ -1,0 +1,6 @@
+ansible_winrm_server_cert_validation: ignore
+ansible_port: 5986
+ansible_winrm_operation_timeout_sec: 100
+ansible_winrm_read_timeout_sec: 120
+win_domain_setup_type: TreeDomain
+win_domain_setup_name: "{{ ad_tree_domain }}"

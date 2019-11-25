@@ -2,3 +2,8 @@
 git_repo: https://github.com/freeipa/freeipa.git
 ad_root_domain: ad.test
 ad_root_dc_hostname: ad-root
+ad_child_domain: child.ad.test
+ad_child_dc_hostname: ad-child
+ad_tree_domain: adtree.test
+ad_tree_dc_hostname: ad-tree
+

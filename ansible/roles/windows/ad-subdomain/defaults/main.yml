@@ -1,3 +1,2 @@
 ---
-root_domain: "{{ ad_root_domain }}"
 safe_mode_password: SecretSafe123
