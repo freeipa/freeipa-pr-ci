@@ -43,7 +43,7 @@ def create_parser():
         def load_yaml(yml_path):
             try:
                 with open(yml_path) as yml_file:
-                    return yaml.load(yml_file)
+                    return yaml.safe_load(yml_file)
             except IOError as e:
                 raise argparse.ArgumentTypeError(
                     'Failed to open {}: {}'.format(yml_path, e))

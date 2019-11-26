@@ -47,7 +47,7 @@ class TestControl(object):
 
     def __init__(self, cfg_path):
         try:
-            cfg = yaml.load(open(cfg_path))
+            cfg = yaml.safe_load(open(cfg_path))
         except (IOError, yaml.parser.ParserError) as exc:
             raise ValueError(exc)
 

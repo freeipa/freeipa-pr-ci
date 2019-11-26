@@ -497,10 +497,10 @@ class PullRequest(object):
         tasks_file_content = self.__get_tasks_file_content(world)
 
         try:
-            return yaml.load(tasks_file_content)["jobs"]
+            return yaml.safe_load(tasks_file_content)["jobs"]
         # FIXME: for older PRs to pass. Can be later deleted
         except KeyError:
-            return yaml.load(task_link)["jobs"]
+            return yaml.safe_load(task_link)["jobs"]
 
     def __remove_label(self, world: World, label: Label) -> None:
         """Removes PR's label on GitHub using REST API
