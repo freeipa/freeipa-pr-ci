@@ -26,25 +26,15 @@
   when: update_packages is defined and update_packages
 
 - name: install freeipa packages
-  block:
-    - dnf:
-        state: latest
-        name:
-          - freeipa-*
-          - python*-ipatests
-      register: result
-      until: result.rc == 0
-      retries: 3
-      delay: 5
-  rescue:
-    # Distro repos are turned off in default template
-    # If a new package from fedora/updates is required, this will fix it
-    - dnf:
-        state: latest
-        enablerepo: fedora,updates
-        name:
-          - freeipa-*
-          - python*-ipatests
+  dnf:
+    state: latest
+    name:
+      - freeipa-*
+      - python*-ipatests
+  register: result
+  until: result.rc == 0
+  retries: 3
+  delay: 5
 
 - name: install client packages
   dnf:
