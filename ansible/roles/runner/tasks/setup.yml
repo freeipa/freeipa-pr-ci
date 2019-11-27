@@ -43,11 +43,15 @@
       - python2-requests
       - python3-requests
       - NetworkManager
-      - python-dnf
+      - python3-dnf
       - redhat-rpm-config
       - crontabs
   notify:
     - restart_nfs
+
+- name: register vagrant version
+  shell: vagrant --version | awk '{print $2}'
+  register: vagrant_version
 
 # as per sssd-suite readme file states, we need vagrant plugins...
 - name: install libvirt plugin for vagrant
@@ -56,14 +60,17 @@
 
 - name: install vagrant plugin (winrm) for AD tests
   raw: vagrant plugin install winrm
+  when: vagrant_version.stdout is version('2.2.0', '<')
   ignore_errors: yes
 
 - name: install vagrant plugins (winrm-fs) for AD tests
   raw: vagrant plugin install winrm-fs
+  when: vagrant_version.stdout is version('2.2.0', '<')
   ignore_errors: yes
 
 - name: install vagrant plugins (winrm-elevated) for AD tests
   raw: vagrant plugin install winrm-elevated
+  when: vagrant_version.stdout is version('2.2.0', '<')
   ignore_errors: yes
 
 # adding after packages install as the file can be overwritten by "mailcap"
@@ -84,7 +91,7 @@
 
 - name: start&enable nfs
   service:
-    name: nfs
+    name: nfs-server
     enabled: true
     state: started
 
