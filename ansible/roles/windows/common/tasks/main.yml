@@ -3,6 +3,18 @@
 
 - wait_for_connection:
 
+- name: set host name from ansible inventory name
+  win_hostname:
+    name: "{{ inventory_hostname }}"
+  register: hostname
+
+- name: Reboot
+  win_reboot:
+  when: hostname.reboot_required
+
+- setup:
+  when: hostname is changed
+
 - name: Install AD Domain Services feature
   win_feature:
     name: AD-Domain-Services
