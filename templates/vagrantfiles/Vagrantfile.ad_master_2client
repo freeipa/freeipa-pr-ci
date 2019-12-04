@@ -60,7 +60,7 @@ Vagrant.configure(2) do |config|
         ad_root.vm.box_version = ">=0"
         ad_root.vm.synced_folder ".", "/vagrant", type: "nfs", disabled: true
 
-        config.vm.provider "libvirt" do |domain, override|
+        ad_root.vm.provider "libvirt" do |domain, override|
             domain.cpus = 2
             domain.memory = 4096
         end
