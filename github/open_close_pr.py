@@ -36,7 +36,7 @@ def load_yaml(yml_path):
     yaml = ruamel.yaml.YAML()
     try:
         with open(yml_path, 'r+') as yml_file:
-            return yaml.safe_load(yml_file)
+            return yaml.load(yml_file)
     except IOError as exc:
         raise argparse.ArgumentTypeError(
             'Failed to open {}: {}'.format(yml_path, exc))
