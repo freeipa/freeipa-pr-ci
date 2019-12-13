@@ -7,3 +7,33 @@
   win_shell: Install-AdcsCertificationAuthority -CAType EnterpriseRootCA -Force
   args:
     creates: C:\Windows\System32\CertSrv\CertEnroll
+  register: cert_authority
+
+- name: Autologon name
+  win_regedit:
+    key: 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
+    value: DefaultUserName
+    data: Administrator
+
+- name: Autologon password
+  win_regedit:
+    key: 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
+    value: DefaultPassword
+    data: Secret123
+
+- name: Autologon enable
+  win_regedit:
+    key: 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
+    value: AutoAdminLogon
+    data: 1
+
+- name: Autologon domain
+  win_regedit:
+    key: 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
+    value: DefaultDomain
+    data: ad.test
+
+- name: Reboot to finish configuring Certification Authority
+  win_reboot:
+    test_command: 'Get-ADUser -Filter {Name -eq "Administrator"}'
+  when: cert_authority is changed
