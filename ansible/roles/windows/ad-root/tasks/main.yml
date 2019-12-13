@@ -10,6 +10,6 @@
 
 - name: Restart
   win_reboot:
-    test_command: 'dsquery user -name Administrator'
+    test_command: 'Get-ADUser -Filter {Name -eq "Administrator"}'
 
 - import_tasks: certificate-authority.yaml
