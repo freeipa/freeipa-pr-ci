@@ -47,7 +47,6 @@
   dnf:
     state: latest
     name:
-      - PyYAML  # ipa-vagrant-ci dependency
       - vim
       - NetworkManager
       - xorg-x11-server-Xvfb
