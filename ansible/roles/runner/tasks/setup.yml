@@ -73,6 +73,22 @@
   when: vagrant_version.stdout is version('2.2.0', '<')
   ignore_errors: yes
 
+# TODO: Replace COPR repo when the packages hit the stable repos
+- name: install winrm packages and dependencies for AD tests
+  block:
+    - name: enable winrm copr repo
+      shell: "dnf copr enable -y @freeipa/freeipa-pr-ci"
+      args:
+        warn: no
+    - name: install packages and their dependencies
+      dnf:
+        state: present
+        name:
+          - rubygem-winrm
+          - rubygem-winrm-fs
+          - rubygem-winrm-elevated
+  when: vagrant_version.stdout is version('2.2.0', '>=')
+
 # adding after packages install as the file can be overwritten by "mailcap"
 - name: add mime.types so awscli can correctly guess content-types
   copy:
