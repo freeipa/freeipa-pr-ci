@@ -8,6 +8,12 @@
       set_fact:
         dns_forwarder: "{{ dns_server.stdout }}"
 
+    # https://github.com/ansible/ansible/issues/56243
+    - name: ensure file already exists at template dest to work around 'invalid selinux context' issue
+      file:
+        path: "/vagrant/ipa-test-config.yaml"
+        state: touch
+
     - name: create test config file
       template:
         src: ipa-test-config.yaml
