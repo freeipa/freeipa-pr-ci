@@ -92,7 +92,7 @@ class VagrantCleanup(VagrantTask):
     def _run(self):
         logging.info("Destroying vagrant machines.")
         self.execute_subtask(
-            PopenTask(["vagrant", "destroy"], raise_on_err=False))
+            PopenTask(["vagrant", "destroy", "--force"], raise_on_err=False))
 
 class VagrantBoxDownload(VagrantTask):
     def __init__(self, box_name, box_version, link_image=True, **kwargs):
