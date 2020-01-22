@@ -31,7 +31,7 @@
   win_regedit:
     key: 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
     value: DefaultDomain
-    data: ad.test
+    data: "{{ root_domain }}"
 
 - name: Reboot to finish configuring Certification Authority
   win_reboot:
