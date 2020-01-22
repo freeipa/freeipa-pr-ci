@@ -1,15 +1,13 @@
 ---
-# tasks file for win-ad-forest
-- name: Push script to Windows machine
-  win_template:
-    src: Install-ADDSForest.ps1.j2
-    dest: 'C:\Windows\Temp\Install-ADDSForest.ps1'
+- name: Create Windows domain
+  win_domain:
+    dns_domain_name: "{{ root_domain }}"
+    safe_mode_password: "{{ safe_mode_password }}"
+  register: win_root_domain
 
-- name: Promote to Forest Domain controller
-  win_shell: 'C:\Windows\Temp\Install-ADDSForest.ps1'
-
-- name: Restart
+- name: Reboot Windows
   win_reboot:
     test_command: 'Get-ADUser -Filter {Name -eq "Administrator"}'
+  when: win_root_domain.reboot_required
 
 - import_tasks: certificate-authority.yaml
