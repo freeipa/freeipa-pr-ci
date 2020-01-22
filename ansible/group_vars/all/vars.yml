@@ -1,2 +1,4 @@
 ---
 git_repo: https://github.com/freeipa/freeipa.git
+ad_root_domain: ad.test
+ad_root_dc_hostname: ad-root

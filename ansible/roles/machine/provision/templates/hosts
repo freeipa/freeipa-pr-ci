@@ -6,5 +6,5 @@
    {% endif %}
 {% endfor %}
 {% if testing_ad is defined %}
-      {{ hostvars['ad-root']['ansible_ip_addresses']|ipv4|first }} ad-root.ad.test
+      {{ hostvars[ad_root_dc_hostname]['ansible_ip_addresses']|ipv4|first }} {{ ad_root_dc_hostname }}.{{ ad_root_domain }}
 {% endif %}

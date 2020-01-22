@@ -27,12 +27,12 @@ domains:
   name: ipa.test
   type: IPA
 {% if testing_ad is defined %}
-- name: ad.test
+- name: {{ ad_root_domain }}
   type: AD
   hosts:
-    - external_hostname: ad-root.ad.test
-      ip: {{ hostvars['ad-root']['ansible_ip_addresses']|ipv4|first }}
-      name: ad-root.ad.test
+    - external_hostname: {{ ad_root_dc_hostname }}.{{ ad_root_domain }}
+      ip: {{ hostvars[ad_root_dc_hostname]['ansible_ip_addresses']|ipv4|first }}
+      name: {{ ad_root_dc_hostname }}.{{ ad_root_domain }}
       role: ad
       username: Administrator
       password: Secret123
