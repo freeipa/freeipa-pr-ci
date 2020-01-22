@@ -1,0 +1,17 @@
+[Unit]
+Description=gunicorn daemon
+Requires=gunicorn.socket
+After=network.target
+
+[Service]
+User=nginx
+Group=nginx
+WorkingDirectory=/usr/share/nginx/
+ExecStart=/usr/bin/gunicorn-3 -w 4 app:app
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop = /bin/kill -s TERM $MAINPID
+#KillMode=mixed
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

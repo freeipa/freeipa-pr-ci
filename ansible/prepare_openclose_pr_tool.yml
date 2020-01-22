@@ -49,6 +49,7 @@
       when: github_token != "" and  repo_owner != 'freeipa'
     - role: automation/nightly_pr
       when: github_token != "" and  repo_owner != 'freeipa'
+    - role: automation/box_hosting  # host vagrant catalog
     # TODO: Enable automated template generation
     # - role: automation/template_pr
     #   when: github_token != "" and  repo_owner != 'freeipa'

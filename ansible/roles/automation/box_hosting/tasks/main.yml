@@ -1,0 +1,74 @@
+---
+# These tasks install a web server (nginx) to host vagrant catalog and boxes.
+#
+# To install boxes from this host just run the below command on your runner:
+# $ export VAGRANT_SERVER_URL='http://URL_TO_THIS_PRCI_AUTOMATION_HOST'
+#
+# Request to http://prci-automation/freeipa/ci-master-f30 will return the catalog
+# you can use any combination of username/boxname.
+#
+# Requests to boxes not available (not downloaded) will be redirected to 
+# vagrantup.com.
+#
+# To download a box to be hosted by prci-automation you need to run:
+# `scripts/cache-vagrant-box.py {username} {boxname} {version}`
+#
+# E.g: `scripts/cache-vagrant-box.py freeipa ci-master-f31 0.0.1`
+- name: install latest (pip) Flask Web framework
+  pip:
+    executable: pip3
+    name: Flask
+
+- name: install nginx and gunicorn
+  dnf:
+    state: present
+    name:
+      - nginx
+      - python3-gunicorn
+
+- name: copy nginx settings
+  copy:
+    src: nginx.conf
+    dest: /etc/nginx/nginx.conf
+
+- name: copy flask application
+  copy:
+    src: app.py
+    dest: /usr/share/nginx/app.py
+
+- name: copy 404.json
+  copy:
+    src: 404.json
+    dest: /usr/share/nginx/html/404.json
+
+- name: create systemd unit for gunicorn
+  copy:
+    src: gunicorn.service
+    dest: /etc/systemd/system/gunicorn.service
+
+- name: create catalog directory
+  file:
+    path: /usr/share/nginx/html/catalog
+    state: directory
+    owner: nginx
+    group: nginx
+    mode: 0700
+
+- name: create socket file for gunicorn
+  copy:
+    src: gunicorn.socket
+    dest: /etc/systemd/system/gunicorn.socket
+
+- name: systemd daemon reload
+  shell: systemctl daemon-reload
+
+- name: enable gunicorn
+  service:
+    enabled: true
+    state: started
+    name: gunicorn.socket
+
+- name: reload nginx service
+  systemd:
+    state: reloaded
+    name: nginx
