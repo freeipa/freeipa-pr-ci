@@ -1,0 +1,5 @@
+cygwin_installer_url: https://cygwin.com/setup-x86_64.exe
+cygwin_installer_local_file: c:/windows/temp/cygwin-setup.exe
+cygwin_mirror_url: http://mirror.cs.vt.edu/pub/cygwin/cygwin/
+sshd_service: cygsshd
+cygwin_dir: c:/tools/cygwin

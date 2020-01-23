@@ -1,0 +1,38 @@
+- name: Check if sshd service exists
+  win_service:
+    name: "{{ sshd_service }}"
+  register: sshd_status
+
+- when: not sshd_status.exists
+  block:
+  - name: donwload cygwin installer
+    win_get_url:
+      url: "{{ cygwin_installer_url }}"
+      dest: "{{ cygwin_installer_local_file }}"
+
+  - name: Install OpenSSH
+    win_shell: >
+      {{ cygwin_installer_local_file }}
+      --quiet-mode
+      --no-desktop
+      --site {{ cygwin_mirror_url }}
+      --root {{ cygwin_dir }}
+      --packages openssh
+
+- name: Create passwd file
+  win_shell: "bin/mkpasswd > etc/passwd"
+  args:
+    chdir: "{{ cygwin_dir }}"
+    creates: "{{ cygwin_dir }}/etc/passwd"
+  register: passwd
+
+- name: Configure ssh
+  win_shell: '{{ cygwin_dir }}/bin/bash -c "export PATH=${PATH}:/bin; ssh-host-config -y -w Secret123"'
+  args:
+    creates: "{{ cygwin_dir }}/etc/ssh_config"
+  register: ssh_config
+
+- name: start sshd
+  win_service:
+    name: "{{ sshd_service }}"
+    state: "{{ 'restarted' if passwd is changed or ssh_config is changed else 'started' }}"
