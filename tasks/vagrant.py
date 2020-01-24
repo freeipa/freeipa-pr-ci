@@ -1,12 +1,16 @@
 import logging
 import os
-import signal
+import re
+import subprocess
 import time
+from datetime import datetime
+
+import yaml
+
+import tasks
 
 from . import constants
-from .common import (
-    PopenTask, PopenException, FallibleTask, TaskException
-)
+from .common import FallibleTask, PopenTask, TaskException
 
 
 def with_vagrant(func):
@@ -94,6 +98,7 @@ class VagrantCleanup(VagrantTask):
         self.execute_subtask(
             PopenTask(["vagrant", "destroy", "--force"], raise_on_err=False))
 
+
 class VagrantBoxDownload(VagrantTask):
     def __init__(self, box_name, box_version, link_image=True, **kwargs):
         """
@@ -105,7 +110,13 @@ class VagrantBoxDownload(VagrantTask):
         self.link_image = True
 
     def _run(self):
+        self.box.update_latest_use()
+
         if not self.box.exists():
+            # If necessary delete oldest box to save space before downloading a
+            # new one
+            VagrantBox.delete_oldest_box()
+
             try:
                 self.execute_subtask(
                     PopenTask([
@@ -162,8 +173,73 @@ class VagrantBox(object):
             libvirt_name=self.libvirt_name,
             version=self.version)
 
+    @property
+    def last_time_used(self):
+        box_key = '{name}_{version}_{provider}'.format(
+            name=self.name, version=self.version, provider=self.provider)
+        with open(tasks.BOX_STATS_FILE, 'r') as stats_file:
+            stats = yaml.safe_load(stats_file)
+            if not stats:
+                stats = {}
+
+        return stats.get(box_key, None)
+
+    @staticmethod
+    def delete_oldest_box():
+        all_boxes = sorted(
+            VagrantBox.installed_boxes(), key=lambda x: x.last_time_used)
+
+        # Do not delete Windows boxes
+        linux_boxes = [x for x in all_boxes if 'windows' not in x.name]
+        if len(linux_boxes) > 4:
+            linux_boxes[0].delete_box()
+
+    @staticmethod
+    def installed_boxes():
+        output = subprocess.check_output(
+            ['vagrant', 'box', 'list'], timeout=2000)
+
+        if 'There are no installed boxes!' in output.decode():
+            return []
+
+        all_boxes = []
+        for box_data in output.decode().strip().split('\n'):
+            matches = re.search(
+                r'(?P<name>[\/\w-]+)\s+\((?P<provider>[\w-]+)\,\s(?P<version>[\w.]+)\)',  # noqa
+                output.decode(),
+            )
+            box = VagrantBox(
+                name=matches.group('name'),
+                version=matches.group('version'),
+                provider=matches.group('provider'),
+            )
+            all_boxes.append(box)
+
+        return all_boxes
+
+    def update_latest_use(self):
+        box_key = '{name}_{version}_{provider}'.format(
+            name=self.name, version=self.version, provider=self.provider)
+        with open(tasks.BOX_STATS_FILE, 'r+') as stats_file:
+            stats = yaml.safe_load(stats_file)
+            if not stats:
+                stats = {}
+
+        stats[box_key] = datetime.now()
+        with open(tasks.BOX_STATS_FILE, 'w+') as stats_file:
+            yaml.dump(stats, stats_file)
+
     def exists(self):
         return os.path.exists(self.vagrant_path)
 
     def libvirt_exists(self):
         return os.path.exists(self.libvirt_path)
+
+    def delete_box(self):
+        subprocess.run([
+            'vagrant', 'box', 'remove', self.name, '--provider', self.provider,
+            '--box-version', self.version
+        ], timeout=2000)
+
+        subprocess.run(
+            ['virsh', 'vol-delete', self.libvirt_path], timeout=2000)
