@@ -53,6 +53,11 @@
   file:
     path: /vagrant/installed_packages/
     state: directory
+  # /vagrant is mounted using sshfs and there are random "operation not permitted" errors
+  register: pkgs_dir
+  until: pkgs_dir is not failed
+  retries: 3
+  delay: 10
 
 - name: get all packages
   shell: rpm -qa | sort > /vagrant/installed_packages/installed_packages_{{inventory_hostname}}.log
