@@ -25,6 +25,11 @@
     src: config.yml
     dest: /root/.config/freeipa-pr-ci/config.yml
 
+- name: ensure vagrant_boxes_stats.yml exists
+  file:
+    path: /root/.config/freeipa-pr-ci/vagrant_boxes_stats.yml
+    state: touch
+
 - name: create systemd unit for prci
   copy:
     src: prci.service

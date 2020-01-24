@@ -14,6 +14,7 @@ import github3
 import yaml
 from github3.exceptions import NotFoundError
 
+import tasks
 from internals.entities import (
     ExitHandler, JobDispatcher, PullRequest, Status, Task, World,
     sentry_report_exception, JobYAMLError
@@ -236,6 +237,7 @@ def main():
     runner_id = args.ID
     config = args.config
 
+    tasks.BOX_STATS_FILE = config["box_stats_file"]
     credentials = config["credentials"]
     repo = config["repository"]
     tasks_path = config["tasks_file"]

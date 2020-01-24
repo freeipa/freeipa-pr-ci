@@ -5,6 +5,7 @@ credentials:
     token: {{ github_token }}
 tasks_file: .freeipa-pr-ci.yaml
 whitelist_file: /root/freeipa-pr-ci/whitelist.yml
+box_stats_file: /root/.config/freeipa-pr-ci/vagrant_boxes_stats.yml
 no_task_backoff_time: {{ no_task_backoff_time }}
 logging:
     version: 1
