@@ -6,6 +6,11 @@
     - name: github_token
       prompt: API token for GitHub
       private: false
+      # Set the IP address to prci-automation hosting vagrant boxes
+    - name: custom_vagrant_catalog
+      prompt: Custom vagrant catalog host (ip address) (Press enter to ignore)
+      default: false
+      private: false
   gather_facts: false
   pre_tasks:
     - name: install Python 3 deps for ansible modules
