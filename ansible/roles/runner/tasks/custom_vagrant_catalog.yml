@@ -1,0 +1,24 @@
+---
+# Configure host to fetch boxes from custom catalog (prci-automation)
+- name: Add prci-automation entry to /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    regexp: "prci-automation$"
+    line: "{{ custom_vagrant_catalog }} prci-automation"
+
+- name: Set "VAGRANT_SERVER_URL" Environment variable
+  ini_file:
+    path: /etc/systemd/system/prci.service
+    section: Service
+    option: Environment
+    value: "VAGRANT_SERVER_URL='http://prci-automation'"
+    mode: 0700
+
+- name: systemd daemon reload
+  shell: systemctl daemon-reload
+
+- name: restart prci
+  service:
+    name: prci
+    enabled: true
+    state: restarted
