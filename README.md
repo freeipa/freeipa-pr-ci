@@ -140,6 +140,33 @@ jobs directories.
 This feature can be disabled setting `activate_autocleaner: false` in the
 particular playbook.
 
+#### Vagrant box hosting
+
+PR-CI is capable of proxying and hosting boxes from Vagrant, speeding up the
+provisioning phase if the box is not in place.
+
+For that you need to provision runners answering the question:
+"Custom vagrant catalog host (ip address) (Press enter to ignore)"
+
+If you provide the IP address of `prci-automation` then all runners will set
+that to `VAGRANT_SERVER_URL` environment variable and Vagrant will fetch boxesq
+from that address.
+
+##### Cache vagrant boxes
+
+On `prci-automation` you can run the following script to download the boxes,
+making them available locally:
+
+```
+$ scripts/cache-vagrant-box.py {username} {boxname} {version}
+```
+
+E.g:
+
+```
+scripts/cache-vagrant-box.py freeipa ci-master-f31 0.0.1
+```
+
 ## User Guide
 
 ### Re-running tasks
