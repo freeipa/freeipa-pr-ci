@@ -10,7 +10,7 @@ import yaml
 import tasks
 
 from . import constants
-from .common import FallibleTask, PopenTask, TaskException
+from .common import FallibleTask, PopenTask, TaskException, PopenException
 
 
 def with_vagrant(func):
@@ -35,23 +35,54 @@ def __setup_provision(task):
     This tries to execute the provision twice due to
     problems described in issue #20
     """
+    if task.action_name == 'ad':
+        vagrant_up_retries = 2
+        vagrant_provision_retries = 3
+        provision_delay = 120
+    else:
+        vagrant_up_retries = 0
+        vagrant_provision_retries = 1
+        provision_delay = 0
+    retry_delay = 10
+
     task.execute_subtask(
         VagrantBoxDownload(
             box_name=task.template_name,
             box_version=task.template_version,
             link_image=task.link_image,
             timeout=None))
-    try:
-        task.execute_subtask(
-            VagrantUp(action_name=task.action_name, timeout=None))
-        task.execute_subtask(VagrantProvision(timeout=None))
-    except Exception as exc:
-        logging.debug(exc, exc_info=True)
-        logging.info("Failed to provision/up VM. Trying it again")
-        task.execute_subtask(VagrantCleanup(raise_on_err=False))
-        task.execute_subtask(
-            VagrantUp(action_name=task.action_name, timeout=None))
-        task.execute_subtask(VagrantProvision(timeout=None))
+
+    while True:
+        try:
+            task.execute_subtask(
+                VagrantUp(timeout=None))
+            break
+        except PopenException:
+            if vagrant_up_retries:
+                logging.info(
+                    "Retrying to bring the machine up, %s retries left",
+                    vagrant_up_retries)
+                vagrant_up_retries -= 1
+                time.sleep(retry_delay)
+            else:
+                raise
+    if provision_delay:
+        logging.info("Waiting %s seconds before continuing to provision.",
+                     provision_delay)
+        time.sleep(provision_delay)
+    while True:
+        try:
+            task.execute_subtask(VagrantProvision(timeout=None))
+            break
+        except PopenException:
+            if vagrant_provision_retries:
+                logging.info(
+                    "Retrying provisioning, %s retries left" %
+                    vagrant_provision_retries)
+                vagrant_provision_retries -= 1
+                time.sleep(retry_delay)
+            else:
+                raise
 
 
 class VagrantTask(FallibleTask):
@@ -61,28 +92,10 @@ class VagrantTask(FallibleTask):
 
 
 class VagrantUp(VagrantTask):
-    def __init__(self, action_name, **kwargs):
-        super(VagrantUp, self).__init__(**kwargs)
-        self.action_name = action_name
-
     def _run(self):
-        try:
-            self.execute_subtask(
-                PopenTask(['vagrant', 'up', '--no-provision', '--parallel'],
-                          timeout=None))
-        except Exception as exc:
-            if self.action_name != 'ad':
-                raise
-
-            # Handle possible WinRM error: 'The device is not ready'
-            logging.debug(exc, exc_info=True)
-            logging.info("Retrying to bring the machine up.")
-            # Trying again
-            self.execute_subtask(
-                PopenTask(['vagrant', 'up', '--no-provision', '--parallel'],
-                          timeout=None))
-            logging.info("Waiting before continuing to provision.")
-            time.sleep(120)
+        self.execute_subtask(
+            PopenTask(['vagrant', 'up', '--no-provision', '--parallel'],
+                      timeout=None))
 
 
 class VagrantProvision(VagrantTask):
