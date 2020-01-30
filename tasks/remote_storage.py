@@ -22,32 +22,7 @@ job directory using awscli (which does parallelism for us) under S3 bucket
 "jobs" prefix (directory). Currently 2 awscli commands are needed in order to
 set correct encoding for gzip files. Content types are set automatically using
 "/etc/mime.types" file.
-At the end we create root jobs index to list all "freeipa" repo PR jobs in the
-bucket.
 """
-
-
-def create_jobs_root_index():
-    """
-    Generate root jobs index from AWS DynamoDB table.
-    """
-    client = boto3.client('s3')
-    dynamodb = boto3.resource('dynamodb', region_name=CLOUD_REGION)
-    table = dynamodb.Table(CLOUD_DB)
-
-    response = table.scan()
-    objects = response['Items']
-
-    while response.get('LastEvaluatedKey'):
-        response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
-        objects.extend(response['Items'])
-
-    obj_data = {'objects': objects}
-
-    client.put_object(Body=generate_index(obj_data, is_root=True),
-                      Bucket=CLOUD_BUCKET,
-                      Key=os.path.join(CLOUD_JOBS_DIR, 'index.html'),
-                      ContentEncoding='utf-8', ContentType='text/html')
 
 
 def generate_index(obj_data, is_root=False):
@@ -245,8 +220,13 @@ class CloudUpload(FallibleTask):
 
 class CreateRootIndex(FallibleTask):
     """
-    Create jobs root index
+    This was used to save metadata to dynamodb and generate the index page
+    after that.
+
+    This behaviour has changed, metadata continues to be stored, but index
+    generation was removed.
     """
+
     def __init__(self, uuid, repo_owner, pr_number, pr_author, task_name,
                  returncode, **kwargs):
         if not re.match(UUID_RE, uuid):
@@ -263,4 +243,3 @@ class CreateRootIndex(FallibleTask):
         save_jobdir_metadata(self.uuid, self.repo_owner,
                              self.pr_number, self.pr_author,
                              self.task_name, self.returncode)
-        create_jobs_root_index()
