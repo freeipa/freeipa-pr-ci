@@ -3,7 +3,7 @@ import os
 import re
 import subprocess
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import yaml
 
@@ -199,8 +199,15 @@ class VagrantBox(object):
 
     @staticmethod
     def delete_oldest_box():
+        def clean_last_time_used(box):
+            '''Return "yesterday" for boxes previously installed in the system.
+            '''
+            if box.last_time_used:
+                return box.last_time_used
+            return datetime.now() - timedelta(days=1)
+
         all_boxes = sorted(
-            VagrantBox.installed_boxes(), key=lambda x: x.last_time_used)
+            VagrantBox.installed_boxes(), key=clean_last_time_used)
 
         # Do not delete Windows boxes
         linux_boxes = [x for x in all_boxes if 'windows' not in x.name]
