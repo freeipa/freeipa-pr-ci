@@ -1,2 +1,5 @@
 ---
 freeipa_version: master
+
+# Only master 
+repo_freeipa_copr_enabled: 1
