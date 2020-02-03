@@ -6,6 +6,13 @@
     attributes:
       gidNumber: 10047
 
+- name: group@group
+  win_domain_group:
+    name: group@group
+    scope: global
+    attributes:
+      gidNumber: 10048
+
 - name: A test user with posix attributes defined
   include_role:
     name: windows/ipa-ad-data
