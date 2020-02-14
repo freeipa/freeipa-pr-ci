@@ -13,7 +13,6 @@
 - include: autocleaner.yml
   when: activate_autocleaner
 - include: custom_vagrant_catalog.yml
-  when: custom_vagrant_catalog is defined and custom_vagrant_catalog != 'False'
 
 - include_role:
     name: utils
