@@ -26,6 +26,11 @@
       - nginx
       - python3-gunicorn
 
+- name: set selinux to permissive
+  selinux:
+    policy: targeted
+    state: permissive
+
 - name: copy nginx settings
   copy:
     src: nginx.conf
@@ -66,7 +71,7 @@
   service:
     enabled: true
     state: started
-    name: gunicorn.socket
+    name: gunicorn
 
 - name: reload nginx service
   systemd:
