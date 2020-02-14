@@ -58,8 +58,10 @@ def get_pull_requests(repository: Dict) -> List[Dict]:
 
 
 def get_last_commit(pull_request: Dict) -> Dict:
-    """Extracts last pull request from a given pull request."""
-    return pull_request["commits"]["nodes"][0]["commit"]
+    """Extracts head commit from a given pull request."""
+    for commit in pull_request["commits"]["nodes"]:
+        if commit["commit"]["oid"] == pull_request["headRefOid"]:
+            return commit["commit"]
 
 
 def get_commit_sha(commit: Dict) -> Text:
