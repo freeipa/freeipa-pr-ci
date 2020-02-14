@@ -9,6 +9,7 @@ def make_pull_requests_query(owner: Text, repo: Text) -> Dict[Text, Text]:
       nodes {
         number
         baseRefName
+        headRefOid
         mergeable
         author {
           login
@@ -18,7 +19,7 @@ def make_pull_requests_query(owner: Text, repo: Text) -> Dict[Text, Text]:
             name
           }
         }
-        commits(last: 1) {
+        commits(last: 250) {
           nodes {
             commit {
               oid
@@ -52,7 +53,8 @@ def make_pull_request_query(
         "query": """{
   repository(owner: "%s", name: "%s") {
     pullRequest(number: %s) {
-      commits(last: 1) {
+      headRefOid
+      commits(last: 250) {
         nodes {
           commit {
             oid
