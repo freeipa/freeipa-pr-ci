@@ -74,28 +74,8 @@ def make_object(root, obj):
     }
 
 
-def make_objects(root, objects):
-    """
-    Go through subdirs and files in order to gather "object" data.
-    """
-    for f in objects:
-        yield make_object(root, f)
-
-
-def make_aws_data(remote_path, uuid, pr_number, pr_author, task_name,
-                  returncode, hostname, objects):
-    """
-    Create AWS data for Jinja.
-    """
-    return {
-        "remote_path": remote_path, "uuid": uuid, "pr_number": pr_number,
-        "pr_author": pr_author, "task_name": task_name,
-        "returncode": returncode, "hostname": hostname,"objects": objects
-    }
-
-
 def create_local_indeces(uuid, pr_number, pr_author, task_name, returncode,
-                         hostname):
+                         hostname, repo_owner):
     """
     Go through whole job result directory structure and gather all files with
     metadata for every directory. Note: AWS S3 does not support classic web
@@ -108,11 +88,18 @@ def create_local_indeces(uuid, pr_number, pr_author, task_name, returncode,
     job_path_start = job_dir.rfind(os.sep) + 1
     for root, dirs, files in os.walk(job_dir):
         remote_path = root[job_path_start:]
-        objects = list(make_objects(root, dirs + files))
-        data = make_aws_data(
-            remote_path, uuid, pr_number, pr_author,
-            task_name, returncode, hostname, objects
-        )
+        objects = [make_object(root, obj) for obj in dirs + files]
+        data = {
+            "remote_path": remote_path,
+            "uuid": uuid,
+            "pr_number": pr_number,
+            "pr_author": pr_author,
+            "task_name": task_name,
+            "returncode": returncode,
+            "hostname": hostname,
+            "repo_owner": repo_owner,
+            "objects": objects,
+        }
         write_index(data, root)
 
 
@@ -204,8 +191,15 @@ class CloudUpload(FallibleTask):
                              self.pr_number, self.pr_author,
                              self.task_name, self.returncode)
 
-        create_local_indeces(self.uuid, self.pr_number, self.pr_author,
-                             self.task_name, self.returncode, self.hostname)
+        create_local_indeces(
+            uuid=self.uuid,
+            pr_number=self.pr_number,
+            pr_author=self.pr_author,
+            task_name=self.task_name,
+            returncode=self.returncode,
+            hostname=self.hostname,
+            repo_owner=self.repo_owner,
+        )
 
         aws_sync_cmd = ['aws', 's3', 'sync', src, dest]
         sync_all_except_gz = ['--include=*', '--exclude=*.gz']
