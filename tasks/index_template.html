@@ -9,7 +9,7 @@
   <a href="{{ cloud_jobs_url }}"><img src="{{ cloud_url }}prci.png"></a>
   <h4 class="text-center"> {{ obj_data.hostname }} </h4>
   <h4 class="text-center"> {{ obj_data.uuid }} </h4>
-  <h4 class="text-center"> <a href="https://github.com/freeipa/freeipa/pull/{{ obj_data.pr_number }}"> PR#{{ obj_data.pr_number }} </a> - {{ obj_data.task_name }}
+  <h4 class="text-center"> <a href="https://github.com/{{ obj_data.repo_owner }}/freeipa/pull/{{ obj_data.pr_number }}"> PR#{{ obj_data.pr_number }} </a> - {{ obj_data.task_name }}
     {% if obj_data.returncode == '0' %}
     <i class="fas fa-check" style="color:#28A745"></i> {% else %}
     <i class="fas fa-times" style="color:#CB2431"></i>
