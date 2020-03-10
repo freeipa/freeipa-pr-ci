@@ -49,6 +49,14 @@
     - samba-client
   when: testing_ad is defined
 
+- name: install Fedora 27 specific tests dependencies
+  dnf:
+    state: latest
+    name:
+      - ntpdate
+      - sssd-tools
+  when: ansible_distribution == 'Fedora' and ansible_distribution_version == '27'
+
 - name: create directory to save installed packages logs
   file:
     path: /vagrant/installed_packages/
