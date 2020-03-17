@@ -18,8 +18,9 @@ from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
 import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
+if sys.version_info < (3, 0):
+    reload(sys)
+    sys.setdefaultencoding('utf-8')
 
 try:
     import simplejson as json
