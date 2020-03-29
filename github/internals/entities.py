@@ -740,8 +740,12 @@ class Task(object):
 
         if status.description != self.description:
             raise EnvironmentError(
-                "Task {} PR#{} was processed by multiple runners".format(
-                    self.name, self.pr_number
+                "Task {task_name} PR#{pr_number} was processed by multiple "
+                "runners. ('{gh_desc}' != '{self_desc}')".format(
+                    task_name=self.name,
+                    pr_number=self.pr_number,
+                    gh_desc=status.description,
+                    self_desc=self.description,
                 )
             )
         world.create_status(self, result.state, result.description, result.url)
