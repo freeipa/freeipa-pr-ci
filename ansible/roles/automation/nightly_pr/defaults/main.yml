@@ -67,8 +67,8 @@ nightly_jobs:
     prci_config: "nightly_latest_389ds.yaml"
 
   - name: testing_master_testing
-    weekdays: "6"
-    hour: "10"
+    weekdays: "7"
+    hour: "2"
     minute: "00"
     flow: "testing"
     branch: "master"
