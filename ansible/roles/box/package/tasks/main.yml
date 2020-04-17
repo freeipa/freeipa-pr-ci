@@ -48,3 +48,5 @@
       "{{ template_box_name }}" \
       "{{ template_box_dir }}/{{ template_box_name }}.box" \
       --bump-revision
+  tags:
+    - upload_box

@@ -4,6 +4,8 @@
 
 - include: download_rawhide_box.yml
   when: fedora_version == 'rawhide'
+  tags:
+    - download_rawhide_box
 
 - name: create folder for image
   file:
