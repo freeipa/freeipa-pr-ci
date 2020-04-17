@@ -2,7 +2,7 @@
 - block:
   - name: write swap file
     command: >
-      fallocate -l {{ swapfile_size }} {{ swapfile_file }}
+      dd if=/dev/zero of={{ swapfile_file }} count={{ swapfile_size }} bs=1MB
     args:
       creates: "{{ swapfile_file }}"
       warn: false
