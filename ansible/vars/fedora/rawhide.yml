@@ -1,5 +1,5 @@
 ---
-fedora_releasever: 31  # bump when fedora gets branched
+fedora_releasever: 33  # bump when fedora gets branched
 
 fedora_rawhide_template_dir: /tmp/rawhide_box
 base_box_url: "file://{{ fedora_rawhide_template_dir }}/latest.box"
