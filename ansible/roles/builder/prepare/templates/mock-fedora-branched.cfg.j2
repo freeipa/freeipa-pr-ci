@@ -7,6 +7,8 @@ config_opts['extra_chroot_dirs'] = [ '/run/lock', ]
 config_opts['releasever'] = '{{ fedora_releasever }}'
 config_opts['package_manager'] = 'dnf'
 
+{# tmpfs plugin disabled for Fedora 32 and Rawhide to workaround a build failure #}
+{% if fedora_releasever < 32 %}
 # Configure tmpfs to speed up mock
 config_opts['plugin_conf']['tmpfs_enable'] = True
 config_opts['plugin_conf']['tmpfs_opts'] = {}
@@ -14,6 +16,7 @@ config_opts['plugin_conf']['tmpfs_opts']['required_ram_mb'] = 1024
 config_opts['plugin_conf']['tmpfs_opts']['max_fs_size'] = '4g'
 config_opts['plugin_conf']['tmpfs_opts']['mode'] = '0755'
 config_opts['plugin_conf']['tmpfs_opts']['keep_mounted'] = False
+{% endif %}
 
 
 config_opts['yum.conf'] = """
