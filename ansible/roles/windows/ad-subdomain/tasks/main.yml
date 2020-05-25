@@ -33,3 +33,6 @@
   - name: Reboot Windows
     win_reboot:
       test_command: 'Get-ADUser -Filter {Name -eq "Administrator"}'
+
+  - name: reset Administartor password
+    win_shell: net user Administrator Secret123
