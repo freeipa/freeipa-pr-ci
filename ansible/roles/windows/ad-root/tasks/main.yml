@@ -10,4 +10,7 @@
     test_command: 'Get-ADUser -Filter {Name -eq "Administrator"}'
   when: win_root_domain.reboot_required
 
+- name: reset Administartor password
+  win_shell: net user Administrator Secret123
+
 - import_tasks: certificate-authority.yaml
