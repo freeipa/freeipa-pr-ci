@@ -75,20 +75,6 @@
     src: hosts
     dest: /etc/hosts
 
-- name: prevent NetworkManager from updating/etc/resolv.conf
-  ini_file:
-    path: /etc/NetworkManager/NetworkManager.conf
-    section: main
-    option: dns
-    value: "none"
-  register: nm_conf
-
-- name: restart Networkmanager
-  service:
-    name: NetworkManager
-    state: restarted
-  when: nm_conf is changed
-
 - name: create /etc/resolv.conf file from template
   template:
     src: resolv.conf
