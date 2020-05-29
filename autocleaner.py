@@ -86,10 +86,9 @@ def load_yaml(yml_path):
     """
     Load yaml
     """
-    yaml = ruamel.yaml.YAML()
     try:
         with open(yml_path) as yml_file:
-            return yaml.safe_load(yml_file)
+            return ruamel.yaml.safe_load(yml_file)
     except IOError as exc:
         logger.error('Failed to open %s: %s', yml_path, exc)
         sys.exit(1)
@@ -266,8 +265,7 @@ class PRCIDef():
         """
         Get template name and version
         """
-        yaml = ruamel.yaml.YAML()
-        templ_dict = self.get_templ_list(yaml.safe_load(yaml_data))
+        templ_dict = self.get_templ_list(ruamel.yaml.safe_load(yaml_data))
         templ_name = templ_dict['name']
         templ_ver = templ_dict['version']
         return templ_name, templ_ver
