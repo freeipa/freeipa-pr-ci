@@ -13,12 +13,23 @@ import psutil
 
 from . import constants
 
+ERROR_STRINGS = [
+    'Domain is not running',
+]
+
 LOG_FILE_HANDLER = None
 LOG_FORMAT = '%(asctime)-15s %(levelname)8s  %(message)s'
 
 
 PopenFileType = type(psutil._pslinux.popenfile)
 KillPredicateType = Callable[[PopenFileType], bool]
+
+
+def message_contains_error(message):
+    for error_string in ERROR_STRINGS:
+        if error_string in message:
+            return True
+    return False
 
 
 class TaskException(Exception):
@@ -151,12 +162,19 @@ class PopenTask(FallibleTask):
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT)
 
+        force_error = False
         for line in iter(self.process.stdout.readline, b''):
-            logging.debug(line.decode('utf-8').rstrip('\n'))
+            message = line.decode('utf-8').rstrip('\n')
+            if message_contains_error(message):
+                # Force error if message contains some error but exit code is 0
+                force_error = True
+            logging.debug(message)
 
         self.process.wait()
         self.returncode = self.process.returncode
         self.process = None
+        if force_error:
+            self.returncode = 1
         if self.returncode != 0:
             raise PopenException(self)
 
