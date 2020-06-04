@@ -57,7 +57,9 @@ def __setup_provision(task):
             task.execute_subtask(
                 VagrantUp(timeout=None))
             break
-        except PopenException:
+        except PopenException as exc:
+            if exc.task.returncode == -15:  # SIGTERM
+                raise
             if vagrant_up_retries:
                 logging.info(
                     "Retrying to bring the machine up, %s retries left",
@@ -74,7 +76,9 @@ def __setup_provision(task):
         try:
             task.execute_subtask(VagrantProvision(timeout=None))
             break
-        except PopenException:
+        except PopenException as exc:
+            if exc.task.returncode == -15:  # SIGTERM
+                raise
             if vagrant_provision_retries:
                 logging.info(
                     "Retrying provisioning, %s retries left" %
