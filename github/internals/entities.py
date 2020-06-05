@@ -36,7 +36,7 @@ SENTRY_URL = (
 # When runner reaches this remaining API limit value, it will sleep
 # until the reset time will come.
 EPHEMERAL_LIMIT = 60
-STALE_TASK_EXTRA_TIME = 60
+STALE_TASK_EXTRA_TIME = 240
 
 
 def sentry_report_exception(context: Dict):
