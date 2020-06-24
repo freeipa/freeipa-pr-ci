@@ -21,13 +21,21 @@
   with_items:
     - freeipa-client
     - freeipa-client-common
+    - freeipa-client-debuginfo
+    - freeipa-client-epn
+    - freeipa-client-samba
     - freeipa-common
     - freeipa-debuginfo
+    - freeipa-debugsource
+    - freeipa-healthcheck-core
     - freeipa-python-compat
+    - freeipa-selinux
     - freeipa-server
     - freeipa-server-common
+    - freeipa-server-debuginfo
     - freeipa-server-dns
     - freeipa-server-trust-ad
+    - freeipa-server-trust-ad-debuginfo
     - python3-ipaclient
     - python3-ipalib
     - python3-ipaserver
