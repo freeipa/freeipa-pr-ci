@@ -5,6 +5,12 @@
     safe_mode_password: "{{ safe_mode_password }}"
   register: win_root_domain
 
+- name: Enforce AES encryption
+  win_security_policy:
+    section: Registry Values
+    key: "MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\Kerberos\\Parameters\\SupportedEncryptionTypes"
+    value: 4,2147483640
+
 - name: Reboot Windows
   win_reboot:
     test_command: 'Get-ADUser -Filter {Name -eq "Administrator"}'
