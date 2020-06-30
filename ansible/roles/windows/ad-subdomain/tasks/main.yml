@@ -34,11 +34,11 @@
     win_reboot:
       test_command: 'Get-ADUser -Filter {Name -eq "Administrator"}'
 
-- name: Enforce AES encryption
-  win_security_policy:
-    section: Registry Values
-    key: "MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\Kerberos\\Parameters\\SupportedEncryptionTypes"
-    value: 4,2147483640
+  - name: Enforce AES encryption
+    win_security_policy:
+      section: Registry Values
+      key: "MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\Kerberos\\Parameters\\SupportedEncryptionTypes"
+      value: 4,2147483640
 
   - name: reset Administartor password
     win_shell: net user Administrator Secret123
