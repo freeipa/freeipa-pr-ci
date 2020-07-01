@@ -26,3 +26,9 @@
 
 - name: install sshd
   include_role: name=windows/sshd
+
+- name: Enforce AES encryption
+  win_security_policy:
+    section: Registry Values
+    key: "MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\Kerberos\\Parameters\\SupportedEncryptionTypes"
+    value: 4,2147483644

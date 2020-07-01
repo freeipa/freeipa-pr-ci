@@ -35,6 +35,21 @@
   roles:
     - windows/ad-subdomain
 
+- hosts: ad-root
+  any_errors_fatal: true
+  tasks:
+    - name: Force AES encryption types on a trust to child domain
+      win_shell: ksetup /setenctypeattr "{{ ad_child_domain }}" RC4-HMAC-MD5 AES128-CTS-HMAC-SHA1-96 AES256-CTS-HMAC-SHA1-96
+
+    - name: Force AES encryption types on a trust to tree domain
+      win_shell: ksetup /setenctypeattr "{{ ad_tree_domain }}" RC4-HMAC-MD5 AES128-CTS-HMAC-SHA1-96 AES256-CTS-HMAC-SHA1-96
+
+- hosts: ad-child,ad-tree
+  any_errors_fatal: true
+  tasks:
+    - name: Force AES encryption types on a trust to parent domain
+      win_shell: ksetup /setenctypeattr "{{ ad_root_domain }}" RC4-HMAC-MD5 AES128-CTS-HMAC-SHA1-96 AES256-CTS-HMAC-SHA1-96
+
 - hosts: ad-root,ad-child,ad-tree
   vars:
     ansible_user: Administrator
