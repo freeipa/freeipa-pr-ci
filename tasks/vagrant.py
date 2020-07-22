@@ -216,8 +216,8 @@ class VagrantBox(object):
         # Do not delete Windows boxes
         linux_boxes = [x for x in all_boxes if 'windows' not in x.name]
 
-        # Keep only the latest 3 boxes
-        for box in linux_boxes[:-3]:
+        # Keep only the latest 2 boxes
+        for box in linux_boxes[:-2]:
             box.delete_box()
 
     @staticmethod
