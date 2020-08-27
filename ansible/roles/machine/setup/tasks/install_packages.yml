@@ -121,11 +121,14 @@
     executable: pip3
     name: "{{ python_packages_to_install }}"
 
+# TODO: Remove the hard coded version after the fix below is included in a release
+# https://github.com/mozilla/geckodriver/issues/1756
 - name: download geckodriver
   shell: |
-        VERSION=$(curl https://github.com/mozilla/geckodriver/releases/latest 2>/dev/null | \
-        egrep -o 'href="[^"]*"' | sed 's/href="//' | sed 's/"$//' | \
-        awk -F"/" '{print $NF}')
+        # VERSION=$(curl https://github.com/mozilla/geckodriver/releases/latest 2>/dev/null | \
+        # egrep -o 'href="[^"]*"' | sed 's/href="//' | sed 's/"$//' | \
+        # awk -F"/" '{print $NF}')
+        VERSION="v0.26.0"
         curl -L "https://github.com/mozilla/geckodriver/releases/download/$VERSION/geckodriver-$VERSION-linux64.tar.gz" | tar xzv -C /opt
 
 - name: download selenium
