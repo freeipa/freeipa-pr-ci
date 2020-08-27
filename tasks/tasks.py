@@ -107,9 +107,10 @@ class JobTask(FallibleTask):
         self.compress_logs()
         if self.publish_artifacts:
             self.upload_artifacts()
-            # list only "freeipa" repo PRs in root index
+            # list only "freeipa" and "freeipa-pr-ci2" repos PRs in root index
             # (Jobs of PRs against forks are not listed)
-            if self.repo_owner == 'freeipa':
+            # "freeipa-pr-ci2" is the account used to host nighlty runs
+            if self.repo_owner in ['freeipa', 'freeipa-pr-ci2']:
                 self.create_root_index()
 
     def upload_artifacts(self):
