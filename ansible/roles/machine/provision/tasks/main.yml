@@ -88,6 +88,13 @@
 - name: set hostname
   shell: "hostnamectl set-hostname {{ inventory_hostname }}.ipa.test"
 
+# Change selinux state if `selinux_enforcing: true` is set in test suite definition 
+- name: set selinux to enforcing
+  selinux:
+    policy: targeted
+    state: enforcing
+  when: selinux_enforcing is defined and selinux_enforcing
+
 - include_role:
     name: utils
     tasks_from: enable_swap
