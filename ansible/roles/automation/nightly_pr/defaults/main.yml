@@ -73,3 +73,27 @@ nightly_jobs:
     flow: "testing"
     branch: "master"
     prci_config: "nightly_latest_testing.yaml"
+
+  - name: testing_master_latest_selinux
+    weekdays: "1"
+    hour: "15"
+    minute: "00"
+    flow: "ci"
+    branch: "master"
+    prci_config: "nightly_latest_selinux.yaml"
+
+  - name: testing_master_testing_selinux
+    weekdays: "3"
+    hour: "15"
+    minute: "00"
+    flow: "testing"
+    branch: "master"
+    prci_config: "nightly_latest_testing_selinux.yaml"
+
+  - name: testing_ipa-4.8_latest_selinux
+    weekdays: "5"
+    hour: "15"
+    minute: "00"
+    flow: "ci"
+    branch: "ipa-4-8"
+    prci_config: "nightly_ipa-4-8_latest_selinux.yaml"
