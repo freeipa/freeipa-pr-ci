@@ -3,9 +3,8 @@
   dnf:
     state: present
     name:
-      # FIXME: Temporarily installing scratch build, revert it to `python3-github3py` when new version is released
-      - https://kojipkgs.fedoraproject.org/packages/python-github3py/1.3.0/1.fc30/noarch/python3-github3py-1.3.0-1.fc30.noarch.rpm
-      - PyYAML
+      - python3-github3py
+      - python3-pyyaml
       - git
       - crontabs
       - python3-pip
