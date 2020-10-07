@@ -1,3 +1,0 @@
----
-fedora_releasever: 29
-base_box_url: https://download.fedoraproject.org/pub/fedora/linux/releases/29/Cloud/x86_64/images/Fedora-Cloud-Base-Vagrant-29-1.2.x86_64.vagrant-libvirt.box
