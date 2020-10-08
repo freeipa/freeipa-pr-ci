@@ -37,6 +37,19 @@
     - vars/flows/{{ flow }}.yml
     - vars/fedora/{{ fedora_version }}.yml
     - vars/ipa_branches/{{ git_branch }}.yml
+  pre_tasks:
+    # GPG keys might be outdated for packages in Rawhide
+    - name: Update fedora-repos package
+      when: nightly_compose is defined and nightly_compose
+      dnf:
+        state: latest
+        name: fedora-repos
+        disable_gpg_check: yes
+    - name: update distro packages
+      dnf:
+        name: '*'
+        state: latest
+    - command: dnf clean all
   roles:
     - role: builder
       git_version: "{{ git_branch }}"
