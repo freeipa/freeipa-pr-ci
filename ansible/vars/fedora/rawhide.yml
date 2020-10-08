@@ -1,9 +1,11 @@
 ---
-fedora_releasever: 33  # bump when fedora gets branched
+fedora_releasever: 34  # bump when fedora gets branched
 
-fedora_rawhide_template_dir: /tmp/rawhide_box
-base_box_url: "file://{{ fedora_rawhide_template_dir }}/latest.box"
+nightly_compose: true
 
-fedora_rawhide_images_remote_dir: https://dl.fedoraproject.org/pub/fedora/linux/development/rawhide/Cloud/x86_64/images/
+fedora_nightly_template_dir: /tmp/rawhide_box
+base_box_url: "file://{{ fedora_nightly_template_dir }}/latest.box"
+
+fedora_nightly_images_remote_dir: https://dl.fedoraproject.org/pub/fedora/linux/development/rawhide/Cloud/x86_64/images/
 
 repo_rawhide_enabled: 1
