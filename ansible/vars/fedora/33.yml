@@ -1,0 +1,10 @@
+---
+fedora_releasever: 33  # Fedora 33 is still in Beta
+nightly_compose: true
+
+fedora_nightly_template_dir: /tmp/f33_box
+base_box_url: "file://{{ fedora_nightly_template_dir }}/latest.box"
+
+fedora_nightly_images_remote_dir: https://dl.fedoraproject.org/pub/fedora/linux/development/33/Cloud/x86_64/images/
+
+# repo_rawhide_enabled: 1
