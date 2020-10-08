@@ -42,6 +42,11 @@
   args:
     chdir: "{{ template_box_dir }}"
 
+- name: print sha1sum
+  shell: "sha1sum {{ template_box_name }}.box"
+  args:
+    chdir: "{{ template_box_dir }}"
+
 - name: upload box to vagrantcloud
   shell: |
     ../vagrant/box_uploader.py \
