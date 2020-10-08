@@ -2,10 +2,10 @@
 - include: cleanup.yml
   tags: cleanup
 
-- include: download_rawhide_box.yml
-  when: fedora_version == 'rawhide'
+- include: download_nightly_box.yml
+  when: nightly_compose is defined and nightly_compose
   tags:
-    - download_rawhide_box
+    - download_nightly_box
 
 - name: create folder for image
   file:
