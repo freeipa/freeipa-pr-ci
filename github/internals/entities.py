@@ -27,7 +27,9 @@ API_CHECK_SLEEP = 7
 GITHUB_DESCRIPTION_LIMIT = 139
 RACE_TIMEOUT = 17
 RERUN_PENDING = "pending for rerun"
+RERUN_PENDING_FMT = "pending for rerun by {runner_id} on {date}"
 TASK_TAKEN_FMT = "Taken by {runner_id} on {date}"
+TASK_LOCKED_FMT = "Locked by {runner_id} on {date}"
 SENTRY_URL = (
     "https://d24d8d622cbb4e2ea447c9a64f19b81a:"
     "4db0ce47706f435bb3f8a02a0a1f2e22@sentry.io/193222"
@@ -165,10 +167,11 @@ class World(object):
         )
 
     def poll_status(
-        self, pr_number: int, task_name: Text
+        self, pr_number: int, task_name: Text, no_sleep: bool=False
     ) -> "Status":
         """Gets commit status on GitHub using GraphQL API"""
-        sleep(randint(8, 13))  # FIXME: We're polling too concurrently
+        if not no_sleep:
+            sleep(randint(8, 13))  # FIXME: We're polling too concurrently
         pr_query = queries.make_pull_request_query(
             self.repo_owner, self.repo_name, pr_number
         )
@@ -345,26 +348,43 @@ class Status(Stateful):
         return "taken" in self.description.lower()
 
     @property
+    def locked(self) -> bool:
+        return "locked" in self.description.lower()
+
+    @property
     def unassigned(self) -> bool:
         return "unassigned" in self.description.lower()
 
     @property
     def rerun_pending(self) -> bool:
-        return self.description == RERUN_PENDING
+        return self.description.startswith(RERUN_PENDING)
 
     @property
     def processing(self) -> bool:
         return any((
-            self.pending, self.rerun_pending, self.taken, self.unassigned
+            self.pending,
+            self.rerun_pending,
+            self.taken,
+            self.unassigned,
+            self.locked,
         ))
 
     def stalled(self, task: "Task") -> bool:
         """Checks if commit status is timed out"""
         now = datetime.now(pytz.UTC)
-        timeout = timedelta(seconds=task.timeout)
-        if not timeout:
+
+        if self.taken:
+            format_string = TASK_TAKEN_FMT
+            timeout = timedelta(seconds=task.timeout)
+            if not timeout:
+                return False
+        elif self.locked:
+            format_string = TASK_LOCKED_FMT
+            timeout = timedelta(seconds=60)
+        else:
             return False
-        parsed = parse.parse(TASK_TAKEN_FMT, self.description)
+
+        parsed = parse.parse(format_string, self.description)
         if not parsed:
             return False
 
@@ -652,8 +672,9 @@ class Task(object):
                 )
             )
 
+        # Locking task
         time_now = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
-        description = TASK_TAKEN_FMT.format(
+        description = TASK_LOCKED_FMT.format(
             runner_id=world.runner_id,
             date=time_now
         )
@@ -661,7 +682,7 @@ class Task(object):
 
         sleep(RACE_TIMEOUT)
 
-        status = world.poll_status(self.pr_number, self.name)
+        status = world.poll_status(self.pr_number, self.name, no_sleep=True)
 
         if status.description != description:
             raise EnvironmentError(
@@ -669,6 +690,14 @@ class Task(object):
                     self.name, self.pr_number
                 )
             )
+
+        # Taking task
+        time_now = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+        description = TASK_TAKEN_FMT.format(
+            runner_id=world.runner_id,
+            date=time_now
+        )
+        world.create_status(self, State.PENDING, description)
 
         self.description = description
 
@@ -690,13 +719,12 @@ class Task(object):
                 )
             )
 
-
     def set_rerun(self, world: World) -> None:
         """Creates a commit status on GitHub using REST API
 
         Sets the status description to RERUN_PENDING value.
         """
-        status = world.poll_status(self.pr_number, self.name)
+        status = world.poll_status(self.pr_number, self.name, no_sleep=True)
         if status.succeeded or (status.taken and not status.stalled):
             raise EnvironmentError(
                 "Task {} PR#{} is changed".format(
@@ -710,7 +738,12 @@ class Task(object):
                 )
             )
 
-        world.create_status(self, State.PENDING, RERUN_PENDING)
+        time_now = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+        description = RERUN_PENDING_FMT.format(
+            runner_id=world.runner_id,
+            date=time_now
+        )
+        world.create_status(self, State.PENDING, description)
 
     def execute(self, world: World, statuses: Dict) -> None:
         """Runs the related task class defined in tasks/tasks.py"""
