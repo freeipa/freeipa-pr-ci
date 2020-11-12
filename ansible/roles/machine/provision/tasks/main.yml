@@ -37,6 +37,8 @@
     name:
       - freeipa-*
       - python*-ipatests
+    exclude:
+      - freeipa-fas
   register: result
   until: result.rc == 0
   retries: 3
