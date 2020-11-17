@@ -9,3 +9,5 @@ base_box_url: "file://{{ fedora_nightly_template_dir }}/latest.box"
 fedora_nightly_images_remote_dir: https://dl.fedoraproject.org/pub/fedora/linux/development/rawhide/Cloud/x86_64/images/
 
 repo_rawhide_enabled: 1
+repo_pki_master_enabled: 0
+repo_389ds_testing_enabled: 0
