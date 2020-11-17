@@ -1,5 +1,6 @@
 #!/bin/env python3
 import argparse
+import hashlib
 import logging
 import os
 import pathlib
@@ -20,6 +21,16 @@ BOX_PATH_PATTERN = (
     '{user_name}/boxes/{box_name}/versions/{box_version}/'
     'providers/{provider_name}.box'
 )
+
+
+def sha1sum(filename):
+    hashsum = hashlib.sha1()
+    buffer_ = bytearray(128 * 1024)
+    mv = memoryview(buffer_)
+    with open(filename, 'rb', buffering=0) as f:
+        for n in iter(lambda: f.readinto(mv), 0):
+            hashsum.update(mv[:n])
+    return hashsum.hexdigest()
 
 
 def download_box(user_name, box_name, box_version):
@@ -95,6 +106,14 @@ def download_box(user_name, box_name, box_version):
         parents=True, exist_ok=True
     )
     shutil.move(temp_box_path, final_box_path)
+
+    box_sha1sum = sha1sum(final_box_path)
+    logger.info(f'sha1sum: {box_sha1sum}')
+
+    if provider.get('checksum') and provider.get('checksum_type') == 'sha1':
+        if box_sha1sum != provider.get('checksum'):
+            logger.error("Vagrant cloud and local box checksums dont't match")
+            return 1
 
     return 0
 
