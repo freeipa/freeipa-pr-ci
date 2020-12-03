@@ -1,6 +1,17 @@
 ---
-- name: gather logs
-  shell: mv /root/rpmbuild/RPMS/*.log /vagrant/
+- name: create log directories for mock build srpm and rpm
+  file:
+    path: '{{ item }}'
+    state: directory
+  with_items:
+    - /vagrant/build-srpms-logs
+    - /vagrant/build-rpms-logs
+
+- name: gather logs for SRPMS
+  shell: mv /root/rpmbuild/SRPMS/*.log /vagrant/build-srpms-logs
+
+- name: gather logs for RPMS
+  shell: mv /root/rpmbuild/RPMS/*.log /vagrant/build-rpms-logs
 
 - name: create rpms directory
   file:
