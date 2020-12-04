@@ -1,4 +1,11 @@
 ---
+- name: add autoreconf to spec file (ipa-4-6 branch only)
+  lineinfile:
+    path: /root/freeipa/freeipa.spec.in
+    insertafter: "^%setup"
+    line: autoreconf -if
+  when: build_version is version('4.6.9.dev', '=')
+
 - name: change version in spec file
   replace:
     path: /root/freeipa/freeipa.spec.in
