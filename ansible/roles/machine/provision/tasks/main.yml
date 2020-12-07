@@ -1,8 +1,14 @@
 ---
 - block:
-    - name: get DNS server from resolv.conf
+    - name: get DNS server from resolv.conf (fedora <= 32)
       shell: awk '$1 == "nameserver" {print $2; exit}' /etc/resolv.conf
       register: dns_server
+      when: ansible_distribution == 'Fedora' and ansible_distribution_version is version('32', '<=')
+
+    - name: get DNS server from resolvectl (fedora >= f33)
+      shell: "resolvectl status | grep 'Current DNS Server' | awk -F': ' '{print $2}'"
+      register: dns_server
+      when: ansible_distribution == 'Fedora' and ansible_distribution_version is version('33', '>=')
 
     - name: set dns forwarder fact
       set_fact:
