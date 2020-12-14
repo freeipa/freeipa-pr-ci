@@ -6,7 +6,7 @@
       when: ansible_distribution == 'Fedora' and ansible_distribution_version is version('32', '<=')
 
     - name: get DNS server from resolvectl (fedora >= f33)
-      shell: "resolvectl status | grep 'Current DNS Server' | awk -F': ' '{print $2}'"
+      shell: "resolvectl dns | grep -m1 ': [1-9]' | awk -F': ' '{print $2}' | cut -d' ' -f 1"
       register: dns_server_resolvectl
       when: ansible_distribution == 'Fedora' and ansible_distribution_version is version('33', '>=')
 
@@ -102,7 +102,7 @@
 - name: set hostname
   shell: "hostnamectl set-hostname {{ inventory_hostname }}.ipa.test"
 
-# Change selinux state if `selinux_enforcing: true` is set in test suite definition 
+# Change selinux state if `selinux_enforcing: true` is set in test suite definition
 - name: set selinux to enforcing
   selinux:
     policy: targeted
