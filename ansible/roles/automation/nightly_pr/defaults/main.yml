@@ -34,21 +34,21 @@ nightly_jobs:
     branch: "ipa-4-6"
     prci_config: "nightly_ipa-4-6.yaml"
 
-  - name: testing_ipa-4.8_latest
+  - name: testing_ipa-4.9_latest
     weekdays: "6"
     hour: "8"
     minute: "00"
     flow: "ci"
-    branch: "ipa-4-8"
-    prci_config: "nightly_ipa-4-8_latest.yaml"
+    branch: "ipa-4-9"
+    prci_config: "nightly_ipa-4-9_latest.yaml"
 
-  - name: testing_ipa-4.8_previous
+  - name: testing_ipa-4.9_previous
     weekdays: "6"
     hour: "15"
     minute: "00"
     flow: "ci"
-    branch: "ipa-4-8"
-    prci_config: "nightly_ipa-4-8_previous.yaml"
+    branch: "ipa-4-9"
+    prci_config: "nightly_ipa-4-9_previous.yaml"
 
   - name: testing_master_pki
     weekdays: "7"
@@ -90,10 +90,10 @@ nightly_jobs:
     branch: "master"
     prci_config: "nightly_latest_testing_selinux.yaml"
 
-  - name: testing_ipa-4.8_latest_selinux
+  - name: testing_ipa-4.9_latest_selinux
     weekdays: "5"
     hour: "15"
     minute: "00"
     flow: "ci"
-    branch: "ipa-4-8"
-    prci_config: "nightly_ipa-4-8_latest_selinux.yaml"
+    branch: "ipa-4-9"
+    prci_config: "nightly_ipa-4-9_latest_selinux.yaml"
