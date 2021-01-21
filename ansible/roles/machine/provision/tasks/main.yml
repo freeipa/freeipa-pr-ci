@@ -89,15 +89,6 @@
     src: hosts
     dest: /etc/hosts
 
-- name: create /etc/resolv.conf file from template
-  template:
-    src: resolv.conf
-    dest: /etc/resolv.conf
-
-# - name: set hostname
-#   hostname:
-#     name: "{{ inventory_hostname }}.ipa.test"
-
 # workaround for https://github.com/ansible/ansible/issues/19814
 - name: set hostname
   shell: "hostnamectl set-hostname {{ inventory_hostname }}.ipa.test"
