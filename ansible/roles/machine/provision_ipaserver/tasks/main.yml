@@ -5,6 +5,100 @@
     dest: /usr/local/bin/ipa-run-webui-tests
     mode: 0755
 
+- block:
+    - name: Install pyOpenSSL
+      dnf:
+        name: python3-pyOpenSSL
+        state: present
+
+    - name: Create PKI directory
+      file:
+        path: "{{ pki_dir }}/ca1"
+        state: directory
+        mode: '0600'
+
+    - name: Generate private keys
+      openssl_privatekey:
+        path: "{{ pki_dir }}/{{ item }}.key"
+        size: 2048
+      with_items:
+        - ca1
+        - ca1/{{ pki_host }}
+
+    - name: Generate server CSRs
+      openssl_csr:
+        path: "{{ pki_dir }}/ca1/{{ pki_host }}.csr"
+        privatekey_path: "{{ pki_dir }}/ca1/{{ pki_host }}.key"
+        subject:
+          commonName: "{{ meta_fqdn }}"
+          organizationName: "{{ pki_org }}"
+
+    - name: Generate CA CSR
+      openssl_csr:
+        path: "{{ pki_dir }}/ca1.csr"
+        privatekey_path: "{{ pki_dir }}/ca1.key"
+        basic_constraints:
+          - CA:TRUE
+          - pathlen:0
+        basic_constraints_critical: yes
+        key_usage:
+          - cRLSign
+          - digitalSignature
+          - keyCertSign
+          - nonRepudiation
+        key_usage_critical: yes
+        subject:
+          commonName: CA
+          organizationName: "{{ pki_org }}"
+
+    - name: Sign CA certificate
+      openssl_certificate:
+        path: "{{ pki_dir }}/ca1.crt"
+        privatekey_path: "{{ pki_dir }}/ca1.key"
+        csr_path: "{{ pki_dir }}/ca1.csr"
+        provider: selfsigned
+
+    - name: Sign server certificate
+      openssl_certificate:
+        path: "{{ pki_dir }}/ca1/{{ pki_host }}.crt"
+        csr_path: "{{ pki_dir }}/ca1/{{ pki_host }}.csr"
+        ownca_path: "{{ pki_dir }}/ca1.crt"
+        ownca_privatekey_path: "{{ pki_dir }}/ca1.key"
+        provider: ownca
+
+    - name: Export PKCS12 certificates
+      openssl_pkcs12:
+        action: export
+        path: "{{ pki_dir }}/ca1/{{ pki_host }}.p12"
+        friendly_name: "Server-Cert"
+        passphrase: "{{ pki_pass }}"
+        privatekey_path: "{{ pki_dir }}/ca1/{{ pki_host }}.key"
+        certificate_path: "{{ pki_dir }}/ca1/{{ pki_host }}.crt"
+        other_certificates: "{{ pki_dir }}/ca1.crt"
+        state: present
+
+    - name: install freeipa in caless mode
+      shell: >
+        ipa-server-install -U
+        -n ipa.test
+        -r IPA.TEST
+        -p Secret.123
+        -a Secret.123
+        --setup-dns
+        --http-cert-file="{{ pki_dir }}/ca1/{{ pki_host }}.p12"
+        --dirsrv-cert-file="{{ pki_dir }}/ca1/{{ pki_host }}.p12"
+        --http-pin "{{ pki_pass }}"
+        --dirsrv-pin "{{ pki_pass }}"
+        --forwarder={{ dns_forwarder | quote }}
+        --no-pkinit
+  when: caless == true
+  vars:
+    pki_dir: "/tmp/pki"
+    pki_pass: "Secret123"
+    pki_host: "{{ inventory_hostname_short }}"
+    pki_org: "Example Org"
+    meta_fqdn: "{{ inventory_hostname }}.ipa.test"
+
 - name: install freeipa
   shell: >
     ipa-server-install -U
@@ -15,6 +109,7 @@
     --setup-dns
     --setup-kra
     --forwarder={{ dns_forwarder | quote }}
+  when: caless == false
 
 - name: set IPA to development mode
   lineinfile:
