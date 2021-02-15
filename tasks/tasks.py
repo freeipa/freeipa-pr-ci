@@ -331,10 +331,34 @@ class RunPytest3(RunPytest):
 class RunWebuiTests(RunPytest):
     action_name = 'webui'
 
+    def __init__(self, template, build_url, test_suite, caless=False, **kwargs):
+        super().__init__(template, build_url, test_suite, **kwargs)
+        self.caless = caless
+
     @property
     def vagrantfile(self):
         return constants.VAGRANTFILE_TEMPLATE.format(
             vagrantfile_name='ipaserver')
+
+    def _before(self):
+        super(RunWebuiTests, self)._before()
+
+        # Prepare test config files
+        try:
+            create_file_from_template(
+                constants.ANSIBLE_VARS_TEMPLATE.format(
+                    action_name=self.action_name),
+                os.path.join(self.data_dir, 'vars.yml'),
+                dict(repofile_url=urllib.parse.urljoin(
+                    self.build_url, 'rpms/freeipa-prci.repo'),
+                    update_packages=self.update_packages,
+                    selinux_enforcing=self.selinux_enforcing,
+                    caless=self.caless))
+        except (OSError, IOError) as exc:
+            msg = "Failed to prepare test config files"
+            logging.debug(exc, exc_info=True)
+            logging.critical(msg)
+            raise exc
 
     def execute_tests(self):
         self.execute_subtask(
