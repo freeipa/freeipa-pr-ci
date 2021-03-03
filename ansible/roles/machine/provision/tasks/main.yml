@@ -38,6 +38,7 @@
     priority: -1
     name: freeipa-prci
     description: FreeIPA PR CI testing packages
+    gpgcheck: no
 
 - name: update packages
   dnf:
