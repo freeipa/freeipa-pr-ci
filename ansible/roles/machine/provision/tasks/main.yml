@@ -35,7 +35,7 @@
 - name: add PR build repository
   yum_repository:
     baseurl: "{{ repofile_url | dirname }}"
-    priority: -1
+    priority: 1
     name: freeipa-prci
     description: FreeIPA PR CI testing packages
     gpgcheck: no
