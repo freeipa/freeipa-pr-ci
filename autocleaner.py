@@ -149,7 +149,7 @@ def prune_exports_file(prune_dirs):
     exports.close()
 
     # sync exportfs before deleting the folders
-    subprocess.run(['exportfs', '-ar'], timeout=TIMEOUT)
+    subprocess.run(['/usr/sbin/exportfs', '-ar'], timeout=TIMEOUT)
 
     return entries_deleted
 
