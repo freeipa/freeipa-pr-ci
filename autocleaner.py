@@ -104,11 +104,12 @@ def get_old_job_dirs(max_days):
     """
     old_job_dirs = []
     max_days = datetime.timedelta(max_days)
+    now = datetime.datetime.now()
     for folder in os.scandir(JOBS_DIR):
         if folder.is_dir():
             mtime = datetime.datetime.fromtimestamp(
                 os.path.getmtime(folder.path))
-            if mtime - datetime.datetime.now() < max_days:
+            if now - mtime > max_days:
                 old_job_dirs.append(folder.path)
     return old_job_dirs
 
