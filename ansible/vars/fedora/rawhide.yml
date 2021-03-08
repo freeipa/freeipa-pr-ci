@@ -1,5 +1,5 @@
 ---
-fedora_releasever: 34  # bump when fedora gets branched
+fedora_releasever: 35  # bump when fedora gets branched
 
 nightly_compose: true
 
