@@ -1,0 +1,19 @@
+---
+- name: comment default NTP pool
+  replace:
+    path: /etc/chrony.conf
+    regexp: "^(pool.*)$"
+    replace: '#\1'
+
+- name: use custom NTP servers
+  blockinfile:
+    path: /etc/chrony.conf
+    block: |
+      {{ custom_ntp_servers }}
+  register: ntp_servers
+
+- name: restart chronyd to apply config changes
+  service:
+    name: chronyd.service
+    state: restarted
+  when: ntp_servers.changed

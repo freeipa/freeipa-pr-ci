@@ -13,6 +13,8 @@
 - include: autocleaner.yml
   when: activate_autocleaner
 - include: custom_vagrant_catalog.yml
+- include: custom_ntp_servers.yml.yml
+  when: custom_ntp_servers is defined
 
 - include_role:
     name: utils
