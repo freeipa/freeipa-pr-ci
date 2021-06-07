@@ -3,12 +3,31 @@ basedir: /root/openclose_pr
 
 nightly_jobs:
   - name: testing_master_latest
-    weekdays: "1,3,5"
+    weekdays: "1"
     hour: "23"
     minute: "00"
     flow: "ci"
     branch: "master"
     prci_config: "nightly_latest.yaml"
+    reviewer: wladich
+
+  - name: testing_master_latest
+    weekdays: "3,5"
+    hour: "23"
+    minute: "00"
+    flow: "ci"
+    branch: "master"
+    prci_config: "nightly_latest.yaml"
+    reviewer: flo-renaud
+
+  - name: testing_master_previous
+    weekdays: "2"
+    hour: "23"
+    minute: "00"
+    flow: "ci"
+    branch: "master"
+    prci_config: "nightly_previous.yaml"
+    reviewer: miskopo
 
   - name: testing_master_previous
     weekdays: "2,4"
@@ -17,6 +36,7 @@ nightly_jobs:
     flow: "ci"
     branch: "master"
     prci_config: "nightly_previous.yaml"
+    reviewer: ssidhaye
 
   - name: testing_master_rawhide
     weekdays: "6"
@@ -25,6 +45,7 @@ nightly_jobs:
     flow: "ci"
     branch: "master"
     prci_config: "nightly_rawhide.yaml"
+    reviewer: flo-renaud
 
   - name: testing_ipa-4.6
     weekdays: "7"
@@ -33,6 +54,7 @@ nightly_jobs:
     flow: "ci"
     branch: "ipa-4-6"
     prci_config: "nightly_ipa-4-6.yaml"
+    reviewer: miskopo
 
   - name: testing_ipa-4.9_latest
     weekdays: "6"
@@ -41,6 +63,7 @@ nightly_jobs:
     flow: "ci"
     branch: "ipa-4-9"
     prci_config: "nightly_ipa-4-9_latest.yaml"
+    reviewer: miskopo
 
   - name: testing_ipa-4.9_previous
     weekdays: "6"
@@ -49,6 +72,7 @@ nightly_jobs:
     flow: "ci"
     branch: "ipa-4-9"
     prci_config: "nightly_ipa-4-9_previous.yaml"
+    reviewer: menonsudhir
 
   - name: testing_master_pki
     weekdays: "7"
@@ -57,6 +81,7 @@ nightly_jobs:
     flow: "pki"
     branch: "master"
     prci_config: "nightly_latest_pki.yaml"
+    reviewer: amore17
 
   - name: testing_master_389ds
     weekdays: "6"
@@ -65,6 +90,7 @@ nightly_jobs:
     flow: "389ds"
     branch: "master"
     prci_config: "nightly_latest_389ds.yaml"
+    reviewer: flo-renaud
 
   - name: testing_master_testing
     weekdays: "7"
@@ -73,6 +99,7 @@ nightly_jobs:
     flow: "testing"
     branch: "master"
     prci_config: "nightly_latest_testing.yaml"
+    reviewer: fcami
 
   - name: testing_master_latest_selinux
     weekdays: "1"
@@ -81,6 +108,7 @@ nightly_jobs:
     flow: "ci"
     branch: "master"
     prci_config: "nightly_latest_selinux.yaml"
+    reviewer: wladich
 
   - name: testing_master_testing_selinux
     weekdays: "3"
@@ -89,6 +117,7 @@ nightly_jobs:
     flow: "testing"
     branch: "master"
     prci_config: "nightly_latest_testing_selinux.yaml"
+    reviewer: fcami
 
   - name: testing_ipa-4.9_latest_selinux
     weekdays: "5"
@@ -97,3 +126,4 @@ nightly_jobs:
     flow: "ci"
     branch: "ipa-4-9"
     prci_config: "nightly_ipa-4-9_latest_selinux.yaml"
+    reviewer: miskopo

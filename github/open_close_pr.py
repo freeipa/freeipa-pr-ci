@@ -291,6 +291,10 @@ class AutomatedPR(object):
                 pr = self.repo.create_pull(pr_title, self.args.branch,
                                            self.args.id)
 
+            # Request a review
+            if self.args.reviewer:
+                pr.create_review_requests(reviewers=[self.args.reviewer])
+
             logger.info("PR %s created", pr.number)
         except github3.GitHubError as error:
             logger.error(error.errors)
@@ -356,6 +360,11 @@ def create_parser():
              "FreeIPA repo. E.g: ipatests/prci_definitions/gating"
     )
 
+    nightly.add_argument(
+        '--reviewer', type=str, required=False,
+        help="Github name of the user from which a review will be requested. "
+             "E.g: flo-renaud"
+    )
     template = commands.add_parser(
         'open_template_pr', parents=[parent_parser],
         description="Opens a PR for bumping PRCI template version"

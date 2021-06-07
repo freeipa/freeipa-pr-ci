@@ -14,6 +14,7 @@
            --branch {{ item.branch }}
            --prci_config {{ prci_def_dir }}/{{ item.prci_config }}
            --pr_against_upstream {{ pr_against_upstream | bool }}
+           --reviewer {{ item.reviewer }}
     user: root
     state: present
   with_items: "{{ nightly_jobs }}"
