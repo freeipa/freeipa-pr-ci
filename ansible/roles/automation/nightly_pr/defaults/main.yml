@@ -30,7 +30,7 @@ nightly_jobs:
     reviewer: miskopo
 
   - name: testing_master_previous
-    weekdays: "2,4"
+    weekdays: "4"
     hour: "23"
     minute: "00"
     flow: "ci"

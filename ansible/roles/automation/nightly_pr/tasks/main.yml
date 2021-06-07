@@ -1,6 +1,6 @@
 - name: schedule opening nightly PRs
   cron:
-    name: "openclose_{{ item.name }}"
+    name: "openclose_{{ item.name }}_{{ item.reviewer }}"
     minute: "{{ item.minute }}"
     hour: "{{ item.hour }}"
     weekday: "{{ item.weekdays }}"
