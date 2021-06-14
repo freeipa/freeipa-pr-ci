@@ -15,9 +15,24 @@
       {{ cygwin_installer_local_file }}
       --quiet-mode
       --no-desktop
-      --site {{ cygwin_mirror_url }}
+      --site {{ item }}
       --root {{ cygwin_dir }}
       --packages openssh
+    failed_when: "'Installation incomplete' in (cygwin_result.stdout + cygwin_result.stderr)"
+    register: cygwin_result
+    ignore_errors: yes
+    with_items: "{{ cygwin_mirror_urls }}"
+    when: cygwin_result is undefined or cygwin_result.failed
+
+  - name: Check Cygwin installation status
+    vars:
+      last_mirror_result: "{{ cygwin_result.results | rejectattr('skipped', 'defined') | list | last }}"
+    assert:
+      that: "not last_mirror_result.failed"
+      fail_msg: |
+        Cygwin installation failed with message:
+        {{ last_mirror_result.stdout }}
+        {{ last_mirror_result.stderr }}
 
 - name: Create passwd file
   win_shell: "bin/mkpasswd > etc/passwd"
