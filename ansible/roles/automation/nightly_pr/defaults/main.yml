@@ -93,8 +93,8 @@ nightly_jobs:
     reviewer: flo-renaud
 
   - name: testing_master_testing
-    weekdays: "7"
-    hour: "2"
+    weekdays: "3"
+    hour: "8"
     minute: "00"
     flow: "testing"
     branch: "master"
