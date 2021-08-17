@@ -13,6 +13,11 @@
     attributes:
       gidNumber: 10048
 
+- name: testgroup1
+  win_domain_group:
+    name: testgroup1
+    scope: global
+
 - name: A test user with posix attributes defined
   include_role:
     name: windows/ipa-ad-data
@@ -26,6 +31,34 @@
       PasswordNeverExpires: $true
       Enabled: $true
       OtherAttributes: "@{'uidNumber'='10042'; 'gidNumber'='10047'; 'loginShell'='/bin/sh'; 'homeDirectory'='/home/testuser'; 'unixHomeDirectory'='/home/testuser'; 'gecos'='Test User'}"
+
+- name: A test user with only posix attributes uidNumber defined
+  include_role:
+    name: windows/ipa-ad-data
+    tasks_from: user.yml
+  vars:
+    options:
+      Name: testuser1
+      GivenName: Test1
+      Surname: User1
+      AccountPassword: Secret123
+      PasswordNeverExpires: $true
+      Enabled: $true
+      OtherAttributes: "@{'uidNumber'='10050'; 'loginShell'='/bin/sh'; 'homeDirectory'='/home/testuser1'; 'unixHomeDirectory'='/home/testuser1'; 'gecos'='Test User1'}"
+
+- name: A test user with gid but no corresponding group
+  include_role:
+    name: windows/ipa-ad-data
+    tasks_from: user.yml
+  vars:
+    options:
+      Name: testuser2
+      GivenName: Test2
+      Surname: User2
+      AccountPassword: Secret123
+      PasswordNeverExpires: $true
+      Enabled: $true
+      OtherAttributes: "@{'uidNumber'='10060'; 'gidNumber'='10049'; 'loginShell'='/bin/sh'; 'homeDirectory'='/home/testuser2'; 'unixHomeDirectory'='/home/testuser2'; 'gecos'='Test User2'}"
 
 - name: set Test User primary group
   include_role:
@@ -47,6 +80,28 @@
       AccountPassword: Secret123
       PasswordNeverExpires: $true
       Enabled: $true
+
+- name: A test user without posix attributes defined and nondefault primarygroup
+  include_role:
+    name: windows/ipa-ad-data
+    tasks_from: user.yml
+  vars:
+    options:
+      Name: nonposixuser1
+      GivenName: Nonposix1
+      Surname: User1
+      AccountPassword: Secret123
+      PasswordNeverExpires: $true
+      Enabled: $true
+      user: nonposixuser1
+
+- name: set Test User primary group
+  include_role:
+    name: windows/ipa-ad-data
+    tasks_from: primary_group.yml
+  vars:
+    user: nonposixuser1
+    group: testgroup1
 
 - name: A test user with posix attributes which is disabled
   include_role:
