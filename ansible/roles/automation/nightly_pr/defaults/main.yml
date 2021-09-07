@@ -36,7 +36,7 @@ nightly_jobs:
     flow: "ci"
     branch: "master"
     prci_config: "nightly_previous.yaml"
-    reviewer: ssidhaye
+    reviewer: miskopo
 
   - name: testing_master_rawhide
     weekdays: "6"
