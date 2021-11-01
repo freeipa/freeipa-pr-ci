@@ -4,5 +4,6 @@
 - include: clean_dhcp_state.yml
 - include: clean_mac_addresses.yml
 - include: clean_logs.yml
+- include: clean_vagrant_temp.yml
 - include: clean_history.yml
 

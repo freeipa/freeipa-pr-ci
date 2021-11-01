@@ -2,6 +2,6 @@
 selinux_mode: permissive
 copr_repo: "@freeipa/freeipa-master"
 python_packages_to_install:
-  - pytest-html
+  - pytest-html==1.22.0
   - nose
   - selenium

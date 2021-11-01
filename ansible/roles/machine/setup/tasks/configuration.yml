@@ -10,6 +10,7 @@
     - fedora
     - updates
     - updates-testing
+    - fedora-cisco-openh264
 
 - name: enable selected repositories
   shell: "dnf config-manager --set-enabled {{ item.key }}"
