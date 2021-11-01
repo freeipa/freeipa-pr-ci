@@ -40,6 +40,7 @@
     - python3-ipalib
     - python3-ipaserver
     - python3-ipatests
+  ignore_errors: yes
 
 # this can be removed when python2 is gone completly
 - name: remove freeipa python2 packages seperately
@@ -60,6 +61,7 @@
       - xorg-x11-server-Xvfb
       - firefox
       - python3-paramiko
+      - python3-pip
       - firewalld
       - nfs-utils
 

@@ -1,0 +1,6 @@
+---
+- name: remove temporary interface from f27
+  file:
+    path: /etc/sysconfig/network-scripts/ifcfg-eth1
+    state: absent
+  when: fedora_version == '27'
