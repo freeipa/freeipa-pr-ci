@@ -45,6 +45,13 @@
         state: latest
         name: fedora-repos
         disable_gpg_check: yes
+    - name: set dnf fastest mirror
+      ini_file:
+          path: /etc/dnf/dnf.conf
+          section: main
+          option: fastestmirror
+          value: "true"
+          no_extra_spaces: yes
     - name: update distro packages
       dnf:
         name: '*'
