@@ -123,22 +123,31 @@
     executable: pip3
     name: "{{ python_packages_to_install }}"
 
-# TODO: Remove the hard coded version after the fix below is included in a release
-# https://github.com/mozilla/geckodriver/issues/1756
 - name: download geckodriver
-  shell: |
-        # VERSION=$(curl https://github.com/mozilla/geckodriver/releases/latest 2>/dev/null | \
-        # egrep -o 'href="[^"]*"' | sed 's/href="//' | sed 's/"$//' | \
-        # awk -F"/" '{print $NF}')
-        VERSION="v0.26.0"
-        curl -L "https://github.com/mozilla/geckodriver/releases/download/$VERSION/geckodriver-$VERSION-linux64.tar.gz" | tar xzv -C /opt
+  block:
+    - name: download geckodriver | fetch release metadata
+      uri:
+        url: https://api.github.com/repos/mozilla/geckodriver/releases/latest
+        return_content: yes
+      register: download_metadata
+    - name: download geckodriver | get binary
+      unarchive:
+        src: "{{ download_metadata.json  | to_json | from_json | json_query(query) }}"
+        dest: /opt
+        remote_src: yes
+      vars:
+        query: "assets[?ends_with(name, 'linux64.tar.gz')].browser_download_url | [0]"
 
 - name: download selenium
-  shell: |
-        URL="https://selenium-release.storage.googleapis.com"
-        SRC="$(curl $URL)"
-        MAIN_VERSION=$(echo "$SRC" | grep -oP '[\.0-9]*(?=/selenium-server-standalone)' | awk '{max=$1;if($1>max) {max=$1};} END {print max}')
-        SUBVERSION=$(echo "$SRC" | grep -oP "(?<=$MAIN_VERSION/selenium-server-standalone-$MAIN_VERSION\.)[0-9]" | awk '{max=$1;if($1>max) {max=$1};} END {print max}')
-        SELENIUM_VERSION=$MAIN_VERSION.$SUBVERSION
-        SELENIUM_JAR=selenium-server-standalone-${SELENIUM_VERSION}.jar
-        curl "$URL"/$MAIN_VERSION/$SELENIUM_JAR > /opt/selenium.jar
+  block:
+    - name: download selenium | fetch release metadata
+      uri:
+        url: https://api.github.com/repos/SeleniumHQ/selenium/releases/latest
+        return_content: yes
+      register: download_metadata
+    - name: download selenium | get binary
+      get_url:
+        url: "{{ download_metadata.json  | to_json | from_json | json_query(query) }}"
+        dest: /opt/selenium.jar
+      vars:
+        query: "assets[?content_type == 'application/java-archive'] | [?starts_with(name, 'selenium-server')].browser_download_url | [0]"
