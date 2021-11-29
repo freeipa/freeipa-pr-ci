@@ -3,16 +3,7 @@ basedir: /root/openclose_pr
 
 nightly_jobs:
   - name: testing_master_latest
-    weekdays: "1"
-    hour: "23"
-    minute: "00"
-    flow: "ci"
-    branch: "master"
-    prci_config: "nightly_latest.yaml"
-    reviewer: wladich
-
-  - name: testing_master_latest
-    weekdays: "3,5"
+    weekdays: "1,3,5"
     hour: "23"
     minute: "00"
     flow: "ci"
@@ -90,7 +81,7 @@ nightly_jobs:
     flow: "testing"
     branch: "master"
     prci_config: "nightly_latest_testing.yaml"
-    reviewer: fcami
+    reviewer: flo-renaud
 
   - name: testing_master_latest_selinux
     weekdays: "1"
@@ -99,7 +90,7 @@ nightly_jobs:
     flow: "ci"
     branch: "master"
     prci_config: "nightly_latest_selinux.yaml"
-    reviewer: wladich
+    reviewer: amore17
 
   - name: testing_master_testing_selinux
     weekdays: "3"
@@ -108,7 +99,7 @@ nightly_jobs:
     flow: "testing"
     branch: "master"
     prci_config: "nightly_latest_testing_selinux.yaml"
-    reviewer: fcami
+    reviewer: amore17
 
   - name: testing_ipa-4.9_latest_selinux
     weekdays: "5"
