@@ -3,13 +3,22 @@ basedir: /root/openclose_pr
 
 nightly_jobs:
   - name: testing_master_latest
-    weekdays: "1,3,5"
+    weekdays: "3"
     hour: "23"
     minute: "00"
     flow: "ci"
     branch: "master"
     prci_config: "nightly_latest.yaml"
     reviewer: flo-renaud
+
+  - name: testing_master_latest
+    weekdays: "1,5"
+    hour: "23"
+    minute: "00"
+    flow: "ci"
+    branch: "master"
+    prci_config: "nightly_latest.yaml"
+    reviewer: ssidhaye
 
   - name: testing_master_previous
     weekdays: "2,4"
