@@ -21,7 +21,16 @@ nightly_jobs:
     reviewer: ssidhaye
 
   - name: testing_master_previous
-    weekdays: "2,4"
+    weekdays: "2"
+    hour: "23"
+    minute: "00"
+    flow: "ci"
+    branch: "master"
+    prci_config: "nightly_previous.yaml"
+    reviewer: gkaihorodova
+
+  - name: testing_master_previous
+    weekdays: "4"
     hour: "23"
     minute: "00"
     flow: "ci"
