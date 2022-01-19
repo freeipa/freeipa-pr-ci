@@ -64,6 +64,7 @@
       - python3-pip
       - firewalld
       - nfs-utils
+      - kernel-modules
 
 - name: install Ansible dependencies
   dnf:
