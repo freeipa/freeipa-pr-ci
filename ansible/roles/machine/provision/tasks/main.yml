@@ -103,6 +103,23 @@
     state: enforcing
   when: selinux_enforcing is defined and selinux_enforcing
 
+- block:
+    - name: install FIPS dependencies
+      dnf:
+        state: latest
+        name:
+          - fips-mode-setup
+
+    - name: run fips-mode-setup
+      shell: fips-mode-setup --enable
+
+    - name: create REBOOT_READY file
+      file:
+        path: "/vagrant/REBOOT_READY"
+        state: touch
+
+  when: fips is defined and fips
+
 - include_role:
     name: utils
     tasks_from: bash_settings

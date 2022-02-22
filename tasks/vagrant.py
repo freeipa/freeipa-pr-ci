@@ -21,6 +21,8 @@ def with_vagrant(func):
             logging.critical('vagrant or provisioning failed')
             raise exc
         else:
+            if __check_for_reboot(self):
+                self.execute_subtask(VagrantReload())
             func(self, *args, **kwargs)
         finally:
             if not self.no_destroy:
@@ -28,6 +30,11 @@ def with_vagrant(func):
                     VagrantCleanup(raise_on_err=False))
 
     return wrapper
+
+
+def __check_for_reboot(task):
+    logging.debug("Checking for REBOOT_READY file in task's data dir")
+    return os.path.exists(os.path.join(task.data_dir, "REBOOT_READY"))
 
 
 def __setup_provision(task):
@@ -107,6 +114,15 @@ class VagrantProvision(VagrantTask):
         self.execute_subtask(
             PopenTask(['vagrant', 'provision'],
                       timeout=None))
+
+
+class VagrantReload(VagrantTask):
+    def _run(self):
+        logging.info("Reloading vagrant machines.")
+        self.execute_subtask(
+            PopenTask(['vagrant', 'reload'],
+                      timeout=None)
+        )
 
 
 class VagrantCleanup(VagrantTask):

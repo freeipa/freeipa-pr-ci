@@ -153,7 +153,6 @@ class JobTask(FallibleTask):
                           'affect base PRCI functionality')
             logging.debug(exc, exc_info=True)
 
-
     def terminate(self):
         logging.critical(
             "Terminating execution, runtime exceeded {seconds}s".format(
@@ -247,12 +246,13 @@ class RunPytest(JobTask):
 
     def __init__(self, template, build_url, test_suite, topology=None,
                  timeout=constants.RUN_PYTEST_TIMEOUT, update_packages=False,
-                 xmlrpc=False, selinux_enforcing=False, **kwargs):
+                 xmlrpc=False, selinux_enforcing=False, fips=False, **kwargs):
         super(RunPytest, self).__init__(template, timeout=timeout, **kwargs)
         self.build_url = build_url + '/'
         self.test_suite = test_suite
         self.update_packages = update_packages
         self.selinux_enforcing = selinux_enforcing
+        self.fips = fips
         self.xmlrpc = xmlrpc
 
         if not topology:
@@ -274,10 +274,11 @@ class RunPytest(JobTask):
                 constants.ANSIBLE_VARS_TEMPLATE.format(
                     action_name=self.action_name),
                 os.path.join(self.data_dir, 'vars.yml'),
-                dict(repofile_url=urllib.parse.urljoin(
-                        self.build_url, 'rpms/freeipa-prci.repo'),
-                     update_packages=self.update_packages,
-                     selinux_enforcing=self.selinux_enforcing))
+                {"repofile_url": urllib.parse.urljoin(
+                    self.build_url, 'rpms/freeipa-prci.repo'),
+                    "update_packages": self.update_packages,
+                    "selinux_enforcing": self.selinux_enforcing,
+                    "fips": self.fips})
         except (OSError, IOError) as exc:
             msg = "Failed to prepare test config files"
             logging.debug(exc, exc_info=True)
@@ -286,6 +287,20 @@ class RunPytest(JobTask):
 
     @with_vagrant
     def _run(self):
+        if self.fips:
+            try:
+                self.execute_subtask(
+                    PopenTask(
+                        ['vagrant', 'ssh', '-c',
+                         'fips-mode-setup --is-enabled'],
+                        raise_on_err=True
+                    )
+                )
+                logging.info("FIPS successfully installed.")
+            except TaskException as exp:
+                logging.critical("FIPS mode was not installed correctly.")
+                raise exp
+
         try:
             self.execute_tests()
             logging.info('>>>>> TESTS PASSED <<<<<<')
@@ -353,6 +368,7 @@ class RunWebuiTests(RunPytest):
                     self.build_url, 'rpms/freeipa-prci.repo'),
                     update_packages=self.update_packages,
                     selinux_enforcing=self.selinux_enforcing,
+                    fips=self.fips,
                     caless=self.caless))
         except (OSError, IOError) as exc:
             msg = "Failed to prepare test config files"
