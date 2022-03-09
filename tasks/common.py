@@ -1,11 +1,11 @@
 import abc
-import collections
 import errno
 import logging
 import os
 import signal
 import subprocess
 import threading
+from collections.abc import Callable as AbcCallable
 from typing import Callable, List, Text
 
 import jinja2
@@ -60,7 +60,7 @@ class PopenException(TaskException):
             error=self.task.returncode)
 
 
-class Task(collections.Callable):
+class Task(AbcCallable):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, timeout=120):
