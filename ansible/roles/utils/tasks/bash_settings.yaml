@@ -1,0 +1,12 @@
+---
+- block:
+  - name: disable bracketed bash paste mode
+    shell: bind 'set enable-bracketed-paste off'
+  - name: permanently system-wide disable bracketed bash paste mode
+    shell: echo 'set enable-bracketed-paste off' >> /etc/inputrc
+  - name: check setting
+    shell: cat /etc/inputrc | grep enable-bracketed-paste
+    register: bracketed_paste_mode
+  - name: display enable-bracketed-paste mode
+    debug:
+      msg: "{{ bracketed_paste_mode }}"
