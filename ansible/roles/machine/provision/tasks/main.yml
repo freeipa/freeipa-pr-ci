@@ -105,4 +105,8 @@
 
 - include_role:
     name: utils
+    tasks_from: bash_settings
+
+- include_role:
+    name: utils
     tasks_from: enable_swap
