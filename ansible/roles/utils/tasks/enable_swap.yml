@@ -39,3 +39,4 @@
       passno: '0'
       dump: '0'
       state: present
+  when: ansible_distribution == 'Fedora' and ansible_distribution_version is version('34', '<=')
