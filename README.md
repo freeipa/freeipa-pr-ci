@@ -204,7 +204,7 @@ the label.
 3. Make sure correct variables for Fedora version are configured in
    `ansible/vars/fedora/`.
 
-4. Run `create-box-template`
+4. Run `create-template-box`
 
    This will create a vagrant box in `/tmp/$box_name/`. It will also be
    published on vagrantcloud.
