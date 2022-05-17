@@ -1,7 +1,8 @@
 ---
 - name: gather list of ifcfg files
-  raw: find /etc/sysconfig/network-scripts/ -type f -name "ifcfg-*"
+  raw: find /etc/sysconfig/network-scripts/ -type f -name "ifcfg-*" 2>/dev/null
   register: ifcfg_files
+  ignore_errors: yes
 
 - name: remove HWADDR line from ifcfg files
   lineinfile:
