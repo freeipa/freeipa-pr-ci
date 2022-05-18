@@ -21,6 +21,10 @@
   args:
     chdir: "{{ template_box_dir }}"
 
+- name: Pause for 30 seconds
+  pause:
+    seconds: 30
+
 - name: create vagrant box
   become: true
   shell: "vagrant package --output {{ template_box_name }}.box"
