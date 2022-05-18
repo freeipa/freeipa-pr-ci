@@ -2,6 +2,8 @@
 - name: create srpm
   shell: |
     mock --buildsrpm \
+      {% if copr is defined and copr %}--addrepo 'https://download.copr.fedorainfracloud.org/results/{{ copr }}/fedora-$releasever-$basearch/'{% endif %}
+      {% if enable_testing_repo is defined and enable_testing_repo|bool %}--enablerepo updates-testing{% endif %}
       --spec /root/rpmbuild/SPECS/freeipa.spec \
       --sources /root/rpmbuild/SOURCES/freeipa-{{ build_version }}.tar.gz \
       --result /root/rpmbuild/SRPMS/
@@ -9,6 +11,8 @@
 - name: create rpms
   shell: |
     mock --rebuild /root/rpmbuild/SRPMS/*.src.rpm \
+      {% if copr is defined and copr %}--addrepo 'https://download.copr.fedorainfracloud.org/results/{{ copr }}/fedora-$releasever-$basearch/'{% endif %}
+      {% if enable_testing_repo is defined and enable_testing_repo|bool %}--enablerepo updates-testing{% endif %}
       --result /root/rpmbuild/RPMS/
 
 - name: remove srpm artifact from RPMS dir
