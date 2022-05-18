@@ -250,6 +250,8 @@ FreeIPA packages.
 ```yaml
       class: Build
       args:
+        enable_testing_repo: true
+        copr: '@pki/master'
         git_repo: '{git_repo}'
         git_refspec: '{git_refspec}'
         template: &ci-master-f26
@@ -270,6 +272,11 @@ Some of these arguments are common to all FreeIPA jobs.
 - `timeout`: Maximum allowed time in seconds. If the job is still running after
   this period of time passes, it will be killed, torn down and reported as an
   error.
+- `copr`: Custom COPR repo that will be enabled in `mock` (for Build stage) and
+  inside all vms.
+- `enable_testing_repo`: Same as `copr` but this enables `updates-testing` repo.
+- `update_packages`: This forces DNF to updates all packages when installing
+  dependencies. _This does not apply to Build stage._ __This is "mandatory" for non-build stages with `copr` or `enable_testing_repo` enabled.__
 
 There are also `Build` specific arguments.
 

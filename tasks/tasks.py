@@ -170,11 +170,14 @@ class Build(JobTask):
     action_name = 'build'
 
     def __init__(self, template, git_refspec=None, git_version=None, git_repo=None,
-                 timeout=constants.BUILD_TIMEOUT, topology=None, **kwargs):
+                 timeout=constants.BUILD_TIMEOUT, topology=None, copr=None,
+                 enable_testing_repo=False, **kwargs):
         super(Build, self).__init__(template, timeout=timeout, **kwargs)
         self.git_refspec = git_refspec
         self.git_version = git_version
         self.git_repo = git_repo
+        self.copr = copr
+        self.enable_testing_repo = enable_testing_repo
 
     @with_vagrant
     def _run(self):
@@ -215,7 +218,9 @@ class Build(JobTask):
                 extra_vars={
                     'git_refspec': self.git_refspec,
                     'git_version': self.git_version,
-                    'git_repo': self.git_repo},
+                    'git_repo': self.git_repo,
+                    'copr': self.copr,
+                    'enable_testing_repo': self.enable_testing_repo},
                 timeout=None))
 
     def collect_build_artifacts(self):
@@ -246,7 +251,8 @@ class RunPytest(JobTask):
 
     def __init__(self, template, build_url, test_suite, topology=None,
                  timeout=constants.RUN_PYTEST_TIMEOUT, update_packages=False,
-                 xmlrpc=False, selinux_enforcing=False, fips=False, **kwargs):
+                 xmlrpc=False, selinux_enforcing=False, fips=False, copr=None,
+                 enable_testing_repo=False, **kwargs):
         super(RunPytest, self).__init__(template, timeout=timeout, **kwargs)
         self.build_url = build_url + '/'
         self.test_suite = test_suite
@@ -254,6 +260,8 @@ class RunPytest(JobTask):
         self.selinux_enforcing = selinux_enforcing
         self.fips = fips
         self.xmlrpc = xmlrpc
+        self.copr = copr
+        self.enable_testing_repo = enable_testing_repo
 
         if not topology:
             topology = {'name': constants.DEFAULT_TOPOLOGY}
@@ -272,13 +280,20 @@ class RunPytest(JobTask):
         try:
             create_file_from_template(
                 constants.ANSIBLE_VARS_TEMPLATE.format(
-                    action_name=self.action_name),
+                    action_name=self.action_name
+                ),
                 os.path.join(self.data_dir, 'vars.yml'),
-                {"repofile_url": urllib.parse.urljoin(
-                    self.build_url, 'rpms/freeipa-prci.repo'),
+                {
+                    "repofile_url": urllib.parse.urljoin(
+                        self.build_url, 'rpms/freeipa-prci.repo'
+                    ),
                     "update_packages": self.update_packages,
                     "selinux_enforcing": self.selinux_enforcing,
-                    "fips": self.fips})
+                    "fips": self.fips,
+                    "copr": self.copr,
+                    "enable_testing_repo": self.enable_testing_repo,
+                },
+            )
         except (OSError, IOError) as exc:
             msg = "Failed to prepare test config files"
             logging.debug(exc, exc_info=True)
@@ -346,9 +361,13 @@ class RunPytest3(RunPytest):
 class RunWebuiTests(RunPytest):
     action_name = 'webui'
 
-    def __init__(self, template, build_url, test_suite, caless=False, **kwargs):
+    def __init__(self, template, build_url, test_suite, caless=False, fips=False,
+                 copr=None, enable_testing_repo=False, **kwargs):
         super().__init__(template, build_url, test_suite, **kwargs)
         self.caless = caless
+        self.fips = fips
+        self.copr = copr
+        self.enable_testing_repo = enable_testing_repo
 
     @property
     def vagrantfile(self):
@@ -369,7 +388,9 @@ class RunWebuiTests(RunPytest):
                     update_packages=self.update_packages,
                     selinux_enforcing=self.selinux_enforcing,
                     fips=self.fips,
-                    caless=self.caless))
+                    caless=self.caless,
+                    copr=self.copr,
+                    enable_testing_repo=self.enable_testing_repo))
         except (OSError, IOError) as exc:
             msg = "Failed to prepare test config files"
             logging.debug(exc, exc_info=True)
