@@ -65,4 +65,12 @@ failovermethod=priority
 gpgkey=file:///usr/share/distribution-gpg-keys/fedora/RPM-GPG-KEY-fedora-{{ fedora_releasever }}-primary
 gpgcheck=1
 enabled={{ repo_updates_enabled }}
+
+[updates-testing]
+name=updates-testing
+metalink=https://mirrors.fedoraproject.org/metalink?repo=updates-testing-f$releasever&arch=$basearch
+failovermethod=priority
+gpgkey=file:///usr/share/distribution-gpg-keys/fedora/RPM-GPG-KEY-fedora-{{ fedora_releasever }}-primary
+gpgcheck=1
+enabled=0
 """
