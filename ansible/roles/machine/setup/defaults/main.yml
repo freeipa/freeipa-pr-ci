@@ -1,6 +1,6 @@
 ---
 selinux_mode: permissive
 python_packages_to_install:
-  - pytest-html==1.22.0
+  - pytest-html
   - nose
   - selenium
