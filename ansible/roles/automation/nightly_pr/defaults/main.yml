@@ -127,3 +127,39 @@ nightly_jobs:
     branch: "ipa-4-9"
     prci_config: "nightly_ipa-4-9_latest_selinux.yaml"
     reviewer: miskopo
+
+  - name: testing_master_sssd
+    weekdays: "7"
+    hour: "08"
+    minute: "00"
+    flow: "ci"
+    branch: "master"
+    prci_config: "nightly_latest_sssd.yaml"
+    reviewer: flo-renaud
+
+  - name: testing_ipa-4.10_previous
+    weekdays: "1"
+    hour: "08"
+    minute: "00"
+    flow: "ci"
+    branch: "ipa-4-10"
+    prci_config: "nightly_ipa-4-10_previous.yaml"
+    reviewer: flo-renaud
+
+  - name: testing_ipa-4.10_latest
+    weekdays: "2"
+    hour: "11"
+    minute: "00"
+    flow: "ci"
+    branch: "ipa-4-10"
+    prci_config: "nightly_ipa-4-10_latest.yaml"
+    reviewer: flo-renaud
+
+  - name: testing_ipa-4.10_latest_selinux
+    weekdays: "4"
+    hour: "11"
+    minute: "00"
+    flow: "ci"
+    branch: "ipa-4-10"
+    prci_config: "nightly_ipa-4-10_latest_selinux.yaml"
+    reviewer: flo-renaud
