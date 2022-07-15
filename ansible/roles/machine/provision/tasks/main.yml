@@ -58,6 +58,12 @@
     state: latest
   when: update_packages is defined and update_packages
 
+- name: update pip packages
+  pip:
+    executable: pip3
+    name: "{{ python_packages_to_install }}"
+  when: update_packages is defined and update_packages
+
 - name: install freeipa packages
   dnf:
     state: latest
