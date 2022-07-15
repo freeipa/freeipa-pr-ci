@@ -1,2 +1,6 @@
 ---
 deploy_ipa_test_config: false
+python_packages_to_install: # same as machine/setup/defaults
+  - pytest-html
+  - nose
+  - selenium

@@ -1,6 +1,6 @@
 ---
 selinux_mode: permissive
-python_packages_to_install:
+python_packages_to_install: # same as machine/provision/defaults
   - pytest-html
   - nose
   - selenium
