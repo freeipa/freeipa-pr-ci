@@ -232,6 +232,12 @@ class PRCIDef():
                                 get_gh_token())})
         try:
             files = res.json()['data']['repository']['object']['entries']
+            # filter out non-yaml and prci_checker files
+            files = [
+                f for f in files if
+                (f['name'].endswith('.yaml') or f['name'].endswith('.yml')) and
+                f['name'] != 'prci_jobs_spec.yaml'
+            ]
         except TypeError:
             logger.error(traceback.print_exc())
             logger.error('Could not get PRCI definition files from %s, please '
