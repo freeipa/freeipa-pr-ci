@@ -122,10 +122,10 @@ def prune_exports_file(prune_dirs):
     """
     entries_deleted = []
     try:
-        if not os.geteuid()==0:
+        if not os.geteuid() == 0:
             print("\nUnable to prune /etc/exports. Must be run as root\n")
             return None
-    except:
+    except Exception:
         pass
 
     exports = open('/etc/exports', 'r+')
