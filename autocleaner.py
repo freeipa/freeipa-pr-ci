@@ -210,19 +210,17 @@ class PRCIDef():
         GraphQL query for getting all PRCI yaml job definition files
         """
         return {"query": """{
-      viewer {
-        repository(name: "freeipa") {
-          object(expression: "%s:%s") {
-          ... on Tree{
-            entries{
-              name
-              type
-              mode
+          repository(name: "freeipa", owner: "freeipa") {
+            object(expression: "%s:%s") {
+            ... on Tree{
+              entries{
+                name
+                type
+                mode
+              }
             }
           }
         }
-        }
-      }
     }""" % (self.branch, PRCI_DEF_DIR)}
 
     def get_prci_def_files(self):
@@ -233,7 +231,7 @@ class PRCIDef():
                             headers={'Authorization': 'bearer {}'.format(
                                 get_gh_token())})
         try:
-            files = res.json()['data']['viewer']['repository']['object']['entries']
+            files = res.json()['data']['repository']['object']['entries']
         except TypeError:
             logger.error(traceback.print_exc())
             logger.error('Could not get PRCI definition files from %s, please '
