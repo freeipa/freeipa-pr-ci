@@ -6,6 +6,14 @@
     attributes:
       gidNumber: 10047
 
+- name: mytestgroup with info attribute
+  win_domain_group:
+    name: mytestgroup
+    scope: global
+    attributes:
+      gidNumber: 10055
+      info: mytestuser
+
 - name: group@group
   win_domain_group:
     name: group@group
@@ -142,3 +150,25 @@
   vars:
     user: upnuser
     group: testgroup
+
+- name: A test user with posix attributes defined with same gidnumber of mytestgroup.
+  include_role:
+    name: windows/ipa-ad-data
+    tasks_from: user.yml
+  vars:
+    options:
+      Name: mytestuser
+      GivenName: Test
+      Surname: User
+      AccountPassword: Secret123
+      PasswordNeverExpires: $true
+      Enabled: $true
+      OtherAttributes: "@{'uidNumber'='10055'; 'gidNumber'='10055'; 'loginShell'='/bin/sh'; 'homeDirectory'='/home/mytestuser'; 'unixHomeDirectory'='/home/mytestuser'; 'gecos'='Test User'}"
+
+- name: set primary group for mytestuser
+  include_role:
+    name: windows/ipa-ad-data
+    tasks_from: primary_group.yml
+  vars:
+    user: mytestuser
+    group: mytestgroup
