@@ -1,6 +1,12 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 #
+# Add the following to the topologies section of your test definitions:
+#
+# ipaserver: &ipaserver
+#   name: ipaserver
+#   cpu: 2
+#   memory: 2750
 
 Vagrant.configure(2) do |config|
 
