@@ -1,6 +1,12 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 #
+# Add the following to the topologies section of your test definitions:
+#
+# master_1repl: &master_1repl
+#   name: master_1repl
+#   cpu: 4
+#   memory: 6750
 
 Vagrant.configure(2) do |config|
 
@@ -36,8 +42,8 @@ Vagrant.configure(2) do |config|
 
     config.vm.define "controller" , primary: true do |controller|
         controller.vm.provider "libvirt" do |domain,override|
-            # Less resources needed for controller
-            domain.memory = 950
+            # Less resources needed for controller - same amount as the clients
+            domain.memory = 1250
         end
 
         controller.vm.provision :ansible do |ansible|
