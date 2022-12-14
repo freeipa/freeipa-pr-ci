@@ -65,15 +65,6 @@ nightly_jobs:
     prci_config: "nightly_ipa-4-9_latest.yaml"
     reviewer: miskopo
 
-  - name: testing_ipa-4.9_previous
-    weekdays: "6"
-    hour: "15"
-    minute: "00"
-    flow: "ci"
-    branch: "ipa-4-9"
-    prci_config: "nightly_ipa-4-9_previous.yaml"
-    reviewer: menonsudhir
-
   - name: testing_master_pki
     weekdays: "7"
     hour: "20"
