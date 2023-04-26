@@ -12,6 +12,7 @@ from git import Repo
 from urllib.parse import urljoin
 import subprocess
 import requests
+import time
 
 
 REF_FORMAT = 'refs/heads/'
@@ -264,7 +265,9 @@ class AutomatedPR(object):
                  else self.repo.owner.login)
         logger.debug("A new PR against %s/freeipa will be created with "
                      "the title %s", owner, pr_title)
-        self.create_pr(pr_title)
+        pr = self.create_pr(pr_title)
+        self.delete_local_branch()
+        self.assign_reviewer_to_pr(pr)
 
     def open_nightly_pr(self):
         # before opening a new PR, we close the old one with the same
@@ -277,29 +280,40 @@ class AutomatedPR(object):
                  else self.repo.owner.login)
         logger.debug("A new PR against %s/freeipa will be created with "
                      "the title %s", owner, pr_title)
-        self.create_pr(pr_title)
+        pr = self.create_pr(pr_title)
+        self.delete_local_branch()
+        self.assign_reviewer_to_pr(pr)
 
-    def create_pr(self, pr_title):
-        try:
-            if self.args.pr_against_upstream:
-                users_head = '{}:{}'.format(self.repo.owner.login,
-                                            self.args.id)
-                pr = self.upstream_repo.create_pull(pr_title, self.args.branch,
-                                                    users_head)
-            else:
-                # will open a PR against user's fork
-                pr = self.repo.create_pull(pr_title, self.args.branch,
-                                           self.args.id)
+    def create_pr(self, pr_title, max_attempts=3, delay=5):
+        attempts = 0
+        while attempts < max_attempts:
+            time.sleep(delay)
+            try:
+                if self.args.pr_against_upstream:
+                    users_head = '{}:{}'.format(self.repo.owner.login,
+                                                self.args.id)
+                    pr = self.upstream_repo.create_pull(
+                        pr_title, self.args.branch, users_head
+                    )
+                else:
+                    # will open a PR against user's fork
+                    pr = self.repo.create_pull(
+                        pr_title, self.args.branch, self.args.id
+                    )
 
-            # Request a review
-            if self.args.reviewer:
-                pr.create_review_requests(reviewers=[self.args.reviewer])
+                logger.info("PR %s created", pr.number)
+                break
+            except github3.GitHubError as error:
+                logger.error(error.errors)
+                attempts += 1
+        return pr
 
-            logger.info("PR %s created", pr.number)
-        except github3.GitHubError as error:
-            logger.error(error.errors)
-        finally:
-            self.delete_local_branch()
+    def assign_reviewer_to_pr(self, pr):
+        # Request a review
+        reviewer = self.args.reviewer
+        if reviewer:
+            logger.info("Assigning reviewer %s to PR %s", reviewer, pr.number)
+            pr.create_review_requests(reviewers=[reviewer])
 
     def run(self):
         fnc = getattr(self, self.args.command)
