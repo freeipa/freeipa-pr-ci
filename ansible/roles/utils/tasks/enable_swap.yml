@@ -5,7 +5,6 @@
       dd if=/dev/zero of={{ swapfile_file }} count={{ swapfile_size }} bs=1MB
     args:
       creates: "{{ swapfile_file }}"
-      warn: false
     register: write_swap_file
 
   - name: set swap file permissions
@@ -18,16 +17,12 @@
   - name: create swap file
     command: >
       mkswap {{ swapfile_file }}
-    args:
-      warn: false
     when: write_swap_file is changed
     register: create_swap_file
 
   - name: enable swapfile
     command: >
       swapon {{ swapfile_file }}
-    args:
-      warn: false
     when: create_swap_file is changed
 
   - name: add swapfile to /etc/fstab

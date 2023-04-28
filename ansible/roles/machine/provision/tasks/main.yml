@@ -42,14 +42,10 @@
 
 - name: "configure custom COPR repo ({{ copr }})"
   shell: "dnf copr enable -y {{ copr }}"
-  args:
-    warn: false
   when: copr is defined and copr
 
 - name: enable updates-testing repository
   shell: "dnf config-manager --set-enabled updates-testing"
-  args:
-    warn: false
   when: enable_testing_repo is defined and enable_testing_repo
 
 - name: update packages
