@@ -10,12 +10,12 @@
 
 - when: not sshd_status.exists
   block:
-  - name: donwload cygwin installer
+  - name: Download cygwin installer
     win_get_url:
       url: "{{ cygwin_installer_url }}"
       dest: "{{ cygwin_installer_local_file }}"
 
-  - name: Install OpenSSH
+  - name: Install cygwin OpenSSH
     win_shell: >
       {{ cygwin_installer_local_file }}
       --quiet-mode
@@ -25,7 +25,7 @@
       --packages openssh
     failed_when: "'Installation incomplete' in (cygwin_result.stdout + cygwin_result.stderr)"
     register: cygwin_result
-    ignore_errors: yes
+    ignore_errors: true
     with_items: "{{ cygwin_mirror_urls }}"
     when: cygwin_result is undefined or cygwin_result.failed
 
@@ -52,7 +52,7 @@
     creates: "{{ cygwin_dir }}/etc/ssh_config"
   register: ssh_config
 
-- name: start sshd
+- name: Start cygwin sshd
   win_service:
     name: "{{ sshd_service }}"
     state: "{{ 'restarted' if passwd is changed or ssh_config is changed else 'started' }}"
