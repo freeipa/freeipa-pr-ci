@@ -1,4 +1,9 @@
-- name: Check if sshd service exists
+- name: Turn off build-in OpenSSH server
+  win_service:
+    name: "sshd"
+    state: "absent"
+
+- name: Check if cygwin sshd service exists
   win_service:
     name: "{{ sshd_service }}"
   register: sshd_status
