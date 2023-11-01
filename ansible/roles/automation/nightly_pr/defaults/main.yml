@@ -18,7 +18,7 @@ nightly_jobs:
     flow: "ci"
     branch: "master"
     prci_config: "nightly_latest.yaml"
-    reviewer: gkaihorodova
+    reviewer: miskopo
 
   - name: testing_master_previous
     weekdays: "2"
@@ -27,7 +27,7 @@ nightly_jobs:
     flow: "ci"
     branch: "master"
     prci_config: "nightly_previous.yaml"
-    reviewer: gkaihorodova
+    reviewer: miskopo
 
   - name: testing_master_previous
     weekdays: "4"
@@ -126,7 +126,7 @@ nightly_jobs:
     flow: "ci"
     branch: "master"
     prci_config: "nightly_latest_sssd.yaml"
-    reviewer: gkaihorodova
+    reviewer: miskopo
 
   - name: testing_ipa-4.10_previous
     weekdays: "1"
