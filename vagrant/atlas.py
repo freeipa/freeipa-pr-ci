@@ -106,7 +106,7 @@ class Boxes(object):
             raise KeyError(key)
 
 
-class Mapping(collections.Mapping):
+class Mapping(collections.abc.Mapping):
     obj_cls = None
     obj_key = None
     id_key = None
@@ -155,7 +155,7 @@ class BoxProvider(CRUD):
             version=boxversion.keys['version'], provider=provider, url=url)
 
     def __init__(self, boxversion, provider):
-        super(BoxProvider, self).__init__(boxversion.context, 
+        super(BoxProvider, self).__init__(boxversion.context,
             name=boxversion.keys['name'], username=boxversion.keys['username'],
             version=boxversion.keys['version'], provider=provider)
 
