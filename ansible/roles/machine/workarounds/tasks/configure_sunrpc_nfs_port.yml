@@ -6,8 +6,8 @@
 # `ansible/roles/machine/setup/tasks/install_packages.yml`, otherwise it would
 # be only installed later by Vagrant when bringing the machine.
 
-- name: configure sunrpc to leave kadmin port 749/TCP open
-  sysctl:
-    name: sunrpc.min_resvport
-    value: 750
-    state: present
+# - name: configure sunrpc to leave kadmin port 749/TCP open
+#   sysctl:
+#     name: sunrpc.min_resvport
+#     value: 750
+#     state: present

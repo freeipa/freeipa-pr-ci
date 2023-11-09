@@ -10,7 +10,7 @@
   args:
     chdir: "{{ template_box_dir }}"
   when: vagrantfile.stat.exists is defined and vagrantfile.stat.exists
- 
+
 - name: remove the template directory
   become: true
   file:
