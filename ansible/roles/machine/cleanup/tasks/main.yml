@@ -1,9 +1,9 @@
 ---
-- include: clean_caches.yml
-- include: clean_hostname.yml
-- include: clean_dhcp_state.yml
-- include: clean_mac_addresses.yml
-- include: clean_logs.yml
-- include: clean_vagrant_temp.yml
-- include: clean_history.yml
+- include_tasks: clean_caches.yml
+- include_tasks: clean_hostname.yml
+- include_tasks: clean_dhcp_state.yml
+- include_tasks: clean_mac_addresses.yml
+- include_tasks: clean_logs.yml
+- include_tasks: clean_vagrant_temp.yml
+- include_tasks: clean_history.yml
 
