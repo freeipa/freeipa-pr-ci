@@ -1,6 +1,7 @@
 ---
 - hosts: runners
-  remote_user: root
+  become: true
+  become_method: sudo
   name: prepare production test runners
   vars_prompt:
     - name: github_token
