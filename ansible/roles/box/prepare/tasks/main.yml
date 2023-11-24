@@ -1,8 +1,8 @@
 ---
-- include: cleanup.yml
+- include_tasks: cleanup.yml
   tags: cleanup
 
-- include: download_nightly_box.yml
+- include_tasks: download_nightly_box.yml
   when: nightly_compose is defined and nightly_compose
   tags:
     - download_nightly_box

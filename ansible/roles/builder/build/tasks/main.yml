@@ -1,9 +1,9 @@
 ---
-- include: prepare.yml
-- include: clone_git_repo.yml
-- include: check_4_5_build_system.yml
-- include: generate_build_version.yml
-- include: create_spec.yml
-- include: create_sources.yml
-- include: create_rpms.yml
+- include_tasks: prepare.yml
+- include_tasks: clone_git_repo.yml
+- include_tasks: check_4_5_build_system.yml
+- include_tasks: generate_build_version.yml
+- include_tasks: create_spec.yml
+- include_tasks: create_sources.yml
+- include_tasks: create_rpms.yml
 

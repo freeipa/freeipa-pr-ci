@@ -1,5 +1,5 @@
 ---
-- include: create_custodia_user.yml
-- include: vagrant_systemctl_no_pager.yml
-- include: configure_sunrpc_nfs_port.yml
+- include_tasks: create_custodia_user.yml
+- include_tasks: vagrant_systemctl_no_pager.yml
+- include_tasks: configure_sunrpc_nfs_port.yml
 
