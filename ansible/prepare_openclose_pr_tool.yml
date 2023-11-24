@@ -1,6 +1,7 @@
 ---
 - hosts: scheduler
-  remote_user: root
+  become: true
+  become_method: sudo
   name: deploy open_close_pr tool
   gather_facts: yes
   vars:

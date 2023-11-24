@@ -1,6 +1,7 @@
 ---
 - hosts: cleanup_runners
-  remote_user: root
+  become: true
+  become_method: sudo
   name: cleanup runners disk
   gather_facts: false
 
