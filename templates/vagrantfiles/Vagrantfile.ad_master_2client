@@ -51,6 +51,7 @@ Vagrant.configure(2) do |config|
             ansible.limit = "all"
             ansible.playbook = "../../ansible/provision_ad.yml"
             ansible.extra_vars = "vars.yml"
+            ansible.compatibility_mode = "2.0"
         end
     end
 
