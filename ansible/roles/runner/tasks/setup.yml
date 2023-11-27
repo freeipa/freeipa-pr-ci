@@ -15,6 +15,17 @@
     name: "*"
     state: latest
 
+# TODO: Replace COPR repo when the packages hit the stable repos
+- name: enable winrm copr repo
+  shell: "dnf copr enable -y @freeipa/freeipa-pr-ci"
+- name: install winrm packages and their dependencies
+  dnf:
+    state: present
+    name:
+      - rubygem-winrm
+      - rubygem-winrm-fs
+      - rubygem-winrm-elevated
+
 - name: install runner dependencies
   dnf:
     state: present
@@ -46,43 +57,14 @@
   notify:
     - restart_nfs
 
-- name: register vagrant version
-  shell: vagrant --version | awk '{print $2}'
-  register: vagrant_version
-
 # as per sssd-suite readme file states, we need vagrant plugins...
 - name: install libvirt plugin for vagrant
   raw: vagrant plugin install vagrant-libvirt
-  ignore_errors: yes
+  ignore_errors: true
 
-- name: install vagrant plugin (winrm) for AD tests
-  raw: vagrant plugin install winrm
-  when: vagrant_version.stdout is version('2.2.0', '<')
-  ignore_errors: yes
-
-- name: install vagrant plugins (winrm-fs) for AD tests
-  raw: vagrant plugin install winrm-fs
-  when: vagrant_version.stdout is version('2.2.0', '<')
-  ignore_errors: yes
-
-- name: install vagrant plugins (winrm-elevated) for AD tests
-  raw: vagrant plugin install winrm-elevated
-  when: vagrant_version.stdout is version('2.2.0', '<')
-  ignore_errors: yes
-
-# TODO: Replace COPR repo when the packages hit the stable repos
-- name: install winrm packages and dependencies for AD tests
-  block:
-    - name: enable winrm copr repo
-      shell: "dnf copr enable -y @freeipa/freeipa-pr-ci"
-    - name: install packages and their dependencies
-      dnf:
-        state: present
-        name:
-          - rubygem-winrm
-          - rubygem-winrm-fs
-          - rubygem-winrm-elevated
-  when: vagrant_version.stdout is version('2.2.0', '>=')
+- name: install vagrant-sshfs plugin for vagrant
+  raw: vagrant plugin install vagrant-sshfs
+  ignore_errors: true
 
 # adding after packages install as the file can be overwritten by "mailcap"
 - name: add mime.types so awscli can correctly guess content-types
