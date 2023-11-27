@@ -65,6 +65,7 @@ Vagrant.configure(2) do |config|
             {% endif %}
 
             host.vm.provider "libvirt" do |domain, override|
+                domain.graphics_type = "spice"
                 domain.cpus = 2
                 domain.memory = 3072
             end
