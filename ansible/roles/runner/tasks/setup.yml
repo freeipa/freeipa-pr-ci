@@ -26,6 +26,10 @@
       - rubygem-winrm-fs
       - rubygem-winrm-elevated
 
+# Use Hashicorp Vagrant (mostly will be newer than Fedora's)
+- name: enable Hashicorp repo
+  shell: "dnf config-manager --add-repo https://rpm.releases.hashicorp.com/fedora/hashicorp.repo"
+
 - name: install runner dependencies
   dnf:
     state: present
