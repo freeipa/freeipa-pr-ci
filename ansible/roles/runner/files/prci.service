@@ -9,8 +9,6 @@ User=root
 Group=root
 WorkingDirectory=/root/freeipa-pr-ci
 ExecStart=/bin/bash -c 'PYTHONPATH=$PYTHONPATH:/root/freeipa-pr-ci /root/freeipa-pr-ci/github/prci.py "$(hostname -s)" --config /root/.config/freeipa-pr-ci/config.yml'
-StandardOutput=syslog
-StandardError=syslog
 Restart=on-failure
 RestartSec=3m
 
