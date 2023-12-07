@@ -116,3 +116,14 @@
     regexp: '^#?SystemMaxUse'
     line: 'SystemMaxUse={{ limit_size_systemd_journal }}'
     state: present
+
+- name: Enable DNSSEC in /etc/systemd/resolved.conf
+  lineinfile:
+    path: /etc/systemd/resolved.conf
+    regexp: '^#?DNSSEC='
+    line: 'DNSSEC=yes'
+
+- name: Restart systemd-resolved service to reflect configuration changes
+  systemd:
+    name: systemd-resolved.service
+    state: restarted
