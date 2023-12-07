@@ -48,4 +48,3 @@
   service:
     name: prci
     enabled: true
-    state: started

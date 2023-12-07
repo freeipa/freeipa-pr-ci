@@ -25,9 +25,3 @@
 
 - name: systemd daemon reload
   shell: systemctl daemon-reload
-
-- name: restart prci
-  service:
-    name: prci
-    enabled: true
-    state: restarted
