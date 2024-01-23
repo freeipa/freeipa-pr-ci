@@ -119,15 +119,6 @@ nightly_jobs:
     prci_config: "nightly_latest_sssd.yaml"
     reviewer: miskopo
 
-  - name: testing_ipa-4.10_previous
-    weekdays: "1"
-    hour: "08"
-    minute: "00"
-    flow: "ci"
-    branch: "ipa-4-10"
-    prci_config: "nightly_ipa-4-10_previous.yaml"
-    reviewer: flo-renaud
-
   - name: testing_ipa-4.10_latest
     weekdays: "2"
     hour: "11"
