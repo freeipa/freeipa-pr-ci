@@ -54,6 +54,14 @@
     state: latest
   when: update_packages is defined and update_packages
 
+# Workaround for pki upgrade issue
+- name: update pki packages
+  dnf:
+    name: 'dogtag-pki-server'
+    state: latest
+    allowerasing: true
+  when: update_packages is defined and update_packages
+
 - name: update pip packages
   pip:
     executable: pip3
