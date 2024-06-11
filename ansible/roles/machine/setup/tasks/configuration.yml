@@ -1,4 +1,9 @@
 ---
+- name: install Python 3 deps for ansible modules
+  dnf:
+    name: python3-libselinux
+    state: latest
+
 - name: set selinux mode
   selinux:
     state: "{{ selinux_mode }}"

@@ -17,6 +17,9 @@ Vagrant.configure(2) do |config|
         template.vm.provider "libvirt" do |domain,override|
             domain.memory = 2048
             override.vm.network "private_network", type: "dhcp"
+{% if fedora_version == '40' %}
+            domain.machine_virtual_size = 20
+{% endif %}
         end
 
     end
