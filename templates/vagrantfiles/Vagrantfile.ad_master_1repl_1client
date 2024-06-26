@@ -3,8 +3,8 @@
 #
 # Add the following to the topologies section of your test definitions:
 #
-# ad_master_1replica_1client: &ad_master_1replica_1client
-#   name: ad_master_1replica_1client
+# ad_master_1repl_1client: &ad_master_1repl_1client
+#   name: ad_master_1repl_1client
 #   cpu: 6
 #   memory: 12096
 
