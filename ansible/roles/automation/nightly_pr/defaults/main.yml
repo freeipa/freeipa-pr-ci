@@ -47,14 +47,14 @@ nightly_jobs:
     prci_config: "nightly_ipa-4-6.yaml"
     reviewer: miskopo
 
-  - name: testing_ipa-4.9_latest
+  - name: testing_ipa-4.12_latest_selinux
     weekdays: "6"
     hour: "8"
     minute: "00"
     flow: "ci"
-    branch: "ipa-4-9"
-    prci_config: "nightly_ipa-4-9_latest.yaml"
-    reviewer: miskopo
+    branch: "ipa-4-12"
+    prci_config: "nightly_ipa-4-12_latest_selinux.yaml"
+    reviewer: b3lix
 
   - name: testing_master_pki
     weekdays: "7"
@@ -137,14 +137,14 @@ nightly_jobs:
     prci_config: "nightly_ipa-4-11_latest_selinux.yaml"
     reviewer: flo-renaud
 
-  - name: testing_ipa-4.10_latest
+  - name: testing_ipa-4.12_latest
     weekdays: "2"
     hour: "11"
     minute: "00"
     flow: "ci"
-    branch: "ipa-4-10"
-    prci_config: "nightly_ipa-4-10_latest.yaml"
-    reviewer: flo-renaud
+    branch: "ipa-4-12"
+    prci_config: "nightly_ipa-4-12_latest.yaml"
+    reviewer: b3lix
 
   - name: testing_ipa-4.10_latest_selinux
     weekdays: "4"
