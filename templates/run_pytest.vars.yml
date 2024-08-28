@@ -6,4 +6,5 @@ caless: {{ caless | default(false) }}
 fips: {{ fips | default(false) }}
 enable_testing_repo: {{ enable_testing_repo | default(false) }}
 ansible_python_interpreter: /usr/bin/python3
+trusted_domain: {{ trusted_domain | default(false) }}
 {% if copr %}copr: "{{ copr }}"{% endif %}

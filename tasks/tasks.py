@@ -252,7 +252,7 @@ class RunPytest(JobTask):
     def __init__(self, template, build_url, test_suite, topology=None,
                  timeout=constants.RUN_PYTEST_TIMEOUT, update_packages=False,
                  xmlrpc=False, selinux_enforcing=False, fips=False, copr=None,
-                 enable_testing_repo=False, **kwargs):
+                 enable_testing_repo=False, trusted_domain=False, **kwargs):
         super(RunPytest, self).__init__(template, timeout=timeout, **kwargs)
         self.build_url = build_url + '/'
         self.test_suite = test_suite
@@ -262,7 +262,7 @@ class RunPytest(JobTask):
         self.xmlrpc = xmlrpc
         self.copr = copr
         self.enable_testing_repo = enable_testing_repo
-
+        self.trusted_domain = trusted_domain
         if not topology:
             topology = {'name': constants.DEFAULT_TOPOLOGY}
 
@@ -292,6 +292,7 @@ class RunPytest(JobTask):
                     "fips": self.fips,
                     "copr": self.copr,
                     "enable_testing_repo": self.enable_testing_repo,
+                    "trusted_domain": self.trusted_domain,
                 },
             )
         except (OSError, IOError) as exc:
@@ -415,3 +416,5 @@ class RunWebuiTests(RunPytest):
 
 class RunADTests(RunPytest):
     action_name = 'ad'
+
+

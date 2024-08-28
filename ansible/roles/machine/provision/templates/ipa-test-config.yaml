@@ -27,6 +27,28 @@ domains:
   name: ipa.test
   type: IPA
 
+{% if trusted_domain %}
+- hosts:
+{% for host in groups['all'] %}
+{% if host.startswith('trustedmaster') or host.startswith('trustedreplica') or host.startswith('trustedclient') %}
+    - external_hostname: {{ hostvars[host]['inventory_hostname'] }}.trustedipa.test
+      name: {{ hostvars[host]['inventory_hostname'] }}.trustedipa.test
+      ip: {{ hostvars[host]['ansible_default_ipv4']['address'] }}
+{% if host.startswith('trustedmaster') %}
+      role: master
+{% endif %}
+{% if host.startswith('trustedreplica') %}
+      role: replica
+{% endif %}
+{% if host.startswith('trustedclient') %}
+      role: client
+{% endif %}
+{% endif %}
+{% endfor %}
+  name: trustedipa.test
+  type: TRUSTED_IPA
+{% endif %}
+
 {% for host, domain, domain_type in [
   (ad_root_dc_hostname, ad_root_domain, "AD"),
   (ad_child_dc_hostname, ad_child_domain, "AD_SUBDOMAIN"),
