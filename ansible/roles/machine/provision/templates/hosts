@@ -1,9 +1,14 @@
 127.0.0.1  localhost
 ::1  localhost
 {% for host in groups['all'] %}
-   {% if 'ansible_default_ipv4' in hostvars[host] %}
-      {{ hostvars[host]['ansible_default_ipv4']['address'] }} {{ hostvars[host]['inventory_hostname'] }}.ipa.test
-   {% endif %}
+{% if 'ansible_default_ipv4' in hostvars[host] %}
+{% if host.startswith('controller') or host.startswith('master') or host.startswith('replica') or host.startswith('client') %}
+{{ hostvars[host]['ansible_default_ipv4']['address'] }} {{ hostvars[host]['inventory_hostname'] }}.ipa.test
+{% endif %}
+{% if host.startswith('trustedmaster') or host.startswith('trustedreplica') or host.startswith('trustedclient') %}
+{{ hostvars[host]['ansible_default_ipv4']['address'] }} {{ hostvars[host]['inventory_hostname'] }}.trustedipa.test
+{% endif %}
+{% endif %}
 {% endfor %}
 
 {% for host, domain in [
@@ -12,6 +17,6 @@
   (ad_tree_dc_hostname, ad_tree_domain)
 ] %}
 {% if host in groups['all'] %}
-      {{ hostvars[host]['ansible_ip_addresses']|ipv4|first }} {{ host }}.{{ domain }}
+{{ hostvars[host]['ansible_ip_addresses']|ipv4|first }} {{ host }}.{{ domain }}
 {% endif %}
 {% endfor %}
