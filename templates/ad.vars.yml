@@ -8,3 +8,4 @@ enable_testing_repo: {{ enable_testing_repo | default(false) }}
 ansible_python_interpreter: /usr/bin/python3
 {% if copr %}copr: "{{ copr }}"{% endif %}
 testing_ad: true
+trusted_domain: {{ trusted_domain | default(false) }}
