@@ -117,11 +117,11 @@
 # workaround for https://github.com/ansible/ansible/issues/19814
 - name: set hostname
   shell: "hostnamectl set-hostname {{ inventory_hostname }}.ipa.test"
-  when: inventory_hostname == 'controller' or inventory_hostname == 'master' or inventory_hostname == 'client' or inventory_hostname == 'replica'
+  when: inventory_hostname is not match("^trusted.*")
 
 - name: set hostname
   shell: "hostnamectl set-hostname {{ inventory_hostname }}.trustedipa.test"
-  when: inventory_hostname == 'trustedmaster' or inventory_hostname == 'trustedclient' or inventory_hostname == 'trustedreplica'
+  when: inventory_hostname is match("^trusted.*")
 
 # Change selinux state if `selinux_enforcing: true` is set in test suite definition
 - name: set selinux to enforcing
