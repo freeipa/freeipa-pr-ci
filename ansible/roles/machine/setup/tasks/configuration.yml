@@ -10,7 +10,7 @@
     policy: targeted
 
 - name: disable distro repositories
-  shell: "dnf config-manager --set-disabled {{ item }}"
+  shell: "dnf config-manager setopt {{ item }}.enabled=0"
   with_items:
     - fedora
     - updates
@@ -18,14 +18,14 @@
     - fedora-cisco-openh264
 
 - name: enable selected repositories
-  shell: "dnf config-manager --set-enabled {{ item.key }}"
+  shell: "dnf config-manager setopt {{ item.key }}.enabled=1"
   with_dict:
     fedora: "{{ repo_fedora_enabled }}"
     updates: "{{ repo_updates_enabled }}"
   when: fedora_version != 'rawhide' and item.value
 
 - name: configure rawhide repository
-  shell: "dnf config-manager --set-{{ 'enabled' if repo_rawhide_enabled else 'disabled' }} rawhide"
+  shell: "dnf config-manager setopt rawhide.enabled={{ '1' if repo_rawhide_enabled else '0' }}"
   when: fedora_version == 'rawhide'
 
 - name: configure FreeIPA COPR repo
