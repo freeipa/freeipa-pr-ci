@@ -27,7 +27,7 @@
     register: cygwin_result
     ignore_errors: true
     with_items: "{{ cygwin_mirror_urls }}"
-    when: cygwin_result is undefined or cygwin_result.failed
+    when: cygwin_result is undefined or cygwin_result.failed|d(false)
 
   - name: Check Cygwin installation status
     vars:
