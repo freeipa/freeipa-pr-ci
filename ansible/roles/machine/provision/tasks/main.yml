@@ -44,8 +44,14 @@
   shell: "dnf copr enable -y {{ copr }}"
   when: copr is defined and copr
 
-- name: enable updates-testing repository
-  shell: "dnf config-manager --set-enabled updates-testing"
+- block:
+    - name: enable updates-testing repository up to f40
+      shell: "dnf config-manager --set-enabled updates-testing"
+      when: ansible_distribution == 'Fedora' and ansible_distribution_version <= '40'
+
+    - name: enable updates-testing repository f41 and above
+      shell: "dnf config-manager setopt updates-testing.enabled=1"
+      when: ansible_distribution == 'Fedora' and ansible_distribution_version > '40'
   when: enable_testing_repo is defined and enable_testing_repo
 
 - name: update packages
