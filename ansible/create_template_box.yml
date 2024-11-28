@@ -39,14 +39,21 @@
     - vars/ipa_branches/{{ git_branch }}.yml
   pre_tasks:
     - name: Install cloud-utils-growpart for f40
-      when: fedora_version == '40'
+      when: fedora_version >= '40'
       command: dnf install -y cloud-utils-growpart
     - name: grow partition size /dev/vda4 for f40
-      when: fedora_version == '40'
+      when: fedora_version >= '40'
       command: growpart /dev/vda 4
     - name: resize the / filesystem for f40
-      when: fedora_version == '40'
+      when: fedora_version >= '40'
       command: btrfs filesystem resize max /
+    - name: Stat /usr/bin/dnf5
+      ansible.builtin.stat:
+        path: /usr/bin/dnf5
+      register: dnf5
+    - name: Install dnf5 support libs
+      ansible.builtin.command: dnf5 install -y python3-libdnf5  dnf5-plugins
+      when: dnf5.stat.exists
     # GPG keys might be outdated for packages in Rawhide
     - name: Update fedora-repos package
       when: nightly_compose is defined and nightly_compose
