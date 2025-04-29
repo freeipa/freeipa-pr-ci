@@ -8,7 +8,6 @@
 - name: remove packages that cause conflicts on rawhide
   dnf:
     name:
-      - gdbm
       - python2-chardet
     state: absent
   when: fedora_version in ['rawhide', '30']
@@ -59,12 +58,20 @@
       - vim
       - NetworkManager
       - xorg-x11-server-Xvfb
-      - firefox
       - python3-paramiko
       - python3-pip
       - firewalld
       - nfs-utils
       - kernel-modules
+
+# firefox installation may fail due to openh264 conflict
+# allowerasing to prevent install failure
+- name: install additional packages
+  dnf:
+    state: latest
+    allowerasing: true
+    name:
+      - firefox
 
 - name: install Ansible dependencies
   dnf:
