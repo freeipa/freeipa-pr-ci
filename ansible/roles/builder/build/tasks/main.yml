@@ -4,6 +4,7 @@
 - include_tasks: check_4_5_build_system.yml
 - include_tasks: generate_build_version.yml
 - include_tasks: create_spec.yml
+- include_tasks: prepare_distributable.yml
 - include_tasks: create_sources.yml
 - include_tasks: create_rpms.yml
 
