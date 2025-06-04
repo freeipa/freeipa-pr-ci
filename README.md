@@ -31,7 +31,7 @@ handled by our tooling.
   (*Note*: please use `freeipa_pr_ci` key for root access if you have it)
 - **Hostname**: short hostname is used as the runner identifier, please make
   sure it is unique.
-- **Persistent configuration**: runner may be rebooted occassionally. All
+- **Persistent configuration**: runner may be rebooted occasionally. All
   configuration including hostname and networking should persist after reboot.
 - **Minimum specs**: 4 vCPUs, 8 GB RAM, 30 GB disk.
 - **Operating system**: currently, only Fedora is supported.
@@ -42,7 +42,7 @@ handled by our tooling.
 
 - `ansible >= 2.3` on the control machine
 - GitHub token with *Full control of private repositories* (Settings ->
-  Personal access tokens)
+  Developer settings -> Personal access tokens)
 - `freeipa_pr_ci` private key placed in `keys/`
 - Cloud `config` and `credentials` files in `keys/`
 - private keys in `keys/` have permissions set to 0600
@@ -53,7 +53,7 @@ The development runner can be deployed to monitor any FreeIPA fork while
 executing any FreeIPA PR CI fork (any owner and branch). This is useful for
 testing and development purposes.
 
-1. Create ansible inventory `ansible/hosts/runners`
+1. Create ansible inventory `ansible/hosts/runners` (Replace _2.3.4.5_ with the machine's IP address)
 
    ```
    [runners_devel]
@@ -75,7 +75,7 @@ testing and development purposes.
 
 ### "Production" Runner deployment
 
-1. Create ansible inventory `ansible/hosts/runners`
+1. Create ansible inventory `ansible/hosts/runners` (Replace _1.2.3.4_ with the machine's IP address)
 
    ```
    [runners]
