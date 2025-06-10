@@ -6,6 +6,7 @@
     version: "{{ git_version | default('build') }}"
     refspec: "{{ git_refspec }}:build"
     force: yes
+    recursive: yes
   when: git_refspec is defined
 
 - name: checkout git repo and checkout version
@@ -14,5 +15,6 @@
     dest: /root/freeipa
     version: "{{ git_version | default('master') }}"
     force: yes
+    recursive: yes
   when: git_refspec is undefined
 
