@@ -10,6 +10,22 @@
     path: /root/rpmbuild/SOURCES
     state: directory
 
+- name: install Modern WebUI dependencies
+  dnf:
+    state: latest
+    name:
+      - nodejs
+
+- name: download node_modules for Modern WebUI
+  shell: npm install
+  args:
+    chdir: /root/freeipa/install/freeipa-webui
+
+- name: create build of Modern WebUI
+  shell: npm run build
+  args:
+    chdir: /root/freeipa/install/freeipa-webui
+
 - name: pack the sources to tar.gz
   archive:
     path: "/tmp/freeipa-{{ build_version }}"
