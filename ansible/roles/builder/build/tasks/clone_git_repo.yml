@@ -1,18 +1,20 @@
 ---
-- name: clone git repo and checkout refspec's head
+- name: clone git repos and checkout refspec's head
   git:
     repo: "{{ git_repo }}"
     dest: /root/freeipa
     version: "{{ git_version | default('build') }}"
     refspec: "{{ git_refspec }}:build"
     force: yes
+    recursive: yes
   when: git_refspec is defined
 
-- name: checkout git repo and checkout version
+- name: checkout git repos and checkout version
   git:
     repo: "{{ git_repo }}"
     dest: /root/freeipa
     version: "{{ git_version | default('master') }}"
     force: yes
+    recursive: yes
   when: git_refspec is undefined
 
