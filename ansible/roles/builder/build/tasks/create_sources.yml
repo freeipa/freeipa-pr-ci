@@ -10,6 +10,36 @@
     path: /root/rpmbuild/SOURCES
     state: directory
 
+# We check for Modern WebUI to differentiate between main and older versions
+# as Modern WebUI is not backported to older versions.
+- name: Check for Modern WebUI
+  stat:
+    path: /root/freeipa/install/freeipa-webui
+  register: webui
+
+# If Modern WebUI is present, we need to execute the npm install and build
+# outside of the mock environment, because of the internet connection. 
+# We can't omit those steps, as they are required, therefore we just execute 
+# them beforehand.
+- name: install Modern WebUI dependencies
+  dnf:
+    state: latest
+    name:
+      - nodejs
+  when: webui.stat.exists
+
+- name: download node_modules for Modern WebUI
+  shell: npm install
+  args:
+    chdir: /root/freeipa/install/freeipa-webui
+  when: webui.stat.exists
+
+- name: create build of Modern WebUI
+  shell: npm run build
+  args:
+    chdir: /root/freeipa/install/freeipa-webui
+  when: webui.stat.exists
+
 - name: pack the sources to tar.gz
   archive:
     path: "/tmp/freeipa-{{ build_version }}"
