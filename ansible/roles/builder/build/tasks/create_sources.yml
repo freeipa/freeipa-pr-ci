@@ -29,7 +29,7 @@
   when: webui.stat.exists
 
 - name: download node_modules for Modern WebUI
-  shell: npm install
+  shell: npm clean-install
   args:
     chdir: /root/freeipa/install/freeipa-webui
   when: webui.stat.exists
