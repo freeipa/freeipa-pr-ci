@@ -1,5 +1,6 @@
 ipa_admin: admin
 ipa_password: Secret.123
+root_ssh_key_filename: /root/.ssh/freeipa_pr_ci_insecure
 
 {% for host in groups['all'] %}
 {% if host.startswith('master') %}
