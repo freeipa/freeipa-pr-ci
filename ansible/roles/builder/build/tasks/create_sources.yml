@@ -10,6 +10,15 @@
     path: /root/rpmbuild/SOURCES
     state: directory
 
+- name: Check for freeipa-sysusers.conf
+  stat:
+    path: /root/freeipa/freeipa-sysusers.conf
+  register: freeipa_sysusers
+
+- name: Copy freeipa-sysusers.conf to rpmbuild/SOURCES
+  shell: cp /root/freeipa/freeipa-sysusers.conf /root/rpmbuild/SOURCES
+  when: freeipa_sysusers.stat.exists
+
 # We check for Modern WebUI to differentiate between main and older versions
 # as Modern WebUI is not backported to older versions.
 - name: Check for Modern WebUI
@@ -18,8 +27,8 @@
   register: webui
 
 # If Modern WebUI is present, we need to execute the npm install and build
-# outside of the mock environment, because of the internet connection. 
-# We can't omit those steps, as they are required, therefore we just execute 
+# outside of the mock environment, because of the internet connection.
+# We can't omit those steps, as they are required, therefore we just execute
 # them beforehand.
 - name: install Modern WebUI dependencies
   dnf:
