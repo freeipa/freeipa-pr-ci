@@ -38,15 +38,18 @@
     - vars/fedora/{{ fedora_version }}.yml
     - vars/ipa_branches/{{ git_branch }}.yml
   pre_tasks:
-    - name: Install cloud-utils-growpart for f40
+    - name: Grow partition
+      block:
+      - name: Install cloud-utils-growpart for f40
+        command: dnf install -y cloud-utils-growpart
+      - name: find device for partition /
+        ansible.builtin.set_fact:
+          device: "{{ ansible_mounts | json_query('[?mount == `/`].device') }}"
+      - name: grow partition / size  for f40
+        command: growpart "{{ device[0][:-1] }}" "{{ device[0][-1] }}"
+      - name: resize the / filesystem for f40
+        command: btrfs filesystem resize max /
       when: fedora_version >= '40'
-      command: dnf install -y cloud-utils-growpart
-    - name: grow partition size /dev/vda4 for f40
-      when: fedora_version >= '40'
-      command: growpart /dev/vda 4
-    - name: resize the / filesystem for f40
-      when: fedora_version >= '40'
-      command: btrfs filesystem resize max /
     - name: Stat /usr/bin/dnf5
       ansible.builtin.stat:
         path: /usr/bin/dnf5
