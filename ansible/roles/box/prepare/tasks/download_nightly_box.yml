@@ -11,7 +11,7 @@
 
 - name: download latest nightly box ({{ fedora_releasever }})
   shell: >
-    wget -r -np -nH --cut-dirs=9 --accept-regex
+    wget -e robots=off -r -np -nH --cut-dirs=9 --accept-regex
     'Fedora-Cloud-Base-Vagrant-libvirt-{{ fedora_version.capitalize() }}-.*x86_64.vagrant.libvirt.box'
     {{ fedora_nightly_images_remote_dir }}
   args:

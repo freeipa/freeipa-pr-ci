@@ -13,7 +13,7 @@
   when: fedora_version in ['rawhide', '30']
 
 - name: install freeipa rpms with dependencies
-  shell: dnf install -y /vagrant/rpms/*.rpm
+  shell: dnf --setopt pkg_gpgcheck=false install -y /vagrant/rpms/*.rpm
 
 - name: remove freeipa packages while keeping dependencies
   shell: "rpm -e --nodeps '{{ item }}'"
@@ -158,4 +158,4 @@
         url: "{{ download_metadata.json  | to_json | from_json | json_query(query) }}"
         dest: /opt/selenium.jar
       vars:
-        query: "assets[?content_type == 'raw'] | [?ends_with(name, 'jar')] | [?starts_with(name, 'selenium-server')].browser_download_url | [0]"
+        query: "assets[?content_type == 'application/java-archive'] | [?ends_with(name, 'jar')] | [?starts_with(name, 'selenium-server')].browser_download_url | [0]"
