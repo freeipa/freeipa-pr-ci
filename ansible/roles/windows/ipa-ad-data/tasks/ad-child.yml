@@ -19,6 +19,20 @@
       Enabled: $true
       OtherAttributes: "@{'uidNumber'='10142'; 'gidNumber'='10147'; 'loginShell'='/bin/sh'; 'homeDirectory'='/home/subdomaintestuser'; 'gecos'='Subdomaintest User'}"
 
+- name: A test user2 with posix attributes defined
+  include_role:
+    name: windows/ipa-ad-data
+    tasks_from: user.yml
+  vars:
+    options:
+      Name: subdomaintestuser2
+      GivenName: Subdomaintest2
+      Surname: User2
+      AccountPassword: Secret123
+      PasswordNeverExpires: $true
+      Enabled: $true
+      OtherAttributes: "@{'uidNumber'='10144'; 'gidNumber'='10147'; 'loginShell'='/bin/sh'; 'homeDirectory'='/home/subdomaintestuser2'; 'gecos'='Subdomaintest User2'}"
+
 - name: set Subdomaintest User primary group
   include_role:
     name: windows/ipa-ad-data
@@ -39,3 +53,44 @@
       PasswordNeverExpires: $true
       Enabled: $false
       OtherAttributes: "@{'uidNumber'='10143'; 'gidNumber'='10147'; 'loginShell'='/bin/sh'; 'homeDirectory'='/home/subdomaindisableduser'}"
+
+- name: A test user1 without posix attributes defined
+  include_role:
+    name: windows/ipa-ad-data
+    tasks_from: user.yml
+  vars:
+    options:
+      Name: subnonposixuser1
+      GivenName: subNonposix1
+      Surname: subUser1
+      AccountPassword: Secret123
+      PasswordNeverExpires: $true
+      Enabled: $true
+
+- name: A test subnonposixuser2 without posix attributes defined
+  include_role:
+    name: windows/ipa-ad-data
+    tasks_from: user.yml
+  vars:
+    options:
+      Name: subnonposixuser2
+      GivenName: subNonposix2
+      Surname: subUser2
+      AccountPassword: Secret123
+      PasswordNeverExpires: $true
+      Enabled: $true
+
+- name: A test user with expired AD account (accountExpires in the past)
+  include_role:
+    name: windows/ipa-ad-data
+    tasks_from: user.yml
+  vars:
+    options:
+      Name: subexpiredaduser
+      GivenName: subexpiredaduser
+      Surname: User
+      AccountPassword: Secret123
+      PasswordNeverExpires: $true
+      AccountExpirationDate: (Get-Date).AddDays(-1)
+      Enabled: $true
+      OtherAttributes: "@{'uidNumber'='10149'; 'gidNumber'='10147'; 'loginShell'='/bin/sh'; 'homeDirectory'='/home/subexpiredaduser'; 'unixHomeDirectory'='/home/subexpiredaduser'; 'gecos'='Expired AD User'}"
