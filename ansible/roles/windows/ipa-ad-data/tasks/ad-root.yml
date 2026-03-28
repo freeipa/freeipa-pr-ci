@@ -172,3 +172,18 @@
   vars:
     user: mytestuser
     group: mytestgroup
+
+- name: A test user with expired AD account (accountExpires in the past)
+  include_role:
+    name: windows/ipa-ad-data
+    tasks_from: user.yml
+  vars:
+    options:
+      Name: expiredaduser
+      GivenName: Expiredad
+      Surname: User
+      AccountPassword: Secret123
+      PasswordNeverExpires: $true
+      AccountExpirationDate: (Get-Date).AddDays(-1)
+      Enabled: $true
+      OtherAttributes: "@{'uidNumber'='10059'; 'gidNumber'='10047'; 'loginShell'='/bin/sh'; 'homeDirectory'='/home/expiredaduser'; 'unixHomeDirectory'='/home/expiredaduser'; 'gecos'='Expired AD User'}"
