@@ -187,3 +187,33 @@
       AccountExpirationDate: (Get-Date).AddDays(-1)
       Enabled: $true
       OtherAttributes: "@{'uidNumber'='10059'; 'gidNumber'='10047'; 'loginShell'='/bin/sh'; 'homeDirectory'='/home/expiredaduser'; 'unixHomeDirectory'='/home/expiredaduser'; 'gecos'='Expired AD User'}"
+
+- name: AD user with CannotChangePassword
+  include_role:
+    name: windows/ipa-ad-data
+    tasks_from: user.yml
+  vars:
+    options:
+      Name: cannotchangepwduser
+      GivenName: CannotChangePwd
+      Surname: User
+      AccountPassword: Secret123
+      PasswordNeverExpires: $true
+      CannotChangePassword: $true
+      Enabled: $true
+      OtherAttributes: "@{'uidNumber'='10061'; 'gidNumber'='10047'; 'loginShell'='/bin/sh'; 'homeDirectory'='/home/cannotchangepwduser'; 'unixHomeDirectory'='/home/cannotchangepwduser'; 'gecos'='Cannot Change Password User'}"
+
+- name: AD user with ChangePasswordAtLogon (must change password at next logon)
+  include_role:
+    name: windows/ipa-ad-data
+    tasks_from: user.yml
+  vars:
+    options:
+      Name: changepwdatlogonuser
+      GivenName: ChangePwdAtLogon
+      Surname: User
+      AccountPassword: Secret123
+      ChangePasswordAtLogon: $true
+      PasswordNeverExpires: $false
+      Enabled: $true
+      OtherAttributes: "@{'uidNumber'='10062'; 'gidNumber'='10047'; 'loginShell'='/bin/sh'; 'homeDirectory'='/home/changepwdatlogonuser'; 'unixHomeDirectory'='/home/changepwdatlogonuser'; 'gecos'='Change Password At Logon User'}"
