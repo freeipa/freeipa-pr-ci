@@ -94,3 +94,33 @@
       AccountExpirationDate: (Get-Date).AddDays(-1)
       Enabled: $true
       OtherAttributes: "@{'uidNumber'='10149'; 'gidNumber'='10147'; 'loginShell'='/bin/sh'; 'homeDirectory'='/home/subexpiredaduser'; 'unixHomeDirectory'='/home/subexpiredaduser'; 'gecos'='Expired AD User'}"
+
+- name: AD child user with CannotChangePassword
+  include_role:
+    name: windows/ipa-ad-data
+    tasks_from: user.yml
+  vars:
+    options:
+      Name: subcantchgpwduser
+      GivenName: SubCannotChangePwd
+      Surname: User
+      AccountPassword: Secret123
+      PasswordNeverExpires: $true
+      CannotChangePassword: $true
+      Enabled: $true
+      OtherAttributes: "@{'uidNumber'='10150'; 'gidNumber'='10147'; 'loginShell'='/bin/sh'; 'homeDirectory'='/home/subcantchgpwduser'; 'unixHomeDirectory'='/home/subcantchgpwduser'; 'gecos'='Sub Cannot Change Password User'}"
+
+- name: AD child user with ChangePasswordAtLogon (must change password at next logon)
+  include_role:
+    name: windows/ipa-ad-data
+    tasks_from: user.yml
+  vars:
+    options:
+      Name: submustchgpwduser
+      GivenName: SubChangePwdAtLogon
+      Surname: User
+      AccountPassword: Secret123
+      ChangePasswordAtLogon: $true
+      PasswordNeverExpires: $false
+      Enabled: $true
+      OtherAttributes: "@{'uidNumber'='10151'; 'gidNumber'='10147'; 'loginShell'='/bin/sh'; 'homeDirectory'='/home/submustchgpwduser'; 'unixHomeDirectory'='/home/submustchgpwduser'; 'gecos'='Sub Change Password At Logon User'}"
