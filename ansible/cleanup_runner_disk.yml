@@ -47,4 +47,15 @@
           failed_when:
             res.rc != 0
             and "not found" not in res.stderr
+
+        - name: delete image with name _box.img from libvirt
+          shell: >
+            virsh vol-delete --pool default
+            {{ box_initial_name }}-{{ box_name }}_vagrant_box_image_{{ box_version }}_box.img
+          register: res
+          changed_when: res.rc == 0
+          failed_when:
+            res.rc != 0
+            and "not found" not in res.stderr
+
       when: user_confirmation == "YES" and box_name != "" and box_version != ""
