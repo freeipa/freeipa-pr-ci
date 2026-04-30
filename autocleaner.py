@@ -33,6 +33,8 @@ PRCI_DEF_DIR = 'ipatests/prci_definitions'
 LIBVIRT_IMAGES_DIR = '/var/lib/libvirt/images/'
 LIBVIRT_IMAGE_BASE = ('freeipa-VAGRANTSLASH-{name}_vagrant_box_image'
                       '_{version}.img')
+LIBVIRT_IMAGE_ALT_BASE = ('freeipa-VAGRANTSLASH-{name}_vagrant_box_image'
+                         '_{version}_box.img')
 VAGRANT_NO_BOXES = 'There are no installed boxes!'
 
 GH_RAW_PATH = 'https://raw.githubusercontent.com/{owner}/freeipa/{ref}/{path}'
@@ -347,6 +349,12 @@ class Box():
 
         subprocess.run(del_args, timeout=TIMEOUT)
 
+        del_args = ['virsh', 'vol-delete', '--pool', 'default',
+                    LIBVIRT_IMAGE_ALT_BASE.format(
+                        name=name, version=self.box_templ_ver)]
+
+        subprocess.run(del_args, timeout=TIMEOUT)
+
 
 def create_parser():
     """
@@ -371,7 +379,8 @@ def run(args):
     for vagrant_box in list_vagrant_boxes():
         logger.info('Checking if box %s is used', vagrant_box)
         box = Box(vagrant_box)
-        if not box.is_box_used:
+        # Delete boxes for older branches and unused boxes for master branch
+        if box.branch != "master" or not box.is_box_used:
             logger.info('Deleting %s', vagrant_box)
             box.delete_box()
             box.delete_libvirt_img()
