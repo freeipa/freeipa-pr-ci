@@ -158,4 +158,4 @@
         url: "{{ download_metadata.json  | to_json | from_json | json_query(query) }}"
         dest: /opt/selenium.jar
       vars:
-        query: "assets[?content_type == 'application/java-archive'] | [?ends_with(name, 'jar')] | [?starts_with(name, 'selenium-server')].browser_download_url | [0]"
+        query: "assets[?ends_with(name, 'jar')] | [?starts_with(name, 'selenium-server')].browser_download_url | [0]"
