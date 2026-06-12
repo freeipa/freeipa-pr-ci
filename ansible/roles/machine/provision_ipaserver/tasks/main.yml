@@ -163,3 +163,18 @@
     src: user.csr
     dest: /root/.ipa/user.csr
     mode: 0755
+
+- name: Ensure the user is in the wheel group
+  ansible.builtin.user:
+    name: admin
+    groups: wheel
+    append: yes
+    state: present
+
+- name: Configure NOPASSWD for the user via sudoers.d file
+  ansible.builtin.copy:
+    content: "admin ALL=(ALL) NOPASSWD:ALL"
+    dest: "/etc/sudoers.d/admin"
+    mode: '0440'
+    owner: root
+    group: root
