@@ -21,11 +21,20 @@
 # outside of the mock environment, because of the internet connection. 
 # We can't omit those steps, as they are required, therefore we just execute 
 # them beforehand.
+- name: set nodejs packages for Modern WebUI
+  set_fact:
+    nodejs_packages: >-
+      {{
+        ['nodejs24', 'nodejs24-npm']
+        if ansible_distribution == 'Fedora' and ansible_distribution_version is version('44', '>=')
+        else ['nodejs']
+      }}
+  when: webui.stat.exists
+
 - name: install Modern WebUI dependencies
   dnf:
     state: latest
-    name:
-      - nodejs
+    name: "{{ nodejs_packages }}"
   when: webui.stat.exists
 
 - name: download node_modules for Modern WebUI
