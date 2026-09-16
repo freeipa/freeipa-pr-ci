@@ -25,7 +25,7 @@
   dnf:
     state: latest
     name:
-      - nodejs
+      - nodejs22
   when: webui.stat.exists
 
 - name: download node_modules for Modern WebUI
