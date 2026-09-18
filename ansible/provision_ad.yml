@@ -50,6 +50,13 @@
     - name: Force AES encryption types on a trust to parent domain
       win_shell: ksetup /setenctypeattr "{{ ad_root_domain }}" RC4-HMAC-MD5 AES128-CTS-HMAC-SHA1-96 AES256-CTS-HMAC-SHA1-96
 
+- hosts: ad-tree
+  any_errors_fatal: true
+  tasks:
+    - name: Setup conditional DNS forwarder to the tree domain
+      win_shell: Add-DnsServerConditionalForwarderZone -Name {{ ad_tree_domain }} -ReplicationScope Forest -MasterServers {{ hostvars[ad_tree_dc_hostname]['ansible_ip_addresses']|ipv4|first }} -PassThru
+      delegate_to: ad-root
+
 - hosts: ad-root,ad-child,ad-tree
   vars:
     ansible_user: Administrator
