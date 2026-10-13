@@ -77,9 +77,6 @@
     dest: /etc/mime.types
     mode: 0644
 
-- name: force reinstall python3-six
-  raw: dnf reinstall python3-six -y
-
 # - name: configure sunrpc to leave kadmin port 749/TCP open
 #   sysctl:
 #     name: sunrpc.min_resvport
